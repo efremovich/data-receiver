@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	pb "git.astralnalog.ru/utils/protos/storage/proto"
+	pb "github.com/efremovich/data-receiver/pkg/protos/storage/proto"
 )
 
 type GetFileAttrsInput struct {

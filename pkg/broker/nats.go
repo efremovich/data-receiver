@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/efremovich/data-receiver/config"
-	anats "git.astralnalog.ru/utils/anats"
+	anats "github.com/efremovich/data-receiver/pkg/anats"
 )
 
 type NATS interface {

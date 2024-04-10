@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"time"
 
-	"git.astralnalog.ru/utils/protos/generic_client"
+	"github.com/efremovich/data-receiver/pkg/protos/generic_client"
 	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 
-	pb "git.astralnalog.ru/utils/protos/storage/proto"
+	pb "github.com/efremovich/data-receiver/pkg/protos/storage/proto"
 )
 
 const TIMEOUT = time.Second * 3 // Максимальное время выполнения каждого запроса по умолчанию

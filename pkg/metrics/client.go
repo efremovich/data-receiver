@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"git.astralnalog.ru/utils/ametrics"
+	"github.com/efremovich/data-receiver/pkg/ametrics"
 )
 
 const (

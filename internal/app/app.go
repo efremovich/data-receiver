@@ -12,6 +12,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/operatorrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/tprepo"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi/operatorfetcher"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi/storage"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/broker"
 	"github.com/efremovich/data-receiver/pkg/metrics"

@@ -7,8 +7,8 @@ import (
 
 	"github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/pkg/metrics"
-	ggc "git.astralnalog.ru/utils/protos/generic_client"
-	"git.astralnalog.ru/utils/protos/storage"
+	ggc "github.com/efremovich/data-receiver/pkg/protos/generic_client"
+	"github.com/efremovich/data-receiver/pkg/protos/storage"
 )
 
 type Storage interface {

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"git.astralnalog.ru/utils/alogger"
+	"github.com/efremovich/data-receiver/pkg/alogger"
 
 	"github.com/gofiber/fiber/v2"
 )

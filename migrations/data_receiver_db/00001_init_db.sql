@@ -1,5 +1,71 @@
 -- +goose Up
 -- +goose StatementBegin
+
+CREATE TABLE IF NOT EXISTS "data_seller_enums" (
+	"id" integer NOT NULL,
+	"isEnable" boolean NOT NULL,
+	"name" text NOT NULL,
+	PRIMARY KEY ("id")
+);
+
+INSERT INTO public.data_seller_enums (is_enable, name) VALUES (true, "wb"), (true, "ozon"), (true, "1c");
+
+CREATE TABLE IF NOT EXISTS "goods_cards" (
+	"id" integer NOT NULL,
+	"group_id" integer NOT NULL,
+	"subject_id" bigint NOT NULL,
+	"vendor_code" text NOT NULL,
+	"subject_name" text NOT NULL,
+	"brand" text NOT NULL,
+	"title" text NOT NULL,
+	"description" text NOT NULL,
+	"seller_id" integer NOT NULL,
+	"created_at"  NOT NULL,
+	"updated_at"  NOT NULL,
+	PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "characteristics" (
+	"id" integer NOT NULL,
+	"name" text NOT NULL,
+	"value" text NOT NULL,
+	"card_id" bigint NOT NULL,
+	PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "media_files" (
+	"id" integer NOT NULL,
+	"link" text NOT NULL,
+	"card_id" bigint NOT NULL,
+	PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "prices" (
+	"id" integer NOT NULL,
+	"card_id" bigint NOT NULL,
+	"pris" bigint NOT NULL,
+	"price" double precision NOT NULL,
+	"pric" bigint NOT NULL,
+	"discount" double precision NOT NULL,
+	PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "sizes" (
+	"id" integer NOT NULL,
+	"card_id" bigint NOT NULL,
+	"techSize" text NOT NULL,
+	"title" text NOT NULL,
+	"barcode" text NOT NULL,
+	PRIMARY KEY ("id")
+);
+
+ALTER TABLE "data_seller_enums" ADD CONSTRAINT "data_seller_enums_fk0" FOREIGN KEY ("id") REFERENCES "goods_cards"("seller_id");
+
+ALTER TABLE "characteristics" ADD CONSTRAINT "characteristics_fk3" FOREIGN KEY ("card_id") REFERENCES "goods_cards"("id");
+ALTER TABLE "media_files" ADD CONSTRAINT "media_files_fk2" FOREIGN KEY ("card_id") REFERENCES "goods_cards"("id");
+ALTER TABLE "prices" ADD CONSTRAINT "prices_fk1" FOREIGN KEY ("card_id") REFERENCES "goods_cards"("id");
+ALTER TABLE "sizes" ADD CONSTRAINT "sizes_fk1" FOREIGN KEY ("card_id") REFERENCES "goods_cards"("id");
+
 CREATE TABLE public.tp_status_enum (
     id SERIAL PRIMARY KEY,
     tp_status_desc VARCHAR NOT NULL
@@ -76,11 +142,10 @@ CREATE INDEX idx_document_name ON public.tp_document (name);
 
 
 -- +goose StatementEnd
-
-
-
 -- +goose Down
 -- +goose StatementBegin
 -- не будем сносить всю бд
-SELECT 1;
+select 1
+;
 -- +goose StatementEnd
+
