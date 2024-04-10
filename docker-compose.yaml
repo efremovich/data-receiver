@@ -1,0 +1,55 @@
+version: "3.8"
+services:
+  # application
+  # data-receiver:
+  #   container_name: data-receiver
+  #   image: efremovich/data-receiver
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./
+  #     dockerfile: ./Dockerfile
+  #     network: host
+  #   environment:
+  #     GO_ENVIRONMENT: local
+  #     GATEWAY_HTTP_PORT: 8080
+  #     GATEWAY_GRPC_PORT: 8090
+  #   ports:
+  #     - "8001:8080"
+  #     - "9001:8090"
+  #   depends_on:
+  #     - postgres_db
+  #     - db_creator
+  #     - nats
+
+  # infra
+  postgres_db:
+    image: postgres:15.4
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5445:5432
+
+  nats:
+    container_name: nats
+    image: nats:2.9.21
+    command: -js
+    restart: unless-stopped
+    ports:
+      - 4222:4222
+      
+  db_creator:
+    image: postgres:15.4
+    restart: 'on-failure' # контейнер может не отработать с первого раза, если postgres медленно стартует
+    entrypoint: ["psql", "postgres://postgres:postgres@postgres_db:5432", 
+      "-c", "CREATE DATABASE \"data_receiver_db\" WITH ENCODING = \"UTF8\""]
+    depends_on:
+      - postgres_db
+
+  migrator:
+    build:
+      context: .
+      dockerfile: ./migrations/Dockerfile
+    restart: on-failure
+    environment:
+      DB_HOST: postgres_db

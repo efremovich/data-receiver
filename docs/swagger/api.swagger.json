@@ -1,0 +1,256 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Package Receiver API",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "PackageReceiver"
+    }
+  ],
+  "host": "localhost:8080",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/receiver/cms/v1": {
+      "post": {
+        "summary": "Receive a file",
+        "description": "Receive a file in the request body.",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "text/plain"
+        ],
+        "operationId": "PackageReceiver_ReceivePackageV1",
+        "parameters": [
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "The file to upload",
+            "required": true,
+            "type": "file"
+          },
+          {
+            "name": "Send-Receipt-To",
+            "description": "URL for TK",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Content-Disposition",
+            "description": "Name of TP",
+            "in": "header",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "X-Sender-Operator",
+            "in": "header",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "X-Recipient-Operator",
+            "in": "header",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        },
+        "tags": [
+          "PackageReceiver"
+        ]
+      }
+    },
+    "/receiver/health": {
+      "get": {
+        "operationId": "PackageReceiver_CheckHealth",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "PackageReceiver"
+        ]
+      }
+    },
+    "/receiver/tp": {
+      "get": {
+        "operationId": "PackageReceiver_GetTP",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/package_receiverGetTPResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tp",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "doc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PackageReceiver"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "package_receiverDirectory": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "package_receiverGetTPResponse": {
+      "type": "object",
+      "properties": {
+        "founded": {
+          "type": "boolean"
+        },
+        "tp": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "string"
+        },
+        "isReceipt": {
+          "type": "boolean"
+        },
+        "receiptUrl": {
+          "type": "string"
+        },
+        "isSuccess": {
+          "type": "boolean"
+        },
+        "isValidationError": {
+          "type": "boolean"
+        },
+        "isInternalError": {
+          "type": "boolean"
+        },
+        "isNew": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "sendTaskNextAt": {
+          "type": "string"
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/package_receiverDirectory"
+          }
+        },
+        "errorText": {
+          "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
+        },
+        "timeLayout": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "ApiKeyAuth": {
+      "type": "apiKey",
+      "name": "authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ]
+}
