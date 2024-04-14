@@ -9,10 +9,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/controller"
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/operatorrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/tprepo"
-	"github.com/efremovich/data-receiver/internal/usecases/webapi/operatorfetcher"
-	"github.com/efremovich/data-receiver/internal/usecases/webapi/storage"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/broker"
 	"github.com/efremovich/data-receiver/pkg/metrics"
@@ -43,18 +40,6 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, fmt.Errorf("ошибка при создании подключения к NATS: %s", err.Error())
 	}
 
-	// Клиент к оператору для получения списка операторов.
-	fetcher, err := operatorfetcher.New(ctx, conf.OperatorAPI)
-	if err != nil {
-		return nil, err
-	}
-
-	// Репозиторий, который будет хранить операторов.
-	opRepo, err := operatorrepo.NewOperatorRepo(ctx, fetcher)
-	if err != nil {
-		return nil, err
-	}
-
 	// Подключение к БД.
 	conn, err := postgresdb.New(ctx, conf.PGWriterConn, conf.PGReaderConn)
 	if err != nil {
@@ -67,14 +52,8 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, err
 	}
 
-	// Клиент к хранилищу файлов.
-	st, err := storage.NewStorageClient(ctx, conf.Storage, conf.ServiceName, metricsCollector)
-	if err != nil {
-		return nil, err
-	}
-
 	// Основной бизнес-сервис.
-	packageReceiverCoreService := usecases.NewPackageReceiverService(opRepo, tpRepo, natsClient, st, metricsCollector)
+	packageReceiverCoreService := usecases.NewPackageReceiverService(tpRepo, natsClient, metricsCollector)
 
 	gw, err := controller.NewGatewayServer(conf.Gateway, packageReceiverCoreService, metricsCollector)
 	if err != nil {

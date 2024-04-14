@@ -36,25 +36,6 @@ func (gw *grpcGatewayServerImpl) CheckHealth(ctx context.Context, _ *emptypb.Emp
 		return nil
 	})
 
-	g.Go(func() error {
-		err := gw.packageReceiver.PingStorage(ctx)
-		if err != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка при пинге стораджа", err, nil, false)
-			return status.Errorf(codes.Internal, "ошибка при пинге стораджа: %s", err.Error())
-		}
-
-		return nil
-	})
-
-	g.Go(func() error {
-		err := gw.packageReceiver.PingOperator(ctx)
-		if err != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка при пинге апи опертора", err, nil, false)
-		}
-
-		return nil
-	})
-
 	err := g.Wait()
 	if err != nil {
 		return nil, err
