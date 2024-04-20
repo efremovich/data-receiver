@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/valyala/fasthttp/reuseport"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-	"github.com/gofiber/fiber/v2"
-	"github.com/valyala/fasthttp/reuseport"
 
 	"github.com/efremovich/data-receiver/pkg/alogger"
 
@@ -61,7 +62,7 @@ func NewGatewayServer(cfg config.Gateway, packageReceiver usecases.ReceiverCoreS
 		metricsCollector: metricsCollector,
 	}
 
-	router := newRouter(gwmux, cfg, gateway.PackageReceiveV1Handler, metricsCollector)
+	router := newRouter(gwmux, cfg, gateway.CardReceiveV1Handler, metricsCollector)
 
 	interceptors := grpc.ChainUnaryInterceptor(
 		alogger.UnaryTraceIdInterceptor,
@@ -84,28 +85,28 @@ func NewGatewayServer(cfg config.Gateway, packageReceiver usecases.ReceiverCoreS
 }
 
 func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
-	errChanCapacity := 2
-	errChan := make(chan error, errChanCapacity)
+	g, ctx := errgroup.WithContext(ctx)
 
-	go func() {
+	// GRPC
+	g.Go(func() error {
 		adr := gw.cfgGateway.GRPC.Host + ":" + gw.cfgGateway.GRPC.Port
 
 		grpcListener, err := reuseport.Listen("tcp4", adr)
 		if err != nil {
-			errChan <- fmt.Errorf("ошибка при запуске GRPC сервера: %w", err)
-			return
+			return fmt.Errorf("ошибка при запуске GRPC сервера: %w", err)
 		}
-
 		alogger.InfoFromCtx(ctx, "запуск GRPC сервера на "+adr, nil, nil, false)
 		defer alogger.InfoFromCtx(ctx, "GRPC сервер остановлен", nil, nil, false)
 
 		err = gw.grpcServer.Serve(grpcListener)
 		if err != nil {
-			errChan <- fmt.Errorf("ошибка при запуске GRPC сервера: %w", err)
+			return fmt.Errorf("ошибка при запуске GRPC сервера: %w", err)
 		}
-	}()
+		return nil
+	})
 
-	go func() {
+	// REST
+	g.Go(func() error {
 		adr := gw.cfgGateway.HTTP.Host + ":" + gw.cfgGateway.HTTP.Port
 
 		alogger.InfoFromCtx(ctx, "запуск HTTP сервера на "+adr, nil, nil, false)
@@ -113,17 +114,24 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 
 		err := gw.httpServer.Listen(adr)
 		if err != nil {
-			errChan <- fmt.Errorf("ошибка при запуске http сервера: %w", err)
+			return fmt.Errorf("ошибка при запуске http сервера: %w", err)
 		}
-	}()
-
-	select {
-	case <-ctx.Done():
-		gw.gracefulStop()
 		return nil
-	case err := <-errChan:
+	})
+
+	g.Go(func() error {
+		<-ctx.Done()
+		gw.grpcServer.GracefulStop()
+		err := gw.httpServer.Shutdown()
+
 		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("ошибка: %w", err)
 	}
+
+	return nil
 }
 
 func (gw *grpcGatewayServerImpl) gracefulStop() {

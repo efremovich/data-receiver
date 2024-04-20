@@ -1,8 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Package Receiver API",
-    "version": "1.0.0"
+    "title": "Pricer Data Receiver API",
+    "version": "0.0.1"
   },
   "tags": [
     {
@@ -20,64 +20,37 @@
     "application/json"
   ],
   "paths": {
-    "/receiver/cms/v1": {
-      "post": {
-        "summary": "Receive a file",
-        "description": "Receive a file in the request body.",
-        "consumes": [
-          "multipart/form-data"
-        ],
-        "produces": [
-          "text/plain"
-        ],
-        "operationId": "PackageReceiver_ReceivePackageV1",
-        "parameters": [
-          {
-            "name": "file",
-            "in": "formData",
-            "description": "The file to upload",
-            "required": true,
-            "type": "file"
-          },
-          {
-            "name": "Send-Receipt-To",
-            "description": "URL for TK",
-            "in": "header",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "Content-Disposition",
-            "description": "Name of TP",
-            "in": "header",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "X-Sender-Operator",
-            "in": "header",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "X-Recipient-Operator",
-            "in": "header",
-            "required": false,
-            "type": "string"
-          }
-        ],
+    "/receiver/card": {
+      "get": {
+        "operationId": "PackageReceiver_GetCard",
         "responses": {
           "200": {
-            "description": "A successful response."
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/package_receiverGetCardResponse"
+            }
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "article",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "tags": [
           "PackageReceiver"
         ]
@@ -105,109 +78,46 @@
           "PackageReceiver"
         ]
       }
-    },
-    "/receiver/tp": {
-      "get": {
-        "operationId": "PackageReceiver_GetTP",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/package_receiverGetTPResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "tp",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "doc",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "PackageReceiver"
-        ]
-      }
     }
   },
   "definitions": {
-    "package_receiverDirectory": {
+    "package_receiverGetCardResponse": {
       "type": "object",
       "properties": {
-        "name": {
+        "id": {
           "type": "string"
         },
-        "files": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "package_receiverGetTPResponse": {
-      "type": "object",
-      "properties": {
-        "founded": {
-          "type": "boolean"
-        },
-        "tp": {
+        "groupId": {
           "type": "string"
         },
-        "origin": {
+        "subjectId": {
           "type": "string"
         },
-        "isReceipt": {
-          "type": "boolean"
-        },
-        "receiptUrl": {
+        "vendorId": {
           "type": "string"
         },
-        "isSuccess": {
-          "type": "boolean"
+        "vendorCode": {
+          "type": "string"
         },
-        "isValidationError": {
-          "type": "boolean"
+        "subjectName": {
+          "type": "string"
         },
-        "isInternalError": {
-          "type": "boolean"
+        "brand": {
+          "type": "string"
         },
-        "isNew": {
-          "type": "boolean"
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "sellerId": {
+          "type": "string"
         },
         "createdAt": {
           "type": "string"
         },
-        "sendTaskNextAt": {
-          "type": "string"
-        },
-        "content": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/package_receiverDirectory"
-          }
-        },
-        "errorText": {
-          "type": "string"
-        },
-        "errorCode": {
-          "type": "string"
-        },
-        "timeLayout": {
+        "updatedAt": {
           "type": "string"
         }
       }
