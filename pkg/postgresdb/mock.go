@@ -16,9 +16,10 @@ import (
 // проверено только на винде
 func GetMockConn(pathToMigrations string) (*DBConnection, string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	req := testcontainers.ContainerRequest{
-		Image:        "postgres",
+  defer cancel()
+
+  req := testcontainers.ContainerRequest{
+		Image:        "docker.io/postgres:16-alpine",
 		ExposedPorts: []string{"5432/tcp"},
 		AutoRemove:   true,
 		Env: map[string]string{
@@ -33,7 +34,8 @@ func GetMockConn(pathToMigrations string) (*DBConnection, string, error) {
 		ContainerRequest: req,
 		Started:          true,
 	})
-	if err != nil {
+	
+  if err != nil {
 		return nil, "", err
 	}
 
@@ -44,9 +46,9 @@ func GetMockConn(pathToMigrations string) (*DBConnection, string, error) {
 
 	connString := fmt.Sprintf("postgres://postgres:postgres@localhost:%d/postgres?sslmode=disable", port.Int())
 
-	markingDB, err := New(context.Background(), connString, connString)
+	testingDB, err := New(context.Background(), connString, connString)
 	if err != nil {
-		return nil, "", fmt.Errorf("ошибка при создании подключения к бд маркировки: %s", err.Error())
+		return nil, "", fmt.Errorf("ошибка при создании подключения к тестовой бд: %s", err.Error())
 	}
 
 	err = runMigrations(port.Int(), pathToMigrations)
@@ -54,7 +56,7 @@ func GetMockConn(pathToMigrations string) (*DBConnection, string, error) {
 		return nil, "", err
 	}
 
-	return markingDB, connString, nil
+	return testingDB, connString, nil
 }
 
 // проверено только на винде

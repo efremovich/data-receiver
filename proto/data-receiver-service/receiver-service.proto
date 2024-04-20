@@ -1,0 +1,64 @@
+syntax = "proto3";
+package package_receiver;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "./pkg/data-receiver-service;package_receiver";
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Pricer Data Receiver API"
+    version: "0.0.1"
+  };
+  host: "localhost:8080",
+  schemes: HTTP,
+  consumes: "application/json",
+  produces: "application/json"
+  security_definitions: {
+    security: {
+      key: "ApiKeyAuth"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "authorization"
+      }
+    };
+  };
+  security: {
+    security_requirement: {
+      key: "ApiKeyAuth";
+      value: {};
+    }
+  }
+};
+
+service CardReceiver {
+  rpc CheckHealth(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (google.api.http) = {get: "/receiver/health"};
+  }
+
+  rpc ReceiveCard(ReceiveCardRequest) returns (ReceiveCardResponse) {
+    option (google.api.http) = {get: "/receiver/card"};
+  }
+}
+
+message ReceiveCardRequest {
+  string seller = 1;
+}
+
+message ReceiveCardResponse {
+  string id = 1;
+  string group_id = 2;
+  string subject_id = 3;
+  string vendor_id = 4;
+  string vendor_code = 5;
+  string subject_name = 6;
+  string brand = 7;
+  string title = 8;
+  string description = 9;
+  string seller_id = 10;
+  string created_at = 11;
+  string updated_at = 12;
+}
+

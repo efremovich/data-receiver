@@ -7,11 +7,14 @@ import (
 
 	"github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/controller"
-	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/tprepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/wbcontentrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi/wbfetcher"
 	"github.com/efremovich/data-receiver/pkg/alogger"
-	"github.com/efremovich/data-receiver/pkg/broker"
+	"github.com/efremovich/data-receiver/pkg/broker/brokerconsumer"
+	"github.com/efremovich/data-receiver/pkg/broker/brokerpublisher"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
@@ -26,18 +29,25 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		Output: os.Stdout,
 	})
 
-	entity.AddUserErrorMessages()
-
-	// Cборщик метрик.
+	// Сборщик метрик.
 	metricsCollector, err := metrics.NewMetricCollector(conf.ServiceName)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при создании сборщика метрик: %s", err.Error())
 	}
 
-	// Брокер сообщений.
-	natsClient, err := broker.NewNats(ctx, conf, true)
+	// Брокер издатель.
+	brokerPublisher, err := brokerpublisher.NewBrokerPublisher(ctx, conf.BrokerPublisherURL, true)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при создании подключения к NATS: %s", err.Error())
+		return nil, fmt.Errorf("ошибка при создании брокера издателя: %w", err)
+	}
+	if err := brokerPublisher.Ping(); err != nil {
+		return nil, fmt.Errorf("ошибка при подключении к брокеру издателю: %w", err)
+	}
+
+	// Инициализация брокера потребителя.
+	brokerConsumer, err := brokerconsumer.NewBrokerConsumer(ctx, conf.BrokerConsumerURL, true)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка при создании брокера потребителя: %w", err)
 	}
 
 	// Подключение к БД.
@@ -45,17 +55,34 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	wbfetcher := wbfetcher.New(ctx, conf.Seller)
 
-	// Репозиторий ТП.
-	tpRepo, err := tprepo.NewTransportPackageRepo(ctx, conn)
+	wbContentRepo, err := wbcontentrepo.NewWBContentRepo(ctx, wbfetcher)
+	if err != err {
+		return nil, err
+	}
+
+	// Репозиторий Cards.
+	cardRepo, err := cardrepo.NewCardRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+	// Репозиторий Seller
+	sellerRepo, err := sellerrepo.NewSellerRepo(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
 
 	// Основной бизнес-сервис.
-	packageReceiverCoreService := usecases.NewPackageReceiverService(tpRepo, natsClient, metricsCollector)
+	packageReceiverCoreService := usecases.NewPackageReceiverService(
+		conf,
+		wbContentRepo,
+		cardRepo,
+		sellerRepo,
+		brokerPublisher,
+		metricsCollector)
 
-	gw, err := controller.NewGatewayServer(conf.Gateway, packageReceiverCoreService, metricsCollector)
+	gw, err := controller.NewGatewayServer(ctx, conf, packageReceiverCoreService, metricsCollector, brokerConsumer)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при создании gateway сервиса: %s", err.Error())
 	}

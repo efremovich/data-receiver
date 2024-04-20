@@ -9,6 +9,10 @@ type IDWrapper struct {
 	ID sql.NullInt64 `db:"id"`
 }
 
+type BarcodeWraper struct {
+	Barcode sql.NullString `db:"barcode"`
+}
+
 func BoolToNullBoolean(b *bool) sql.NullBool {
 	if b == nil {
 		return sql.NullBool{Valid: false}

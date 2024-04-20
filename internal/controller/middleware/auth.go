@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	package_receiver "github.com/efremovich/data-receiver/pkg/package-receiver-service"
+	// data_receiver "github.com/efremovich/data-receiver/pkg/data-receiver-service"
 
 	"github.com/gogo/status"
 	"google.golang.org/grpc"
@@ -13,7 +13,7 @@ import (
 )
 
 var ignoredMethodsForAuth = map[string]bool{
-	package_receiver.PackageReceiver_CheckHealth_FullMethodName: true,
+	// data_receiver.CardReceiver_CheckHealth_FullMethodName: true,
 }
 
 func AuthInterceptor(token string) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

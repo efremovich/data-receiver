@@ -1,0 +1,78 @@
+package brokerpublisher
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/efremovich/data-receiver/internal/entity"
+	anats "github.com/efremovich/data-receiver/pkg/anats"
+)
+
+// TODO возможно такое стоит вынести в конфигурации.
+const (
+	OutgoingStreamName            = "package-sender-stream"
+	OutgoingSubjectNormalPriority = "package-sender.inbox"
+)
+
+// Брокер издатель.
+type BrokerPublisher interface {
+	// Проверка работы брокера.
+	Ping() error
+	// Отправка пакета в сервис package-sender.
+	SendPackage(ctx context.Context, p *entity.Package, receiptURL string) error
+}
+
+// Имплементация брокера издателя.
+type brokerPublisherImpl struct {
+	anats anats.NatsClient
+}
+
+// Инициализация брокера издателя.
+func NewBrokerPublisher(ctx context.Context, urls []string, updateStream bool) (BrokerPublisher, error) {
+	// TODO заменить реализацию на реализацию пакета package-sender.
+	cfg := anats.NatsClientConfig{
+		Urls:               urls,
+		StreamName:         OutgoingStreamName,
+		Subjects:           []string{OutgoingSubjectNormalPriority},
+		CreateUpdateStream: updateStream,
+	}
+
+	cl, err := anats.NewNatsClient(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &brokerPublisherImpl{anats: cl}, nil
+}
+
+// Проверка подключение к брокеру.
+func (b brokerPublisherImpl) Ping() error {
+	return b.anats.Ping()
+}
+
+// Отправка события в package-sender.
+func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.Package, receiptURL string) error {
+	// Преобразование пакета приложения в сообщение для package-sender.
+	msg := tmpPackageSenderMsg{
+		PackageName: p.Name,
+		SendURL:     p.SendURL,
+		ReceiptURL:  receiptURL,
+	}
+
+	// Сериализация пакета.
+	msgB, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("ошибка при сериализации сообщения для package-sender: %s", err.Error())
+	}
+
+	// Публикация события.
+	return b.anats.PublishMessage(ctx, OutgoingSubjectNormalPriority, msgB)
+}
+
+// TODO структура сообщения которая будет браться из package-sender.
+type tmpPackageSenderMsg struct {
+	PackageName string // Имя пакета для получения из хранилища.
+	SendURL     string // URL для отправки пакета.
+	ReceiptURL  string // URL для получения квитанции.
+}

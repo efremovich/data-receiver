@@ -1,34 +1,16 @@
 package config
 
 type Config struct {
-	ServiceName    string      `env:"SERVICE_NAME, default=receiver"`
-	SelfOperatorID string      `env:"SELFID"`
-	NatsURL        []string    `env:"NATS_URL, default=nats://nats:4222"`
-	PGWriterConn   string      `env:"POSTGRES_WRITER_CONN"`
-	PGReaderConn   string      `env:"POSTGRES_READER_CONN"`
-	LogLevel       int         `env:"LOG_LEVEL, default=-4"` // debug = -4, info = 0, warn = 4
-	OperatorAPI    OperatorAPI `env:", prefix=OPERATOR_"`
-	Storage        Storage     `env:", prefix=STORAGE_"`
-	Gateway        Gateway     `env:", prefix=GATEWAY_"`
-	Packer         Packer      `env:", prefix=PACKER_"`
-}
-
-type Storage struct {
-	URL                string `env:"URL"`
-	Token              string `env:"TOKEN"`
-	UseTLS             bool   `env:"USE_TLS, default=false"`
-	TimeoutSeconds     int    `env:"TIMEOUT_SECONDS, default=5"`
-	InsecureSkipVerify bool   `env:"INSECURE_SKIP_VERIFY, default=true"`
-
-	// Для юнит-тестов и локального запуска.
-	UseMockStorage bool `env:"USE_MOCK, default=false"`
-}
-
-type OperatorAPI struct {
-	BaseURL        string `env:"URL"`
-	TimeoutSeconds int    `env:"TIMEOUT, default=10"`
-	Login          string `env:"LOGIN"`
-	Password       string `env:"PASSWORD"`
+	ServiceName        string   `env:"SERVICE_NAME, default=receiver"`
+	PGWriterConn       string   `env:"POSTGRES_WRITER_CONN"`
+	PGReaderConn       string   `env:"POSTGRES_READER_CONN"`
+	LogLevel           int      `env:"LOG_LEVEL, default=-4"` // debug = -4, info = 0, warn = 4
+	BrokerConsumerURL  []string `env:"BROKER_CONSUMER_URL" validate:"required"`
+	BrokerPublisherURL []string `env:"BROKER_PUBLISHER_URL" validate:"required"`
+	Gateway            Gateway  `env:", prefix=GATEWAY_"`
+	Nats               NATS     `env:", prefix=NATS_"`
+	Seller             Seller   `env:", prefix=SELLER_"`
+	Queue              Queue    `env:", prefix=QUEUE_"`
 }
 
 type Gateway struct {
@@ -43,7 +25,21 @@ type Adr struct {
 	Port string `env:"PORT"`
 }
 
-type Packer struct {
-	CertData []byte `env:"CERT"`
-	KeyData  []byte `env:"KEY"`
+type NATS struct {
+	URLS string `env:"URLS" validate:"required"`
+}
+
+// Настройки очереди.
+type Queue struct {
+	Workers           int `env:"WORKERS, default=1"`             // Количество потоков получения сообщений из очереди.
+	MaxDeliver        int `env:"MAX_DELIVER, default=1"`         // Максимальное количество попыток получить сообщение.
+	NakTimeoutSeconds int `env:"NAK_TIMEOUT_SECONDS, default=2"` // Время через которое будет повторяться попытка получить сообщение.
+	AckWaitSeconds    int `env:"ACK_WAIT_SECONDS, default=3"`    // Время на обработку полученного сообщения.
+	MaxAckPending     int `env:"MAX_ACK_PENDING, default=10000"` // Максимальное количество сообщений, которые могут быть ожидающими подтверждения.
+}
+
+type Seller struct {
+	URL                   string `env:"URL"`
+	Token                 string `env:"TOKEN"`
+	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=10"`
 }

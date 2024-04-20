@@ -17,7 +17,7 @@ func (gw *grpcGatewayServerImpl) CheckHealth(ctx context.Context, _ *emptypb.Emp
 	g := errgroup.Group{}
 
 	g.Go(func() error {
-		err := gw.packageReceiver.PingDB(ctx)
+		err := gw.core.PingDB(ctx)
 		if err != nil {
 			alogger.ErrorFromCtx(ctx, "ошибка при пинге БД приёмника", err, nil, false)
 			return status.Errorf(codes.Internal, "ошибка при пинге БД приёмника: %s", err.Error())
@@ -27,7 +27,7 @@ func (gw *grpcGatewayServerImpl) CheckHealth(ctx context.Context, _ *emptypb.Emp
 	})
 
 	g.Go(func() error {
-		err := gw.packageReceiver.PingNATS(ctx)
+		err := gw.core.PingNATS(ctx)
 		if err != nil {
 			alogger.ErrorFromCtx(ctx, "ошибка при пинге НАТС", err, nil, false)
 			return status.Errorf(codes.Internal, "ошибка при пинге НАТС: %s", err.Error())

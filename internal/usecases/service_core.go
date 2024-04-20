@@ -3,40 +3,51 @@ package usecases
 import (
 	"context"
 
-	"github.com/efremovich/data-receiver/internal/usecases/repository/tprepo"
-	"github.com/efremovich/data-receiver/pkg/broker"
+	conf "github.com/efremovich/data-receiver/config"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/wbcontentrepo"
+	"github.com/efremovich/data-receiver/pkg/broker/brokerpublisher"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 
 	aerror "github.com/efremovich/data-receiver/pkg/aerror"
 )
 
 type ReceiverCoreService interface {
-	ReceiveData(ctx context.Context) aerror.AError
+	ReceiveCards(ctx context.Context, sellerTitle string) aerror.AError
 
 	PingDB(ctx context.Context) error
 	PingNATS(_ context.Context) error
 }
 
 type receiverCoreServiceImpl struct {
-	tpRepo           tprepo.TransportPackageRepo
-	brokerNats       broker.NATS
+	cfg              conf.Config
+	sellerRepo       sellerrepo.SellerRepo
+	cardRepo         cardrepo.CardRepo
+	brokerPublisher  brokerpublisher.BrokerPublisher
 	metricsCollector metrics.Collector
+	wbContentRepo    wbcontentrepo.WBContentRepo
 }
 
-func NewPackageReceiverService(tpR tprepo.TransportPackageRepo,nats broker.NATS, metricsCollector metrics.Collector) ReceiverCoreService {
+func NewPackageReceiverService(cfg conf.Config, wbContentRepo wbcontentrepo.WBContentRepo,
+	cardR cardrepo.CardRepo, sellerR sellerrepo.SellerRepo, brokerPublisher brokerpublisher.BrokerPublisher, metricsCollector metrics.Collector,
+) ReceiverCoreService {
 	service := receiverCoreServiceImpl{
-		brokerNats:       nats,
+		cfg:              cfg,
+		brokerPublisher:  brokerPublisher,
 		metricsCollector: metricsCollector,
-		tpRepo:           tpR,
+		cardRepo:         cardR,
+		sellerRepo:       sellerR,
+		wbContentRepo:    wbContentRepo,
 	}
 
 	return &service
 }
 
 func (s *receiverCoreServiceImpl) PingNATS(_ context.Context) error {
-	return s.brokerNats.Ping()
+	return s.brokerPublisher.Ping()
 }
 
 func (s *receiverCoreServiceImpl) PingDB(ctx context.Context) error {
-	return s.tpRepo.Ping(ctx)
+	return s.cardRepo.Ping(ctx)
 }
