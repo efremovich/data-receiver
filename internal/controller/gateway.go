@@ -19,8 +19,8 @@ import (
 	"github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/controller/middleware"
 	"github.com/efremovich/data-receiver/internal/usecases"
+	desc "github.com/efremovich/data-receiver/pkg/data-receiver-service"
 	"github.com/efremovich/data-receiver/pkg/metrics"
-	desc "github.com/efremovich/data-receiver/pkg/package-receiver-service"
 )
 
 type GrpcGatewayServer interface {
@@ -38,7 +38,7 @@ type grpcGatewayServerImpl struct {
 
 	packageReceiver usecases.ReceiverCoreService
 
-	desc.UnimplementedPackageReceiverServer
+	desc.UnimplementedCardReceiverServer
 }
 
 func NewGatewayServer(cfg config.Gateway, packageReceiver usecases.ReceiverCoreService, metricsCollector metrics.Collector) (GrpcGatewayServer, error) {
@@ -46,7 +46,7 @@ func NewGatewayServer(cfg config.Gateway, packageReceiver usecases.ReceiverCoreS
 
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
-	err := desc.RegisterPackageReceiverHandlerFromEndpoint(
+	err := desc.RegisterCardReceiverHandlerFromEndpoint(
 		context.Background(),
 		gwmux,
 		cfg.GRPC.Host+":"+cfg.GRPC.Port,
@@ -79,7 +79,7 @@ func NewGatewayServer(cfg config.Gateway, packageReceiver usecases.ReceiverCoreS
 	gateway.httpServer = router
 	gateway.grpcServer = grpcServer
 
-	desc.RegisterPackageReceiverServer(grpcServer, gateway)
+	desc.RegisterCardReceiverServer(grpcServer, gateway)
 
 	return gateway, nil
 }

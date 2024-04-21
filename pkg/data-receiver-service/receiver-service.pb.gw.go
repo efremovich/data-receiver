@@ -32,7 +32,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = metadata.Join
 
-func request_PackageReceiver_CheckHealth_0(ctx context.Context, marshaler runtime.Marshaler, client PackageReceiverClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CardReceiver_CheckHealth_0(ctx context.Context, marshaler runtime.Marshaler, client CardReceiverClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
@@ -41,7 +41,7 @@ func request_PackageReceiver_CheckHealth_0(ctx context.Context, marshaler runtim
 
 }
 
-func local_request_PackageReceiver_CheckHealth_0(ctx context.Context, marshaler runtime.Marshaler, server PackageReceiverServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_CardReceiver_CheckHealth_0(ctx context.Context, marshaler runtime.Marshaler, server CardReceiverServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
@@ -51,17 +51,17 @@ func local_request_PackageReceiver_CheckHealth_0(ctx context.Context, marshaler 
 }
 
 var (
-	filter_PackageReceiver_GetCard_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_CardReceiver_GetCard_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_PackageReceiver_GetCard_0(ctx context.Context, marshaler runtime.Marshaler, client PackageReceiverClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CardReceiver_GetCard_0(ctx context.Context, marshaler runtime.Marshaler, client CardReceiverClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetCardRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_PackageReceiver_GetCard_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_CardReceiver_GetCard_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -70,14 +70,14 @@ func request_PackageReceiver_GetCard_0(ctx context.Context, marshaler runtime.Ma
 
 }
 
-func local_request_PackageReceiver_GetCard_0(ctx context.Context, marshaler runtime.Marshaler, server PackageReceiverServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_CardReceiver_GetCard_0(ctx context.Context, marshaler runtime.Marshaler, server CardReceiverServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetCardRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_PackageReceiver_GetCard_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_CardReceiver_GetCard_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -86,13 +86,13 @@ func local_request_PackageReceiver_GetCard_0(ctx context.Context, marshaler runt
 
 }
 
-// RegisterPackageReceiverHandlerServer registers the http handlers for service PackageReceiver to "mux".
-// UnaryRPC     :call PackageReceiverServer directly.
+// RegisterCardReceiverHandlerServer registers the http handlers for service CardReceiver to "mux".
+// UnaryRPC     :call CardReceiverServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
-// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterPackageReceiverHandlerFromEndpoint instead.
-func RegisterPackageReceiverHandlerServer(ctx context.Context, mux *runtime.ServeMux, server PackageReceiverServer) error {
+// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterCardReceiverHandlerFromEndpoint instead.
+func RegisterCardReceiverHandlerServer(ctx context.Context, mux *runtime.ServeMux, server CardReceiverServer) error {
 
-	mux.Handle("GET", pattern_PackageReceiver_CheckHealth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_CardReceiver_CheckHealth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -100,12 +100,12 @@ func RegisterPackageReceiverHandlerServer(ctx context.Context, mux *runtime.Serv
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/package_receiver.PackageReceiver/CheckHealth", runtime.WithHTTPPathPattern("/receiver/health"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/package_receiver.CardReceiver/CheckHealth", runtime.WithHTTPPathPattern("/receiver/health"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_PackageReceiver_CheckHealth_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_CardReceiver_CheckHealth_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -113,11 +113,11 @@ func RegisterPackageReceiverHandlerServer(ctx context.Context, mux *runtime.Serv
 			return
 		}
 
-		forward_PackageReceiver_CheckHealth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CardReceiver_CheckHealth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_PackageReceiver_GetCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_CardReceiver_GetCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -125,12 +125,12 @@ func RegisterPackageReceiverHandlerServer(ctx context.Context, mux *runtime.Serv
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/package_receiver.PackageReceiver/GetCard", runtime.WithHTTPPathPattern("/receiver/card"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/package_receiver.CardReceiver/GetCard", runtime.WithHTTPPathPattern("/receiver/card"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_PackageReceiver_GetCard_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_CardReceiver_GetCard_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -138,16 +138,16 @@ func RegisterPackageReceiverHandlerServer(ctx context.Context, mux *runtime.Serv
 			return
 		}
 
-		forward_PackageReceiver_GetCard_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CardReceiver_GetCard_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
 	return nil
 }
 
-// RegisterPackageReceiverHandlerFromEndpoint is same as RegisterPackageReceiverHandler but
+// RegisterCardReceiverHandlerFromEndpoint is same as RegisterCardReceiverHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterPackageReceiverHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+func RegisterCardReceiverHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
 	conn, err := grpc.DialContext(ctx, endpoint, opts...)
 	if err != nil {
 		return err
@@ -167,63 +167,63 @@ func RegisterPackageReceiverHandlerFromEndpoint(ctx context.Context, mux *runtim
 		}()
 	}()
 
-	return RegisterPackageReceiverHandler(ctx, mux, conn)
+	return RegisterCardReceiverHandler(ctx, mux, conn)
 }
 
-// RegisterPackageReceiverHandler registers the http handlers for service PackageReceiver to "mux".
+// RegisterCardReceiverHandler registers the http handlers for service CardReceiver to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterPackageReceiverHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return RegisterPackageReceiverHandlerClient(ctx, mux, NewPackageReceiverClient(conn))
+func RegisterCardReceiverHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterCardReceiverHandlerClient(ctx, mux, NewCardReceiverClient(conn))
 }
 
-// RegisterPackageReceiverHandlerClient registers the http handlers for service PackageReceiver
-// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "PackageReceiverClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "PackageReceiverClient"
+// RegisterCardReceiverHandlerClient registers the http handlers for service CardReceiver
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "CardReceiverClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "CardReceiverClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "PackageReceiverClient" to call the correct interceptors.
-func RegisterPackageReceiverHandlerClient(ctx context.Context, mux *runtime.ServeMux, client PackageReceiverClient) error {
+// "CardReceiverClient" to call the correct interceptors.
+func RegisterCardReceiverHandlerClient(ctx context.Context, mux *runtime.ServeMux, client CardReceiverClient) error {
 
-	mux.Handle("GET", pattern_PackageReceiver_CheckHealth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_CardReceiver_CheckHealth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/package_receiver.PackageReceiver/CheckHealth", runtime.WithHTTPPathPattern("/receiver/health"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/package_receiver.CardReceiver/CheckHealth", runtime.WithHTTPPathPattern("/receiver/health"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_PackageReceiver_CheckHealth_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CardReceiver_CheckHealth_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_PackageReceiver_CheckHealth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CardReceiver_CheckHealth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_PackageReceiver_GetCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_CardReceiver_GetCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/package_receiver.PackageReceiver/GetCard", runtime.WithHTTPPathPattern("/receiver/card"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/package_receiver.CardReceiver/GetCard", runtime.WithHTTPPathPattern("/receiver/card"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_PackageReceiver_GetCard_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CardReceiver_GetCard_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_PackageReceiver_GetCard_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CardReceiver_GetCard_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -231,13 +231,13 @@ func RegisterPackageReceiverHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_PackageReceiver_CheckHealth_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"receiver", "health"}, ""))
+	pattern_CardReceiver_CheckHealth_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"receiver", "health"}, ""))
 
-	pattern_PackageReceiver_GetCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"receiver", "card"}, ""))
+	pattern_CardReceiver_GetCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"receiver", "card"}, ""))
 )
 
 var (
-	forward_PackageReceiver_CheckHealth_0 = runtime.ForwardResponseMessage
+	forward_CardReceiver_CheckHealth_0 = runtime.ForwardResponseMessage
 
-	forward_PackageReceiver_GetCard_0 = runtime.ForwardResponseMessage
+	forward_CardReceiver_GetCard_0 = runtime.ForwardResponseMessage
 )

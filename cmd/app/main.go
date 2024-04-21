@@ -2,25 +2,30 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"os/signal"
 	"syscall"
 
 	"github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/app"
-	"github.com/efremovich/data-receiver/pkg/aconf/v3"
 )
 
 func main() {
+	var envPath string
+
+	flag.StringVar(&envPath, "envPath", "", "путь к local.env")
+	flag.Parse()
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	c := config.Config{}
-
-	if err := aconf.Load(&c); err != nil {
-		log.Fatalf("aconf.Load failed: %s", err.Error())
+	cfg, err := config.NewConfig(envPath)
+	if err != nil {
+		log.Fatalf("Config error: %s", err)
 	}
-	app, err := app.New(ctx, c)
+
+	app, err := app.New(ctx, cfg)
 	if err != nil {
 		log.Fatalf("app.New failed: %s", err.Error())
 	}

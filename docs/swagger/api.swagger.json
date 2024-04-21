@@ -6,7 +6,7 @@
   },
   "tags": [
     {
-      "name": "PackageReceiver"
+      "name": "CardReceiver"
     }
   ],
   "host": "localhost:8080",
@@ -22,7 +22,7 @@
   "paths": {
     "/receiver/card": {
       "get": {
-        "operationId": "PackageReceiver_GetCard",
+        "operationId": "CardReceiver_GetCard",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -52,13 +52,13 @@
           }
         ],
         "tags": [
-          "PackageReceiver"
+          "CardReceiver"
         ]
       }
     },
     "/receiver/health": {
       "get": {
-        "operationId": "PackageReceiver_CheckHealth",
+        "operationId": "CardReceiver_CheckHealth",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -75,7 +75,7 @@
           }
         },
         "tags": [
-          "PackageReceiver"
+          "CardReceiver"
         ]
       }
     }

@@ -20,7 +20,7 @@ type Application struct {
 	Gateway controller.GrpcGatewayServer
 }
 
-func New(ctx context.Context, conf config.Config) (*Application, error) {
+func New(ctx context.Context, conf *config.Config) (*Application, error) {
 	alogger.SetDefaultConfig(&alogger.Config{
 		Level:  alogger.Level(conf.LogLevel),
 		Output: os.Stdout,
@@ -35,7 +35,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	}
 
 	// Брокер сообщений.
-	natsClient, err := broker.NewNats(ctx, conf, true)
+	natsClient, err := broker.NewNats(ctx, conf.NATS, true)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при создании подключения к NATS: %s", err.Error())
 	}

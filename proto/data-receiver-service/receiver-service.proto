@@ -33,7 +33,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   }
 };
 
-service PackageReceiver {
+service CardReceiver {
   rpc CheckHealth(google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (google.api.http) = {get: "/receiver/health"};
   }

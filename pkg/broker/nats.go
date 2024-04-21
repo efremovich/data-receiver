@@ -18,9 +18,9 @@ type natsImpl struct {
 	anats anats.NatsClient
 }
 
-func NewNats(ctx context.Context, c config.Config, updateStream bool) (NATS, error) {
+func NewNats(ctx context.Context, c config.NATS, updateStream bool) (NATS, error) {
 	cfg := anats.NatsClientConfig{
-		Urls:               c.NatsURL,
+		Urls:               []string{c.URL},
 		StreamName:         ReceiverStreamName,
 		Subjects:           []string{ReceiverSubjectNormalPriority},
 		CreateUpdateStream: updateStream,
