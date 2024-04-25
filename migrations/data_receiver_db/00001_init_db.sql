@@ -170,7 +170,7 @@ COMMENT ON COLUMN categories.seller_id is 'Идентификатор прода
 CREATE TABLE public.wb2cards(
   nmID INTEGER PRIMARY KEY,
   int INTEGER NOT NULL,
-  nmUUID VARCHAR NOT NULL
+  nmUUID VARCHAR NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   card_id SERIAL NOT NULL,
@@ -203,7 +203,7 @@ COMMENT ON COLUMN ozon2cards.updated_at is 'Дата обновления';
 
 CREATE TABLE public.warehouse(
   id SERIAL PRIMARY KEY,
-  ext_id INTEGER NOT NULL
+  ext_id INTEGER NOT NULL,
   name VARCHAR NOT NULL,
   address VARCHAR,
   type VARCHAR,
@@ -225,7 +225,7 @@ CREATE TABLE public.orders(
   ext_id INTEGER NOT NULL,
   price NUMERIC(10,2) NOT NULL,
   warehouse_id SERIAL NOT NULL,
-  CONSTRAINT orders_fkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouse("id")
+  CONSTRAINT orders_fkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouse("id"),
   status VARCHAR,
   direction VARCHAR,
   type VARCHAR,
@@ -233,7 +233,7 @@ CREATE TABLE public.orders(
   card_id SERIAL NOT NULL,
   CONSTRAINT orders_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   seller_id SERIAL NOT NULL,
-  CONSTRAINT orders_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
+  CONSTRAINT orders_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -264,7 +264,7 @@ CREATE TABLE public.stocks(
   card_id SERIAL NOT NULL,
   CONSTRAINT stocks_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   barcode VARCHAR NOT NULL,
-  CONSTRAINT stocks_fkey FOREIGN KEY ("barcode") REFERENCES public.barcodes("barcode")
+  CONSTRAINT stocks_fkey FOREIGN KEY ("barcode") REFERENCES public.barcodes("barcode"),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -287,8 +287,8 @@ CREATE TABLE public.jobs(
   status VARCHAR(128) NOT NULL,
   event_type_id int NOT NULL,
   CONSTRAINT jobs_event_type_id_fkey FOREIGN KEY ("event_type_id") REFERENCES public.event_enum("id"), 
-  description text, 
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  description VARCHAR, 
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 CREATE INDEX jobs_created_at_idx ON jobs(created_at);
 
