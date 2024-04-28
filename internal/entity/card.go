@@ -12,11 +12,12 @@ type Card struct {
 	UpdatedAt       time.Time        // Дана обновления
 	Brand           Brand            // Бренд
 	Characteristics []Characteristic // Характеристики номенклатуры
+	Categories      []Category       // Категории номенклатуры
 }
 
 type Characteristic struct {
 	ID    int64
-	Name  string   //  Наименование характеристики
+	Name  string   // Наименование характеристики
 	Value []string // Значение характеристики
 
 	CardID int64 // Номенклатура владелец
@@ -47,7 +48,7 @@ type Sizes struct {
 }
 
 type Barcode struct {
-	Barcode string
+	Barcode string // Штрихкод
 
 	SizeID   int64
 	SellerID int64
