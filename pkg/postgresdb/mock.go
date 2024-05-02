@@ -18,7 +18,7 @@ func GetMockConn(pathToMigrations string) (*DBConnection, string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	req := testcontainers.ContainerRequest{
-		Image:        "postgres",
+    Image:        "postgres:latest",
 		ExposedPorts: []string{"5432/tcp"},
 		AutoRemove:   true,
 		Env: map[string]string{

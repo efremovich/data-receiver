@@ -30,13 +30,13 @@ func convertToDBCard(_ context.Context, in entity.Card) *cardDB {
 }
 
 func (c cardDB) ConvertToEntityCard(_ context.Context) *entity.Card {
-  return &entity.Card{
-  	ID:              c.ID,
-  	VendorID:       c.VendorID,
-  	VendorCode:      c.VendorCode,
-  	Title:           c.Title,
-  	Description:     c.Description,
-  	CreatedAt:       c.CreatedAt,
-  	UpdatedAt:       c.UpdatedAt,
-  }
+	return &entity.Card{
+		ID:          c.ID,
+		VendorID:    c.VendorID,
+		VendorCode:  c.VendorCode,
+		Title:       c.Title,
+		Description: c.Description,
+		CreatedAt:   c.CreatedAt,
+		UpdatedAt:   c.UpdatedAt,
+	}
 }
