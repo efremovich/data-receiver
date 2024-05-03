@@ -34,7 +34,7 @@ func NewCardRepo(_ context.Context, db *postgresdb.DBConnection) (CardRepo, erro
 func (repo *cardRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Card, error) {
 	var result cardDB
 
-	query := "SELECT * FROM card WHERE id = $1"
+	query := "SELECT * FROM cards WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -46,7 +46,7 @@ func (repo *cardRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Car
 func (repo *cardRepoImpl) SelectByVendorID(ctx context.Context, vendorID string) (*entity.Card, error) {
 	var result cardDB
 
-	query := "SELECT * FROM card WHERE vendor_id = $1"
+	query := "SELECT * FROM cards WHERE vendor_id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, vendorID)
 	if err != nil {
@@ -58,7 +58,7 @@ func (repo *cardRepoImpl) SelectByVendorID(ctx context.Context, vendorID string)
 func (repo *cardRepoImpl) SelectByVendorCode(ctx context.Context, vendorCode string) (*entity.Card, error) {
 	var result cardDB
 
-	query := "SELECT * FROM card WHERE vendor_code = $1"
+	query := "SELECT * FROM cards WHERE vendor_code = $1"
 
 	err := repo.getReadConnection().Get(&result, query, vendorCode)
 	if err != nil {
@@ -71,7 +71,7 @@ func (repo *cardRepoImpl) SelectByVendorCode(ctx context.Context, vendorCode str
 func (repo *cardRepoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Card, error) {
 	var result cardDB
 
-	query := "SELECT * FROM card WHERE title = $1"
+	query := "SELECT * FROM cards WHERE title = $1"
 
 	err := repo.getReadConnection().Get(&result, query, title)
 	if err != nil {
@@ -82,7 +82,7 @@ func (repo *cardRepoImpl) SelectByTitle(ctx context.Context, title string) (*ent
 }
 
 func (repo *cardRepoImpl) Insert(_ context.Context, in entity.Card) (*entity.Card, error) {
-	query := `INSERT INTO card (vendor_id, vendor_code, title, description, created_at) 
+	query := `INSERT INTO cards (vendor_id, vendor_code, title, description, created_at) 
             VALUES ($1, $2, $3, $4, now()) RETURNING id`
 	cardIDWrap := repository.IDWrapper{}
 
@@ -98,7 +98,7 @@ func (repo *cardRepoImpl) Insert(_ context.Context, in entity.Card) (*entity.Car
 func (repo *cardRepoImpl) UpdateExecOne(ctx context.Context, in entity.Card) error {
 	dbModel := convertToDBCard(ctx, in)
 
-	query := `UPDATE card SET vendor_id = $1, vendor_code = $2, title = $3, description = $4, updated_at = NOW() WHERE id = $5`
+	query := `UPDATE cards SET vendor_id = $1, vendor_code = $2, title = $3, description = $4, updated_at = NOW() WHERE id = $5`
 	_, err := repo.getWriteConnection().ExecOne(query, in.VendorID, in.VendorCode, in.Title, in.Description, dbModel.ID)
 	if err != nil {
 		return err

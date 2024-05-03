@@ -7,6 +7,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +17,7 @@ func TestCardRepo(t *testing.T) {
 
 	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_receiver_db")
 	if err != nil {
-		t.Fatalf("ошибка создания мокового соединения. Обычно не включен докер, или неправильно указан путь к миграциям, или не установлен goose. %s", err.Error())
+		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
 	}
 
 	sqlCardRepo, err := cardrepo.NewCardRepo(ctx, conn)

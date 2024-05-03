@@ -3,7 +3,7 @@
 CREATE TABLE public.sellers (
 	id SERIAL PRIMARY KEY,
   title VARCHAR NOT NULL,
-  is_enable BOOLEAN NOT NULL DEFAULT true,
+  is_enable BOOLEAN DEFAULT TRUE,
   ext_id VARCHAR
 );
 COMMENT ON TABLE sellers is 'Продавцы';
@@ -16,15 +16,13 @@ INSERT INTO public.sellers (title) VALUES ('wb'), ('ozon'), ('1c');
 
 CREATE TABLE public.cards (
 	id SERIAL PRIMARY KEY,
-  vendor_id SERIAL NOT NULL,
+  vendor_id VARCHAR NOT NULL,
   vendor_code VARCHAR NOT NULL,
   title VARCHAR NOT NULL,
   description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-
-  barnd_id SERIAL,
-  characteristic_id SERIAL
+  barnd_id SERIAL
 );
 CREATE INDEX cards_vendor_code_idx ON cards(vendor_code);
 CREATE INDEX cards_vendor_id_idx ON cards(vendor_id);
@@ -45,7 +43,7 @@ CREATE TABLE public.brands (
   id SERIAL PRIMARY KEY,
   title VARCHAR NOT NULL,
   seller_id SERIAL NOT NULL,
-  CONSTRAINT brands_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
+  CONSTRAINT brands_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
 );
 CREATE INDEX brands_seller_id_idx ON brands(seller_id);
 
@@ -59,7 +57,7 @@ CREATE TABLE public.characteristics (
 	name VARCHAR NOT NULL,
 	value VARCHAR NOT NULL,
 	card_id SERIAL NOT NULL,
-  CONSTRAINT characteristics_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+  CONSTRAINT characteristics_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX characteristics_card_id_idx ON characteristics(card_id);
 
@@ -73,7 +71,7 @@ CREATE TABLE public.media_files (
 	id SERIAL PRIMARY KEY,
 	link VARCHAR NOT NULL,
 	card_id SERIAL NOT NULL,
-  CONSTRAINT media_files_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+  CONSTRAINT media_files_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX media_files_card_id_idx ON media_files(card_id);
 
@@ -88,9 +86,9 @@ CREATE TABLE public.prices (
 	discount NUMERIC(10,2),
   spetcial_price NUMERIC(10,2),
   seller_id SERIAL NOT NULL,
-  CONSTRAINT prices_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
+  CONSTRAINT prices_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
 	card_id SERIAL NOT NULL,
-  CONSTRAINT prices_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+  CONSTRAINT prices_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX prices_card_id_idx ON prices(card_id);
 CREATE INDEX prices_seller_id_idx ON prices(seller_id);
@@ -107,7 +105,7 @@ CREATE TABLE public.price_history (
   id SERIAL PRIMARY KEY,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   card_id SERIAL NOT NULL,
-  CONSTRAINT price_history_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+  CONSTRAINT price_history_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX price_history_card_id_idx ON price_history(card_id);
 
@@ -121,9 +119,9 @@ CREATE TABLE public.sizes (
 	techSize VARCHAR(40) NOT NULL,
 	title text NOT NULL,
 	card_id SERIAL NOT NULL,
-  CONSTRAINT sizes_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
+  CONSTRAINT sizes_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   price_id SERIAL NOT NULL,
-  CONSTRAINT sizes_fkey FOREIGN KEY ("price_id") REFERENCES public.prices("id")
+  CONSTRAINT sizes_price_id_fkey FOREIGN KEY ("price_id") REFERENCES public.prices("id")
 );
 CREATE INDEX sizes_card_id_idx ON sizes(card_id);
 CREATE INDEX sizes_price_id_idx ON sizes(price_id);
@@ -138,9 +136,9 @@ COMMENT ON COLUMN sizes.price_id is 'Идентификатор цены';
 CREATE TABLE public.barcodes(
   barcode VARCHAR(128) PRIMARY KEY,
   size_id SERIAL NOT NULL,
-  CONSTRAINT barcodes_fkey FOREIGN KEY ("size_id") REFERENCES public.sizes("id"),
+  CONSTRAINT barcodes_size_id_fkey FOREIGN KEY ("size_id") REFERENCES public.sizes("id"),
   seller_id SERIAL NOT NULL,
-  CONSTRAINT barcodes_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
+  CONSTRAINT barcodes_seller_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
 );
 CREATE INDEX barcodes_size_id_idx ON barcodes(size_id);
 CREATE INDEX barcodes_seller_id_idx ON barcodes(seller_id);
@@ -154,9 +152,9 @@ CREATE TABLE public.categories (
   id SERIAL PRIMARY KEY,
   title VARCHAR NOT NULL,
   card_id SERIAL NOT NULL,
-  CONSTRAINT categories_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
+  CONSTRAINT categories_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   seller_id SERIAL NOT NULL,
-  CONSTRAINT categories_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
+  CONSTRAINT categories_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
 );
 CREATE INDEX categories_card_id_idx ON categories(card_id);
 CREATE INDEX categories_seller_id_idx ON categories(seller_id);
@@ -174,7 +172,7 @@ CREATE TABLE public.wb2cards(
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   card_id SERIAL NOT NULL,
-  CONSTRAINT wb2cards_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+  CONSTRAINT wb2cards_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX wb2cards_card_id_idx ON wb2cards(card_id);
 
@@ -191,7 +189,7 @@ CREATE TABLE public.ozon2cards(
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   card_id SERIAL NOT NULL,
-  CONSTRAINT ozon2cards_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+  CONSTRAINT ozon2cards_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX ozon2cards_card_id_idx ON ozon2cards(card_id);
 
@@ -208,7 +206,7 @@ CREATE TABLE public.warehouse(
   address VARCHAR,
   type VARCHAR,
   seller_id SERIAL,
-  CONSTRAINT warehouse_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
+  CONSTRAINT warehouse_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
 );
 CREATE INDEX warehouse_seller_id_idx ON warehouse(seller_id);
 
@@ -225,15 +223,15 @@ CREATE TABLE public.orders(
   ext_id INTEGER NOT NULL,
   price NUMERIC(10,2) NOT NULL,
   warehouse_id SERIAL NOT NULL,
-  CONSTRAINT orders_fkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouse("id"),
+  CONSTRAINT orders_warehouse_idfkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouse("id"),
   status VARCHAR,
   direction VARCHAR,
   type VARCHAR,
   sale NUMERIC(10,2),
   card_id SERIAL NOT NULL,
-  CONSTRAINT orders_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
+  CONSTRAINT orders_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   seller_id SERIAL NOT NULL,
-  CONSTRAINT orders_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
+  CONSTRAINT orders_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -260,11 +258,11 @@ CREATE TABLE public.stocks(
   id SERIAL PRIMARY KEY,
   quantity NUMERIC(10,0) NOT NULL,
   warehouse_id SERIAL NOT NULL,
-  CONSTRAINT stocks_fkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouse("id"),
+  CONSTRAINT stocks_warehouse_id_fkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouse("id"),
   card_id SERIAL NOT NULL,
-  CONSTRAINT stocks_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
+  CONSTRAINT stocks_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   barcode VARCHAR NOT NULL,
-  CONSTRAINT stocks_fkey FOREIGN KEY ("barcode") REFERENCES public.barcodes("barcode"),
+  CONSTRAINT stocks_barcode_fkey FOREIGN KEY ("barcode") REFERENCES public.barcodes("barcode"),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -281,6 +279,12 @@ COMMENT ON COLUMN stocks.warehouse_id is 'Идентификатор склад�
 COMMENT ON COLUMN stocks.card_id is 'Идентификатор номенклатуры';
 COMMENT ON COLUMN stocks.barcode is 'Штрихкод';
 
+CREATE TABLE public.event_enum (
+    id SERIAL PRIMARY KEY,
+    event_desc VARCHAR NOT NULL
+);
+INSERT INTO public.event_enum (event_desc) VALUES ('CREATED'), ('SUCCESS'), ('GOT_AGAIN'), ('ERROR'), ('SEND_TASK_NEXT');
+
 CREATE TABLE public.jobs(
   id BIGSERIAL PRIMARY KEY,
   pub VARCHAR(128) NOT NULL,
@@ -292,18 +296,10 @@ CREATE TABLE public.jobs(
 );
 CREATE INDEX jobs_created_at_idx ON jobs(created_at);
 
-CREATE TABLE public.event_enum (
-    id SERIAL PRIMARY KEY,
-    event_desc VARCHAR NOT NULL
-);
-INSERT INTO public.event_enum (event_desc) VALUES ('CREATED'), ('SUCCESS'), ('GOT_AGAIN'), ('ERROR'), ('SEND_TASK_NEXT');
-
-
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
 -- не будем сносить всю бд
-select 1
-;
+SELECT 1;
 -- +goose StatementEnd
 

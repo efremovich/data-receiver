@@ -13,7 +13,10 @@ import (
 )
 
 func NewCardRepoMock() CardRepo {
-	return cardRepoMockImpl{m: &sync.Mutex{}}
+	return cardRepoMockImpl{
+		store: make(map[int64]entity.Card),
+		m:     &sync.Mutex{},
+	}
 }
 
 type cardRepoMockImpl struct {
