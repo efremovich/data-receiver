@@ -17,7 +17,7 @@ type Card struct {
 
 type Characteristic struct {
 	ID    int64
-	Name  string   // Наименование характеристики
+	Title  string   // Наименование характеристики
 	Value []string // Значение характеристики
 
 	CardID int64 // Номенклатура владелец

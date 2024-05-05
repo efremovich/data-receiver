@@ -55,7 +55,7 @@ COMMENT ON COLUMN brands.seller_id is 'Идентификатор продавц
 CREATE TABLE public.characteristics (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR NOT NULL,
-	value VARCHAR NOT NULL,
+	value TEXT[] NOT NULL,
 	card_id SERIAL NOT NULL,
   CONSTRAINT characteristics_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
