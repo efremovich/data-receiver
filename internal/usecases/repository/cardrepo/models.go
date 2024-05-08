@@ -19,6 +19,47 @@ type cardDB struct {
 	UpdatedAt   time.Time      `db:"updated_at"`
 }
 
+type sizeDB struct {
+	ID       int64
+	TechSize string
+	Title    string
+
+	CardID int64
+}
+
+type categoryDB struct {
+	ID    int64
+	Title string
+
+	CardID   int64
+	SellerID int64
+}
+
+type BarcodeDB struct {
+	Barcode string
+
+	SizeID   int64
+	SellerID int64
+}
+
+func convertToBarcodeDB(_ context.Context, in entity.Barcode) *BarcodeDB {
+	return &BarcodeDB{
+		Barcode: in.Barcode,
+
+		SizeID:   in.SizeID,
+		SellerID: in.SellerID,
+	}
+}
+
+func (c BarcodeDB) ConvertToEntityBarcode(_ context.Context) *entity.Barcode {
+	return &entity.Barcode{
+		Barcode: c.Barcode,
+
+		SizeID:   c.SizeID,
+		SellerID: c.SellerID,
+	}
+}
+
 func convertToDBCard(_ context.Context, in entity.Card) *cardDB {
 	return &cardDB{
 		ID:          in.ID,
@@ -43,3 +84,42 @@ func (c cardDB) ConvertToEntityCard(_ context.Context) *entity.Card {
 	}
 }
 
+func convertToDBSize(_ context.Context, in entity.Size) *sizeDB {
+	return &sizeDB{
+		ID:       in.ID,
+		TechSize: in.TechSize,
+		Title:    in.Title,
+
+		CardID: in.CardID,
+	}
+}
+
+func (c sizeDB) convertToEntitySize(_ context.Context) *entity.Size {
+	return &entity.Size{
+		ID:       c.ID,
+		TechSize: c.TechSize,
+		Title:    c.Title,
+
+		CardID: c.CardID,
+	}
+}
+
+func convertToDBCategories(_ context.Context, in entity.Category) *categoryDB {
+	return &categoryDB{
+		ID:    in.ID,
+		Title: in.Title,
+
+		CardID:   in.CardID,
+		SellerID: in.SellerID,
+	}
+}
+
+func (c categoryDB) ConvertToEntityCategory(_ context.Context) *entity.Category {
+	return &entity.Category{
+		ID:    c.ID,
+		Title: c.Title,
+
+		CardID:   c.CardID,
+		SellerID: c.SellerID,
+	}
+}

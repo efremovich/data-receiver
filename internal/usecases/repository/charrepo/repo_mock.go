@@ -34,15 +34,20 @@ func (repo charRepoMockImpl) SelectByID(_ context.Context, id int64) (*entity.Ch
 	return &res, nil
 }
 
-func (repo charRepoMockImpl) SelectByCardID(_ context.Context, cardID int64) (*entity.Characteristic, error) {
+func (repo charRepoMockImpl) SelectByCardID(_ context.Context, cardID int64) ([]*entity.Characteristic, error) {
 	repo.m.Lock()
 	defer repo.m.Unlock()
 
+	char := []*entity.Characteristic{}
 	for _, v := range repo.store {
 		if v.CardID == cardID {
-			return &v, nil
+			char = append(char, &v)
 		}
 	}
+	if len(char) > 0 {
+		return char, nil
+	}
+
 	return nil, sql.ErrNoRows
 }
 

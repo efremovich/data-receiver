@@ -10,7 +10,7 @@ import (
 
 type CharRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Characteristic, error)
-	SelectByCardID(ctx context.Context, CardID int64) (*entity.Characteristic, error)
+	SelectByCardID(ctx context.Context, CardID int64) ([]*entity.Characteristic, error)
 	Insert(ctx context.Context, in entity.Characteristic) (*entity.Characteristic, error)
 	UpdateExecOne(ctx context.Context, in entity.Characteristic) error
 
@@ -40,8 +40,8 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Cha
 	return result.ConvertToEntityCharacteristic(ctx), nil
 }
 
-func (repo *charRepoImpl) SelectByCardID(ctx context.Context, CardID int64) (*entity.Characteristic, error) {
-	var result characteristicDB
+func (repo *charRepoImpl) SelectByCardID(ctx context.Context, CardID int64) ([]*entity.Characteristic, error) {
+	var result []characteristicDB
 
 	query := "SELECT * FROM characteristics WHERE card_id = $1"
 
@@ -49,7 +49,12 @@ func (repo *charRepoImpl) SelectByCardID(ctx context.Context, CardID int64) (*en
 	if err != nil {
 		return nil, err
 	}
-	return result.ConvertToEntityCharacteristic(ctx), nil
+
+	var resEntity []*entity.Characteristic
+	for _, v := range result{
+		resEntity = append(resEntity, v.ConvertToEntityCharacteristic(ctx))
+	}
+	return resEntity, nil
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Characteristic) (*entity.Characteristic, error) {
