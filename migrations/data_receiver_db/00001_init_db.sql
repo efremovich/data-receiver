@@ -22,7 +22,7 @@ CREATE TABLE public.cards (
   description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  barnd_id SERIAL
+  brand_id SERIAL
 );
 CREATE INDEX cards_vendor_code_idx ON cards(vendor_code);
 CREATE INDEX cards_vendor_id_idx ON cards(vendor_id);
@@ -54,7 +54,7 @@ COMMENT ON COLUMN brands.seller_id is 'Идентификатор продавц
 
 CREATE TABLE public.characteristics (
 	id SERIAL PRIMARY KEY,
-	name VARCHAR NOT NULL,
+	title VARCHAR NOT NULL,
 	value TEXT[] NOT NULL,
 	card_id SERIAL NOT NULL,
   CONSTRAINT characteristics_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
@@ -63,7 +63,7 @@ CREATE INDEX characteristics_card_id_idx ON characteristics(card_id);
 
 COMMENT ON TABLE characteristics is 'Характеристики';
 COMMENT ON COLUMN characteristics.id is 'Идентификатор';
-COMMENT ON COLUMN characteristics.name is 'Наименование';
+COMMENT ON COLUMN characteristics.title is 'Наименование';
 COMMENT ON COLUMN characteristics.value is 'Значение';
 COMMENT ON COLUMN characteristics.card_id is 'Идентификатор номенклатуры';
 
@@ -84,7 +84,7 @@ CREATE TABLE public.prices (
 	id SERIAL PRIMARY KEY,
 	price NUMERIC(10,2),
 	discount NUMERIC(10,2),
-  spetcial_price NUMERIC(10,2),
+  special_price NUMERIC(10,2),
   seller_id SERIAL NOT NULL,
   CONSTRAINT prices_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
 	card_id SERIAL NOT NULL,
@@ -97,7 +97,7 @@ COMMENT ON TABLE prices is 'Цены';
 COMMENT ON COLUMN prices.id is 'Идентификатор';
 COMMENT ON COLUMN prices.price is 'Цена';
 COMMENT ON COLUMN prices.discount is 'Скидка';
-COMMENT ON COLUMN prices.spetcial_price is 'Спецпредложение';
+COMMENT ON COLUMN prices.special_price is 'Спецпредложение';
 COMMENT ON COLUMN prices.seller_id is 'Идентификатор продавца';
 COMMENT ON COLUMN prices.card_id is 'Идентификатор номенклатуры';
 
@@ -116,7 +116,7 @@ COMMENT ON COLUMN price_history.card_id is 'Идентификатор номе�
 
 CREATE TABLE public.sizes (
 	id SERIAL PRIMARY KEY,
-	techSize VARCHAR(40) NOT NULL,
+	tech_size VARCHAR(40) NOT NULL,
 	title text NOT NULL,
 	card_id SERIAL NOT NULL,
   CONSTRAINT sizes_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
@@ -128,7 +128,7 @@ CREATE INDEX sizes_price_id_idx ON sizes(price_id);
 
 COMMENT ON TABLE sizes is 'Размеры';
 COMMENT ON COLUMN sizes.id is 'Идентификатор';
-COMMENT ON COLUMN sizes.techSize is 'Технический обозначение размера';
+COMMENT ON COLUMN sizes.tech_size is 'Технический обозначение размера';
 COMMENT ON COLUMN sizes.title is 'Наименование размера';
 COMMENT ON COLUMN sizes.card_id is 'Идентификатор номенклатуры';
 COMMENT ON COLUMN sizes.price_id is 'Идентификатор цены';

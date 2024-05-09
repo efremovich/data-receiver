@@ -17,29 +17,23 @@ type cardDB struct {
 	Description sql.NullString `db:"description"`
 	CreatedAt   time.Time      `db:"created_at"`
 	UpdatedAt   time.Time      `db:"updated_at"`
+	BrandID     int            `db:"brand_id"`
 }
 
-type sizeDB struct {
-	ID       int64
-	TechSize string
-	Title    string
-
-	CardID int64
-}
 
 type categoryDB struct {
-	ID    int64
-	Title string
+	ID    int64  `db:"id"`
+	Title string `db:"title"`
 
-	CardID   int64
-	SellerID int64
+	CardID   int64 `db:"card_id"`
+	SellerID int64 `db:"seller_id"`
 }
 
 type BarcodeDB struct {
-	Barcode string
+	Barcode string `db:"barcode"`
 
-	SizeID   int64
-	SellerID int64
+	SizeID   int64 `db:"size_id"`
+	SellerID int64 `db:"seller_id"`
 }
 
 func convertToBarcodeDB(_ context.Context, in entity.Barcode) *BarcodeDB {
@@ -84,25 +78,6 @@ func (c cardDB) ConvertToEntityCard(_ context.Context) *entity.Card {
 	}
 }
 
-func convertToDBSize(_ context.Context, in entity.Size) *sizeDB {
-	return &sizeDB{
-		ID:       in.ID,
-		TechSize: in.TechSize,
-		Title:    in.Title,
-
-		CardID: in.CardID,
-	}
-}
-
-func (c sizeDB) convertToEntitySize(_ context.Context) *entity.Size {
-	return &entity.Size{
-		ID:       c.ID,
-		TechSize: c.TechSize,
-		Title:    c.Title,
-
-		CardID: c.CardID,
-	}
-}
 
 func convertToDBCategories(_ context.Context, in entity.Category) *categoryDB {
 	return &categoryDB{

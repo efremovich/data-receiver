@@ -12,8 +12,8 @@ type Card struct {
 	UpdatedAt       time.Time         // Дана обновления
 	Brand           Brand             // Бренд
 	Characteristics []*Characteristic // Характеристики номенклатуры
-	Categories      []Category        // Категории номенклатуры
-	Sizes           []Size            // Размеры
+	Categories      []*Category        // Категории номенклатуры
+	Sizes           []*Size            // Размеры
 }
 
 type Characteristic struct {

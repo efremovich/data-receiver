@@ -6,6 +6,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
 
@@ -43,71 +44,38 @@ func (repo *cardRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Car
 	}
 
 	card := result.ConvertToEntityCard(ctx)
-  
-  charrepo, err := charrepo.NewCharRepo(ctx, repo.db)
-  if err != nil {
-    return nil, err
-  }
+
+	charRepo, err := charrepo.NewCharRepo(ctx, repo.db)
+	if err != nil {
+		return nil, err
+	}
 	// Заполним характеристики.
-	card.Characteristics, err = charrepo.SelectByCardID(ctx, card.ID)
+	card.Characteristics, err = charRepo.SelectByCardID(ctx, card.ID)
 	if err != nil {
 		return nil, err
 	}
 
+	sizeRepo, err := sizerepo.NewSizeRepo(ctx, repo.db)
+	if err != nil {
+		return nil, err
+	}
 	// Заполним размеры
-	card.Sizes, err = repo.getSize(ctx, card.ID)
+	card.Sizes, err = sizeRepo.SelectByCardID(ctx, card.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Заполним категории
-	card.Categories, err = repo.getCategories(ctx, card.ID)
-	if err != nil {
-		return nil, err
-	}
+	// // Заполним категории
+	// card.Categories, err = repo.getCategories(ctx, card.ID)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// Заполним штрихкоды
 
 	return card, nil
 }
 
-// func (repo *cardRepoImpl) getBarcodes(ctx context.Context, card)
-
-func (repo *cardRepoImpl) getCategories(ctx context.Context, cardID int64) ([]entity.Category, error) {
-	var result []categoryDB
-
-	query := "SELECT * FROM categories WHERE card_id = $1"
-
-	err := repo.getReadConnection().Select(&result, query, cardID)
-	if err != nil {
-		return nil, err
-	}
-
-	var resEntity []entity.Category
-	for _, v := range result {
-		resEntity = append(resEntity, *v.ConvertToEntityCategory(ctx))
-	}
-
-	return resEntity, nil
-}
-
-func (repo *cardRepoImpl) getSize(ctx context.Context, cardID int64) ([]entity.Size, error) {
-	var result []sizeDB
-
-	query := "SELECT * FROM sizes WHERE card_id = $1"
-
-	err := repo.getReadConnection().Select(&result, query, cardID)
-	if err != nil {
-		return nil, err
-	}
-
-	var resEntity []entity.Size
-	for _, v := range result {
-		resEntity = append(resEntity, *v.convertToEntitySize(ctx))
-	}
-
-	return resEntity, nil
-}
 
 func (repo *cardRepoImpl) SelectByVendorID(ctx context.Context, vendorID string) (*entity.Card, error) {
 	var result cardDB

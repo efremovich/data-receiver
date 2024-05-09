@@ -31,7 +31,7 @@ func NewCharRepo(_ context.Context, db *postgresdb.DBConnection) (CharRepo, erro
 func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Characteristic, error) {
 	var result characteristicDB
 
-	query := "SELECT * FROM characteristics WHERE id = $1"
+	query := "SELECT id, title, array_to_string(value, ',') as value, card_id FROM characteristics WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -43,22 +43,22 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Cha
 func (repo *charRepoImpl) SelectByCardID(ctx context.Context, CardID int64) ([]*entity.Characteristic, error) {
 	var result []characteristicDB
 
-	query := "SELECT * FROM characteristics WHERE card_id = $1"
+	query := "SELECT id, title, array_to_string(value, ',') as value, card_id FROM characteristics WHERE card_id = $1"
 
-	err := repo.getReadConnection().Get(&result, query, CardID)
+	err := repo.getReadConnection().Select(&result, query, CardID)
 	if err != nil {
 		return nil, err
 	}
 
 	var resEntity []*entity.Characteristic
-	for _, v := range result{
+	for _, v := range result {
 		resEntity = append(resEntity, v.ConvertToEntityCharacteristic(ctx))
 	}
 	return resEntity, nil
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Characteristic) (*entity.Characteristic, error) {
-	query := `INSERT INTO characteristics (card_id, name, value) 
+	query := `INSERT INTO characteristics (card_id, title, value) 
             VALUES ($1, $2, $3) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
@@ -73,13 +73,13 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Characteristic) 
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Characteristic) error {
 	dbModel := convertToDBCharacteristic(ctx, in)
 
-	query := `UPDATE characteristics SET card_id = $1, name = $2, value = $3, updated_at = NOW() WHERE id = $4`
+	query := `UPDATE characteristics SET card_id = $1, title = $2, value = $3, updated_at = NOW() WHERE id = $4`
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.CardID, dbModel.Title, dbModel.Value, dbModel.ID)
 	if err != nil {
 		return err
 	}
 
-  return nil
+	return nil
 }
 
 func (repo *charRepoImpl) Ping(ctx context.Context) error {

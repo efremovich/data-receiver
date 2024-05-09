@@ -3,11 +3,11 @@ package entity
 import "time"
 
 type Price struct {
-	ID           int64   
-  Value        float32 // Значения цены
-	Discont      float32 // Сумма скидки
-	SpecialValue float32 // Специальная цена
-	CreatedAt    time.Time 
+	ID           int64
+	Price        float32 // Значения цены
+	Discount     float32 // Сумма скидки
+	SpecialPrice float32 // Специальная цена
+	CreatedAt    time.Time
 	UpdatedAt    time.Time
 
 	SellerID int64
@@ -16,9 +16,8 @@ type Price struct {
 
 // TODO Подумать, нужна ли нам эта структура
 type PriceHistory struct {
-  ID        int64
-  CreatedAt time.Time
-  
-  PriceID   int64
-}
+	ID        int64
+	CreatedAt time.Time
 
+	PriceID int64
+}
