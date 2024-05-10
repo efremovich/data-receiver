@@ -26,7 +26,7 @@ type Characteristic struct {
 
 type Brand struct {
 	ID   int64
-	Name string // Наименование  бренда
+	Title string // Наименование  бренда
 
 	SellerID int64 // Продавец
 }

@@ -39,7 +39,10 @@ func TestCardRepo(t *testing.T) {
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-
+	// sqlCategoryRepo, err := categoryrepo.NewCategoryRepo(ctx, conn)
+	// if err != nil {
+	// 	t.Fatalf(err.Error())
+	// }
 	err = sqlCardRepo.Ping(context.Background())
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -97,10 +100,10 @@ func TestCardRepo(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	assert.Equal(t, newPrice.Price, priceModel.Price)
-  assert.Equal(t, newPrice.Discount, priceModel.Discount)
-  assert.Equal(t, newPrice.SpecialPrice, priceModel.SpecialPrice)
-  assert.Equal(t, newPrice.SellerID, priceModel.SellerID)
-  assert.Equal(t, newPrice.CardID, priceModel.CardID)
+	assert.Equal(t, newPrice.Discount, priceModel.Discount)
+	assert.Equal(t, newPrice.SpecialPrice, priceModel.SpecialPrice)
+	assert.Equal(t, newPrice.SellerID, priceModel.SellerID)
+	assert.Equal(t, newPrice.CardID, priceModel.CardID)
 
 	sizes := []*entity.Size{
 		{

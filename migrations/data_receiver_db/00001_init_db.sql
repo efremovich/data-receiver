@@ -14,6 +14,32 @@ COMMENT ON COLUMN sellers.ext_id is 'Внешний идентификатор';
 
 INSERT INTO public.sellers (title) VALUES ('wb'), ('ozon'), ('1c');
 
+CREATE TABLE public.brands (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR NOT NULL,
+  seller_id SERIAL NOT NULL,
+  CONSTRAINT brands_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
+);
+CREATE INDEX brands_seller_id_idx ON brands(seller_id);
+
+COMMENT ON TABLE brands is 'Бренды';
+COMMENT ON COLUMN brands.id is 'Идентификатор';
+COMMENT ON COLUMN brands.title is 'Наименование бренда';
+COMMENT ON COLUMN brands.seller_id is 'Идентификатор продавца';
+
+CREATE TABLE public.categories (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR NOT NULL,
+  seller_id SERIAL NOT NULL,
+  CONSTRAINT categories_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
+);
+CREATE INDEX categories_seller_id_idx ON categories(seller_id);
+
+COMMENT ON TABLE categories is 'Категории товаров';
+COMMENT ON COLUMN categories.id is 'Идентификатор';
+COMMENT ON COLUMN categories.title is 'Наименование категории';
+COMMENT ON COLUMN categories.seller_id is 'Идентификатор продавца';
+
 CREATE TABLE public.cards (
 	id SERIAL PRIMARY KEY,
   vendor_id VARCHAR NOT NULL,
@@ -22,7 +48,8 @@ CREATE TABLE public.cards (
   description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  brand_id SERIAL
+  brand_id SERIAL REFERENCES public.brands("id"),
+  category_id SERIAL REFERENCES public.categories("id")
 );
 CREATE INDEX cards_vendor_code_idx ON cards(vendor_code);
 CREATE INDEX cards_vendor_id_idx ON cards(vendor_id);
@@ -38,19 +65,6 @@ COMMENT ON COLUMN cards.title is 'Наименование номенклату�
 COMMENT ON COLUMN cards.description is 'Описание номенклатуры';
 COMMENT ON COLUMN cards.created_at is 'Дата создания';
 COMMENT ON COLUMN cards.updated_at is 'Дата обновления';
-
-CREATE TABLE public.brands (
-  id SERIAL PRIMARY KEY,
-  title VARCHAR NOT NULL,
-  seller_id SERIAL NOT NULL,
-  CONSTRAINT brands_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
-);
-CREATE INDEX brands_seller_id_idx ON brands(seller_id);
-
-COMMENT ON TABLE brands is 'Бренды';
-COMMENT ON COLUMN brands.id is 'Идентификатор';
-COMMENT ON COLUMN brands.title is 'Наименование бренда';
-COMMENT ON COLUMN brands.seller_id is 'Идентификатор продавца';
 
 CREATE TABLE public.characteristics (
 	id SERIAL PRIMARY KEY,
@@ -147,23 +161,6 @@ COMMENT ON TABLE barcodes is 'Штрихкоды';
 COMMENT ON COLUMN barcodes.barcode is 'Штрихкод';
 COMMENT ON COLUMN barcodes.size_id is 'Идентификатор размера';
 COMMENT ON COLUMN barcodes.seller_id is 'Идентификатор продавца';
-
-CREATE TABLE public.categories (
-  id SERIAL PRIMARY KEY,
-  title VARCHAR NOT NULL,
-  card_id SERIAL NOT NULL,
-  CONSTRAINT categories_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
-  seller_id SERIAL NOT NULL,
-  CONSTRAINT categories_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
-);
-CREATE INDEX categories_card_id_idx ON categories(card_id);
-CREATE INDEX categories_seller_id_idx ON categories(seller_id);
-
-COMMENT ON TABLE categories is 'Категории товаров';
-COMMENT ON COLUMN categories.id is 'Идентификатор';
-COMMENT ON COLUMN categories.title is 'Наименование категории';
-COMMENT ON COLUMN categories.card_id is 'Идентификатор номенклатуры';
-COMMENT ON COLUMN categories.seller_id is 'Идентификатор продавца';
 
 CREATE TABLE public.wb2cards(
   nmID INTEGER PRIMARY KEY,
