@@ -102,10 +102,12 @@ CREATE TABLE public.prices (
   seller_id SERIAL NOT NULL,
   CONSTRAINT prices_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
 	card_id SERIAL NOT NULL,
-  CONSTRAINT prices_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+  CONSTRAINT prices_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 CREATE INDEX prices_card_id_idx ON prices(card_id);
 CREATE INDEX prices_seller_id_idx ON prices(seller_id);
+CREATE INDEX prices_created_at_idx ON prices(created_at);
 
 COMMENT ON TABLE prices is 'Цены';
 COMMENT ON COLUMN prices.id is 'Идентификатор';
@@ -114,19 +116,20 @@ COMMENT ON COLUMN prices.discount is 'Скидка';
 COMMENT ON COLUMN prices.special_price is 'Спецпредложение';
 COMMENT ON COLUMN prices.seller_id is 'Идентификатор продавца';
 COMMENT ON COLUMN prices.card_id is 'Идентификатор номенклатуры';
+COMMENT ON COLUMN prices.created_at is 'Дата создания';
 
-CREATE TABLE public.price_history (
-  id SERIAL PRIMARY KEY,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  card_id SERIAL NOT NULL,
-  CONSTRAINT price_history_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
-);
-CREATE INDEX price_history_card_id_idx ON price_history(card_id);
+-- CREATE TABLE public.price_history (
+--   id SERIAL PRIMARY KEY,
+--   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+--   card_id SERIAL NOT NULL,
+--   CONSTRAINT price_history_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+-- );
+-- CREATE INDEX price_history_card_id_idx ON price_history(card_id);
 
-COMMENT ON TABLE price_history is 'История цен';
-COMMENT ON COLUMN price_history.id is 'Идентификатор';
-COMMENT ON COLUMN price_history.updated_at is 'Дата обновления';
-COMMENT ON COLUMN price_history.card_id is 'Идентификатор номенклатуры'; 
+-- COMMENT ON TABLE price_history is 'История цен';
+-- COMMENT ON COLUMN price_history.id is 'Идентификатор';
+-- COMMENT ON COLUMN price_history.updated_at is 'Дата обновления';
+-- COMMENT ON COLUMN price_history.card_id is 'Идентификатор номенклатуры'; 
 
 CREATE TABLE public.sizes (
 	id SERIAL PRIMARY KEY,

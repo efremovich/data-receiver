@@ -76,8 +76,8 @@ func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, priceID int64) ([
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Price) (*entity.Price, error) {
-	query := `INSERT INTO prices (price, discount, special_price, seller_id, card_id) 
-            VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	query := `INSERT INTO prices (price, discount, special_price, seller_id, card_id, created_at)
+            VALUES ($1, $2, $3, $4, $5, now()) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Price, in.Discount, in.SpecialPrice, in.SellerID, in.CardID)
@@ -92,7 +92,7 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Price) er
 	dbModel := convertToDBPrice(ctx, in)
 
 	query := `UPDATE prices SET 
-            price = $1, discount = $2, special_price = $3, seller_id = $4, card_id = $5
+            price = $1, discount = $2, special_price = $3, seller_id = $4, card_id = $5, created_at = now()
             WHERE id = $6`
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Price, dbModel.Discount, dbModel.SpecialPrice, dbModel.SellerID, dbModel.CardID, dbModel.ID)
 	if err != nil {
