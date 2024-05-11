@@ -2,10 +2,9 @@ package entity
 
 type Warehouse struct {
 	ID      int64
-	ExtID   int64
-	Name    string
+	ExtID   string
+	Title   string
 	Address string
 	Type    string
-
-	Seller Seller
+	Seller  Seller
 }
