@@ -32,7 +32,7 @@ func (c priceDB) convertToEntityPrice(_ context.Context) *entity.Price {
 		Price:        c.Price,
 		Discount:     c.Discount,
 		SpecialPrice: c.SpecialPrice,
-		CardID:   c.CardID,
-		SellerID: c.SellerID,
+		CardID:       c.CardID,
+		SellerID:     c.SellerID,
 	}
 }

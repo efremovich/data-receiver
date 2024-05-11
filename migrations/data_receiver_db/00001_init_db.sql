@@ -42,14 +42,14 @@ COMMENT ON COLUMN categories.seller_id is 'Идентификатор прода
 
 CREATE TABLE public.cards (
 	id SERIAL PRIMARY KEY,
-  vendor_id VARCHAR NOT NULL,
-  vendor_code VARCHAR NOT NULL,
+  vendor_id VARCHAR,
+  vendor_code VARCHAR,
   title VARCHAR NOT NULL,
   description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  brand_id SERIAL REFERENCES public.brands("id"),
-  category_id SERIAL REFERENCES public.categories("id")
+  brand_id SERIAL,  
+  category_id SERIAL
 );
 CREATE INDEX cards_vendor_code_idx ON cards(vendor_code);
 CREATE INDEX cards_vendor_id_idx ON cards(vendor_id);

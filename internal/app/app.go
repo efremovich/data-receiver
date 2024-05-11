@@ -9,7 +9,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/controller"
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/tprepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/broker"
 	"github.com/efremovich/data-receiver/pkg/metrics"
@@ -47,13 +47,13 @@ func New(ctx context.Context, conf *config.Config) (*Application, error) {
 	}
 
 	// Репозиторий ТП.
-	tpRepo, err := tprepo.NewTransportPackageRepo(ctx, conn)
+	cardRepo, err := cardrepo.NewCardRepo(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
 
 	// Основной бизнес-сервис.
-	packageReceiverCoreService := usecases.NewPackageReceiverService(tpRepo, natsClient, metricsCollector)
+	packageReceiverCoreService := usecases.NewPackageReceiverService(cardRepo, natsClient, metricsCollector)
 
 	gw, err := controller.NewGatewayServer(conf.Gateway, packageReceiverCoreService, metricsCollector)
 	if err != nil {

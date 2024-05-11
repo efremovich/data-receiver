@@ -92,9 +92,9 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Price) er
 	dbModel := convertToDBPrice(ctx, in)
 
 	query := `UPDATE prices SET 
-            price = $1 discount = $2, special_price = $3, seller_id = $4, card_id = $5
+            price = $1, discount = $2, special_price = $3, seller_id = $4, card_id = $5
             WHERE id = $6`
-	_, err := repo.getWriteConnection().ExecOne(query, in.Price, in.Discount, in.SpecialPrice, in.SellerID, in.CardID, dbModel.ID)
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Price, dbModel.Discount, dbModel.SpecialPrice, dbModel.SellerID, dbModel.CardID, dbModel.ID)
 	if err != nil {
 		return err
 	}

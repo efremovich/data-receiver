@@ -10,7 +10,7 @@ import (
 
 type CharRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Characteristic, error)
-	SelectByCardID(ctx context.Context, CardID int64) ([]*entity.Characteristic, error)
+	SelectByCardID(ctx context.Context, cardID int64) ([]*entity.Characteristic, error)
 	Insert(ctx context.Context, in entity.Characteristic) (*entity.Characteristic, error)
 	UpdateExecOne(ctx context.Context, in entity.Characteristic) error
 
@@ -40,12 +40,12 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Cha
 	return result.ConvertToEntityCharacteristic(ctx), nil
 }
 
-func (repo *charRepoImpl) SelectByCardID(ctx context.Context, CardID int64) ([]*entity.Characteristic, error) {
+func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*entity.Characteristic, error) {
 	var result []characteristicDB
 
 	query := "SELECT id, title, array_to_string(value, ',') as value, card_id FROM characteristics WHERE card_id = $1"
 
-	err := repo.getReadConnection().Select(&result, query, CardID)
+	err := repo.getReadConnection().Select(&result, query, cardID)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +73,8 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Characteristic) 
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Characteristic) error {
 	dbModel := convertToDBCharacteristic(ctx, in)
 
-	query := `UPDATE characteristics SET card_id = $1, title = $2, value = $3, updated_at = NOW() WHERE id = $4`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.CardID, dbModel.Title, dbModel.Value, dbModel.ID)
+	query := `UPDATE characteristics SET card_id = $1, title = $2, value = $3  WHERE id = $4`
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.CardID, dbModel.Title, in.Value, dbModel.ID)
 	if err != nil {
 		return err
 	}

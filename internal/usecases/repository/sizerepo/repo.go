@@ -76,11 +76,11 @@ func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, cardID int64) ([]
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Size) (*entity.Size, error) {
-	query := `INSERT INTO sizes (card_id, title, tech_size, price_id) 
+	query := `INSERT INTO sizes (title, tech_size, card_id, price_id) 
             VALUES ($1, $2, $3, $4) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.CardID, in.Title, in.TechSize, in.PriceID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title, in.TechSize, in.CardID, in.PriceID)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +91,8 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Size) (*entity.S
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Size) error {
 	dbModel := convertToDBSize(ctx, in)
 
-	query := `UPDATE sizes SET card_id = $1, title = $2, tech_size = $3, price_id= $5 WHERE id = $4`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.CardID, dbModel.Title, dbModel.TechSize, dbModel.ID)
+	query := `UPDATE sizes SET title = $1, tech_size = $2, card_id = $3, price_id = $4 WHERE id = $5`
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.TechSize, dbModel.CardID, dbModel.PriceID, dbModel.ID)
 	if err != nil {
 		return err
 	}

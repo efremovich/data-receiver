@@ -10,7 +10,7 @@ import (
 
 type BrandRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Brand, error)
-	SelectByTitle(ctx context.Context, CardID int64) ([]*entity.Brand, error)
+	SelectByTitle(ctx context.Context, title string) (*entity.Brand, error)
 	Insert(ctx context.Context, in entity.Brand) (*entity.Brand, error)
 	UpdateExecOne(ctx context.Context, in entity.Brand) error
 
@@ -40,25 +40,21 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Brand, 
 	return result.convertToEntityBrand(ctx), nil
 }
 
-func (repo *repoImpl) SelectByTitle(ctx context.Context, cardID int64) ([]*entity.Brand, error) {
-	var result []brandDB
+func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Brand, error) {
+	var result brandDB
 
 	query := "SELECT * FROM brands WHERE title = $1"
 
-	err := repo.getReadConnection().Select(&result, query, cardID)
+	err := repo.getReadConnection().Get(&result, query, title)
 	if err != nil {
 		return nil, err
 	}
 
-	var resEntity []*entity.Brand
-	for _, v := range result {
-		resEntity = append(resEntity, v.convertToEntityBrand(ctx))
-	}
-	return resEntity, nil
+	return result.convertToEntityBrand(ctx), nil
 }
 
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Brand) (*entity.Brand, error) {
-	query := `INSERT INTO brands (title seller_id) 
+	query := `INSERT INTO brands (title, seller_id) 
             VALUES ($1, $2) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
@@ -74,7 +70,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Brand) error 
 	dbModel := convertToDBBrand(ctx, in)
 
 	query := `UPDATE brands SET 
-            title = $1 seller_id = $2
+            title = $1, seller_id = $2
             WHERE id = $3`
 	_, err := repo.getWriteConnection().ExecOne(query, in.Title, in.SellerID, dbModel.ID)
 	if err != nil {

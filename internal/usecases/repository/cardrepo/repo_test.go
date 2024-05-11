@@ -4,15 +4,16 @@ import (
 	"context"
 	"testing"
 
-	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	
+  "github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCardRepo(t *testing.T) {
@@ -64,7 +65,7 @@ func TestCardRepo(t *testing.T) {
 	assert.Equal(t, newCard.Title, cardModel.Title)
 	assert.Equal(t, newCard.Description, cardModel.Description)
 
-	characteristics := []*entity.Characteristic{
+	characteristics := []entity.Characteristic{
 		{
 			Title:  "Цвет",
 			Value:  []string{"белый", "черный", "красный"},
@@ -78,7 +79,7 @@ func TestCardRepo(t *testing.T) {
 	}
 
 	for _, char := range characteristics {
-		charModel, err := sqlCharRepo.Insert(ctx, *char)
+		charModel, err := sqlCharRepo.Insert(ctx, char)
 		if err != nil {
 			t.Fatal(err.Error())
 		}

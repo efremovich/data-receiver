@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 
-	"github.com/efremovich/data-receiver/internal/usecases/repository/tprepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/pkg/broker"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 
@@ -18,16 +18,16 @@ type ReceiverCoreService interface {
 }
 
 type receiverCoreServiceImpl struct {
-	tpRepo           tprepo.TransportPackageRepo
+  cardRepo cardrepo.CardRepo
 	brokerNats       broker.NATS
 	metricsCollector metrics.Collector
 }
 
-func NewPackageReceiverService(tpR tprepo.TransportPackageRepo,nats broker.NATS, metricsCollector metrics.Collector) ReceiverCoreService {
+func NewPackageReceiverService(cardR cardrepo.CardRepo,nats broker.NATS, metricsCollector metrics.Collector) ReceiverCoreService {
 	service := receiverCoreServiceImpl{
 		brokerNats:       nats,
 		metricsCollector: metricsCollector,
-		tpRepo:           tpR,
+    cardRepo:         cardR,
 	}
 
 	return &service
@@ -38,5 +38,5 @@ func (s *receiverCoreServiceImpl) PingNATS(_ context.Context) error {
 }
 
 func (s *receiverCoreServiceImpl) PingDB(ctx context.Context) error {
-	return s.tpRepo.Ping(ctx)
+	return s.cardRepo.Ping(ctx)
 }

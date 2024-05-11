@@ -18,6 +18,7 @@ type cardDB struct {
 	CreatedAt   time.Time      `db:"created_at"`
 	UpdatedAt   time.Time      `db:"updated_at"`
 	BrandID     int            `db:"brand_id"`
+  CategoryID  int            `db:"category_id"`
 }
 
 
