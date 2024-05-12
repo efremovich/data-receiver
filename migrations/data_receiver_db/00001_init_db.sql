@@ -199,41 +199,43 @@ COMMENT ON COLUMN ozon2cards.created_at is 'Дата создания';
 COMMENT ON COLUMN ozon2cards.updated_at is 'Дата обновления';
 
 
-CREATE TABLE public.warehouse(
+CREATE TABLE public.warehouses(
   id SERIAL PRIMARY KEY,
-  ext_id INTEGER NOT NULL,
-  name VARCHAR NOT NULL,
+  ext_id VARCHAR NOT NULL,
+  title VARCHAR NOT NULL,
   address VARCHAR,
   type VARCHAR,
   seller_id SERIAL,
-  CONSTRAINT warehouse_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
+  CONSTRAINT warehouses_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
 );
-CREATE INDEX warehouse_seller_id_idx ON warehouse(seller_id);
+CREATE INDEX warehouses_seller_id_idx ON warehouses(seller_id);
 
-COMMENT ON TABLE warehouse is 'Склады';
-COMMENT ON COLUMN warehouse.id is 'Идентификатор';
-COMMENT ON COLUMN warehouse.ext_id is 'Внешний идентификатор';
-COMMENT ON COLUMN warehouse.name is 'Наименование склада';
-COMMENT ON COLUMN warehouse.address is 'Адрес склада';
-COMMENT ON COLUMN warehouse.type is 'Тип склада';
-COMMENT ON COLUMN warehouse.seller_id is 'Идентификатор продавца';
+COMMENT ON TABLE warehouses is 'Склады';
+COMMENT ON COLUMN warehouses.id is 'Идентификатор';
+COMMENT ON COLUMN warehouses.ext_id is 'Внешний идентификатор';
+COMMENT ON COLUMN warehouses.title is 'Наименование склада';
+COMMENT ON COLUMN warehouses.address is 'Адрес склада';
+COMMENT ON COLUMN warehouses.type is 'Тип склада';
+COMMENT ON COLUMN warehouses.seller_id is 'Идентификатор продавца';
 
 CREATE TABLE public.orders(
   id SERIAL PRIMARY KEY,
-  ext_id INTEGER NOT NULL,
+  ext_id VARCHAR NOT NULL,
   price NUMERIC(10,2) NOT NULL,
-  warehouse_id SERIAL NOT NULL,
-  CONSTRAINT orders_warehouse_idfkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouse("id"),
-  status VARCHAR,
-  direction VARCHAR,
+  discount NUMERIC(10,2),
+  special_price NUMERIC(10,2),
+  status VARCHAR NOT NULL,
+  direction VARCHAR NOT NULL,
   type VARCHAR,
-  sale NUMERIC(10,2),
-  card_id SERIAL NOT NULL,
-  CONSTRAINT orders_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  
+  warehouse_id SERIAL NOT NULL,
+  CONSTRAINT orders_warehouse_idfkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouses("id"),
   seller_id SERIAL NOT NULL,
   CONSTRAINT orders_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  card_id SERIAL NOT NULL,
+  CONSTRAINT orders_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX orders_card_id_idx ON orders(card_id);
 CREATE INDEX orders_warehouse_id_idx ON orders(warehouse_id);
@@ -246,11 +248,12 @@ COMMENT ON TABLE orders is 'Заказы';
 COMMENT ON COLUMN orders.id is 'Идентификатор';
 COMMENT ON COLUMN orders.ext_id is 'Внешний идентификатор';
 COMMENT ON COLUMN orders.price is 'Цена';
+COMMENT ON COLUMN orders.discount is 'Скидка';
+COMMENT ON COLUMN orders.special_price is 'Спеццена';
 COMMENT ON COLUMN orders.warehouse_id is 'Идентификатор склада';
 COMMENT ON COLUMN orders.status is 'Статус заказа';
 COMMENT ON COLUMN orders.direction is 'Направление заказа';
 COMMENT ON COLUMN orders.type is 'Тип заказа';
-COMMENT ON COLUMN orders.sale is 'Скидка';
 COMMENT ON COLUMN orders.card_id is 'Идентификатор номенклатуры';
 COMMENT ON COLUMN orders.seller_id is 'Идентификатор продавца';
 
@@ -258,7 +261,7 @@ CREATE TABLE public.stocks(
   id SERIAL PRIMARY KEY,
   quantity NUMERIC(10,0) NOT NULL,
   warehouse_id SERIAL NOT NULL,
-  CONSTRAINT stocks_warehouse_id_fkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouse("id"),
+  CONSTRAINT stocks_warehouse_id_fkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouses("id"),
   card_id SERIAL NOT NULL,
   CONSTRAINT stocks_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   barcode VARCHAR NOT NULL,

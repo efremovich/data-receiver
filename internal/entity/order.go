@@ -3,16 +3,18 @@ package entity
 import "time"
 
 type Order struct {
-	ID          int64
-	ExtID       int64
-	Status      string
-	Description string
-	Type        string
-	Sale        float32
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID           int64
+	ExtID        string
+	Price        float32
+	Discount     float32
+	SpecialPrice float32
+	Status       string
+	Type         string
+	Direction    string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 
-	Price     Price
-	Warehouse Warehouse
-  Seller Seller
+	WarehouseID int64
+	SellerID int64
+	CardID int64
 }

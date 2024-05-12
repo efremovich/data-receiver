@@ -7,5 +7,5 @@ type Ozon2Card struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Card Card
+	CardID int64
 }

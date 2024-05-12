@@ -1,4 +1,4 @@
-package sizerepo_test
+package warehouserepo_test
 
 import (
 	"context"
@@ -8,36 +8,17 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/efremovich/data-receiver/internal/entity"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
 
-func TestSizeRepo(t *testing.T) {
+func TestWarehouseRepo(t *testing.T) {
 	ctx := context.Background()
 
 	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_receiver_db")
 	if err != nil {
 		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
-	}
-
-	// Создание карточки
-	sqlCardRepo, err := cardrepo.NewCardRepo(ctx, conn)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	newCard := entity.Card{
-		VendorID:    uuid.NewString(),
-		VendorCode:  uuid.NewString(),
-		Title:       uuid.NewString(),
-		Description: uuid.NewString(),
-	}
-
-	modelCard, err := sqlCardRepo.Insert(ctx, newCard)
-	if err != nil {
-		t.Fatal(err)
 	}
 
 	// Создание цены
@@ -55,44 +36,27 @@ func TestSizeRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Создание цены
-	sqlPriceRepo, err := pricerepo.NewPriceRepo(ctx, conn)
+	sqlRepo, err := warehouserepo.NewWarehouseRepo(ctx, conn)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	newPrice := entity.Price{
-		Price:        5.5,
-		Discount:     1.5,
-		SpecialPrice: 8.0,
-		SellerID:     modelSeller.ID,
-		CardID:       modelCard.ID,
-	}
-
-	modelPrice, err := sqlPriceRepo.Insert(ctx, newPrice)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	sqlRepo, err := sizerepo.NewSizeRepo(ctx, conn)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	newSize := entity.Size{
-		TechSize: uuid.NewString(),
+	newWarehouse := entity.Warehouse{
+		ExtID:    uuid.NewString(),
 		Title:    uuid.NewString(),
-		CardID:   modelCard.ID,
-		PriceID:  modelPrice.ID,
+		Address:  uuid.NewString(),
+		Type:     uuid.NewString(),
+		SellerID: modelSeller.ID,
 	}
 	// Создание
-	model, err := sqlRepo.Insert(ctx, newSize)
+	model, err := sqlRepo.Insert(ctx, newWarehouse)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	assert.Equal(t, model.TechSize, newSize.TechSize)
-	assert.Equal(t, model.Title, newSize.Title)
-	assert.Equal(t, model.CardID, newSize.CardID)
-	assert.Equal(t, model.PriceID, newSize.PriceID)
+	assert.Equal(t, model.ExtID, newWarehouse.ExtID)
+	assert.Equal(t, model.Title, newWarehouse.Title)
+	assert.Equal(t, model.Address, newWarehouse.Address)
+	assert.Equal(t, model.Type, newWarehouse.Type)
+	assert.Equal(t, model.SellerID, newWarehouse.SellerID)
 
 	// Выборка по ID
 	model, err = sqlRepo.SelectByID(ctx, model.ID)
@@ -100,55 +64,47 @@ func TestSizeRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, model.TechSize, newSize.TechSize)
-	assert.Equal(t, model.Title, newSize.Title)
-	assert.Equal(t, model.CardID, newSize.CardID)
-	assert.Equal(t, model.PriceID, newSize.PriceID)
+	assert.Equal(t, model.ExtID, newWarehouse.ExtID)
+	assert.Equal(t, model.Title, newWarehouse.Title)
+	assert.Equal(t, model.Address, newWarehouse.Address)
+	assert.Equal(t, model.Type, newWarehouse.Type)
+	assert.Equal(t, model.SellerID, newWarehouse.SellerID)
 
 	// Выборка по id карточки
-	models, err := sqlRepo.SelectByCardID(ctx, newSize.CardID)
+	models, err := sqlRepo.SelectBySellerID(ctx, modelSeller.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, model := range models {
-		assert.Equal(t, model.TechSize, newSize.TechSize)
-		assert.Equal(t, model.Title, newSize.Title)
-		assert.Equal(t, model.CardID, newSize.CardID)
-		assert.Equal(t, model.PriceID, newSize.PriceID)
-	}
-
-	// Выборка по id карточки
-	models, err = sqlRepo.SelectByPriceID(ctx, newSize.CardID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, model := range models {
-		assert.Equal(t, model.TechSize, newSize.TechSize)
-		assert.Equal(t, model.Title, newSize.Title)
-		assert.Equal(t, model.CardID, newSize.CardID)
-		assert.Equal(t, model.PriceID, newSize.PriceID)
+		assert.Equal(t, model.ExtID, newWarehouse.ExtID)
+		assert.Equal(t, model.Title, newWarehouse.Title)
+		assert.Equal(t, model.Address, newWarehouse.Address)
+		assert.Equal(t, model.Type, newWarehouse.Type)
+		assert.Equal(t, model.SellerID, newWarehouse.SellerID)
 	}
 
 	// Обновление
-	newSize.Title = uuid.NewString()
-	newSize.TechSize = uuid.NewString()
-	newSize.CardID = modelCard.ID
-	newSize.PriceID = modelPrice.ID
-	newSize.ID = model.ID
+	newWarehouse.Title = uuid.NewString()
+	newWarehouse.ExtID = uuid.NewString()
+	newWarehouse.Address = uuid.NewString()
+	newWarehouse.Type = uuid.NewString()
+	newWarehouse.SellerID = modelSeller.ID
+	newWarehouse.ID = model.ID
 
-	err = sqlRepo.UpdateExecOne(ctx, newSize)
+	err = sqlRepo.UpdateExecOne(ctx, newWarehouse)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Выборка по ID
-	model, err = sqlRepo.SelectByID(ctx, newSize.ID)
+	model, err = sqlRepo.SelectByID(ctx, newWarehouse.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, model.TechSize, newSize.TechSize)
-	assert.Equal(t, model.Title, newSize.Title)
-	assert.Equal(t, model.CardID, newSize.CardID)
-	assert.Equal(t, model.PriceID, newSize.PriceID)
+	assert.Equal(t, model.ExtID, newWarehouse.ExtID)
+	assert.Equal(t, model.Title, newWarehouse.Title)
+	assert.Equal(t, model.Address, newWarehouse.Address)
+	assert.Equal(t, model.Type, newWarehouse.Type)
+	assert.Equal(t, model.SellerID, newWarehouse.SellerID)
 }

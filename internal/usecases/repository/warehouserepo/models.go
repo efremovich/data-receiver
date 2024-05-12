@@ -22,17 +22,17 @@ func convertToDBWarehouse(_ context.Context, in entity.Warehouse) *warehouseDB {
 		Title:    in.Title,
 		Address:  in.Address,
 		Type:     in.Type,
-		SellerID: in.Seller.ID,
+		SellerID: in.SellerID,
 	}
 }
 
 func (c warehouseDB) convertToEntityWarehouse(_ context.Context) *entity.Warehouse {
 	return &entity.Warehouse{
-		ID:           c.ID,
-    ExtID:        c.ExtID,
-    Title:        c.Title,
-    Address:      c.Address,
-    Type:         c.Type,
-    // Seller:       c.SellerID,
+		ID:       c.ID,
+		ExtID:    c.ExtID,
+		Title:    c.Title,
+		Address:  c.Address,
+		Type:     c.Type,
+		SellerID: c.SellerID,
 	}
 }
