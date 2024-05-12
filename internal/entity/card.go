@@ -10,7 +10,7 @@ type Card struct {
 	Description     string            // Описание номенклатуры
 	CreatedAt       time.Time         // Дата создания
 	UpdatedAt       time.Time         // Дана обновления
-	BrandID         int64            // Бренд
+	BrandID         int64             // Бренд
 	Characteristics []*Characteristic // Характеристики номенклатуры
 	Categories      []*Category       // Категории номенклатуры
 	Sizes           []*Size           // Размеры

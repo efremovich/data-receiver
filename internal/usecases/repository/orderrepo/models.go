@@ -14,6 +14,7 @@ type orderDB struct {
 	Price        float32      `db:"price"`
 	Discount     float32      `db:"discount"`
 	SpecialPrice float32      `db:"special_price"`
+	Quantity     int          `db:"quantity"`
 	Status       string       `db:"status"`
 	Direction    string       `db:"direction"`
 	Type         string       `db:"type"`
@@ -30,6 +31,7 @@ func convertToDBOrder(_ context.Context, in entity.Order) *orderDB {
 		ID:           in.ID,
 		ExtID:        in.ExtID,
 		Price:        in.Price,
+		Quantity:     in.Quantity,
 		Discount:     in.Discount,
 		SpecialPrice: in.SpecialPrice,
 		Status:       in.Status,
@@ -49,6 +51,7 @@ func (c orderDB) convertToEntityOrder(_ context.Context) *entity.Order {
 		ID:           c.ID,
 		ExtID:        c.ExtID,
 		Price:        c.Price,
+		Quantity:     c.Quantity,
 		Discount:     c.Discount,
 		SpecialPrice: c.SpecialPrice,
 		Status:       c.Status,

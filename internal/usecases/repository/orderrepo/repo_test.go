@@ -44,9 +44,9 @@ func TestOrderRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	newWarehouse := entity.Warehouse{
-		Title: uuid.NewString(),
-		ExtID: uuid.NewString(),
-    SellerID: modelSeller.ID,
+		Title:    uuid.NewString(),
+		ExtID:    uuid.NewString(),
+		SellerID: modelSeller.ID,
 	}
 	modelWarehouse, err := sqlWarehouseRepo.Insert(ctx, newWarehouse)
 	if err != nil {
@@ -78,6 +78,7 @@ func TestOrderRepo(t *testing.T) {
 		Price:        5.5,
 		Discount:     2.5,
 		SpecialPrice: 10.5,
+		Quantity:     5,
 		Status:       uuid.NewString(),
 		Type:         uuid.NewString(),
 		Direction:    uuid.NewString(),
@@ -92,6 +93,7 @@ func TestOrderRepo(t *testing.T) {
 	}
 	assert.Equal(t, model.ExtID, newOrder.ExtID)
 	assert.Equal(t, model.Price, newOrder.Price)
+  assert.Equal(t, model.Quantity, newOrder.Quantity)
 	assert.Equal(t, model.Direction, newOrder.Direction)
 	assert.Equal(t, model.Discount, newOrder.Discount)
 	assert.Equal(t, model.SpecialPrice, newOrder.SpecialPrice)
@@ -108,6 +110,7 @@ func TestOrderRepo(t *testing.T) {
 
 	assert.Equal(t, model.ExtID, newOrder.ExtID)
 	assert.Equal(t, model.Price, newOrder.Price)
+  assert.Equal(t, model.Quantity, newOrder.Quantity)
 	assert.Equal(t, model.Direction, newOrder.Direction)
 	assert.Equal(t, model.Discount, newOrder.Discount)
 	assert.Equal(t, model.SpecialPrice, newOrder.SpecialPrice)
@@ -139,6 +142,7 @@ func TestOrderRepo(t *testing.T) {
 
 	assert.Equal(t, model.ExtID, newOrder.ExtID)
 	assert.Equal(t, model.Price, newOrder.Price)
+  assert.Equal(t, model.Quantity, newOrder.Quantity)
 	assert.Equal(t, model.Direction, newOrder.Direction)
 	assert.Equal(t, model.Discount, newOrder.Discount)
 	assert.Equal(t, model.SpecialPrice, newOrder.SpecialPrice)

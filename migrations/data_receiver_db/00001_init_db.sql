@@ -222,6 +222,7 @@ CREATE TABLE public.orders(
   id SERIAL PRIMARY KEY,
   ext_id VARCHAR NOT NULL,
   price NUMERIC(10,2) NOT NULL,
+  quantity INTEGER NOT NULL,
   discount NUMERIC(10,2),
   special_price NUMERIC(10,2),
   status VARCHAR NOT NULL,
@@ -248,6 +249,7 @@ COMMENT ON TABLE orders is 'Заказы';
 COMMENT ON COLUMN orders.id is 'Идентификатор';
 COMMENT ON COLUMN orders.ext_id is 'Внешний идентификатор';
 COMMENT ON COLUMN orders.price is 'Цена';
+COMMENT ON COLUMN orders.quantity is 'Количество';
 COMMENT ON COLUMN orders.discount is 'Скидка';
 COMMENT ON COLUMN orders.special_price is 'Спеццена';
 COMMENT ON COLUMN orders.warehouse_id is 'Идентификатор склада';
@@ -259,25 +261,36 @@ COMMENT ON COLUMN orders.seller_id is 'Идентификатор продавц
 
 CREATE TABLE public.stocks(
   id SERIAL PRIMARY KEY,
-  quantity NUMERIC(10,0) NOT NULL,
+  quantity INTEGER NOT NULL,
+  in_way_to_client INTEGER,
+  in_way_from_client INTEGER,
+
   warehouse_id SERIAL NOT NULL,
   CONSTRAINT stocks_warehouse_id_fkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouses("id"),
   card_id SERIAL NOT NULL,
   CONSTRAINT stocks_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   barcode VARCHAR NOT NULL,
   CONSTRAINT stocks_barcode_fkey FOREIGN KEY ("barcode") REFERENCES public.barcodes("barcode"),
+  seller_id SERIAL NOT NULL,
+  CONSTRAINT stocks_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
+  size_id SERIAL NOT NULL,
+  CONSTRAINT stocks_size_id_fkey FOREIGN KEY ("size_id") REFERENCES public.sizes("id"),
+  
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 CREATE INDEX stocks_card_id_idx ON stocks(card_id);
 CREATE INDEX stocks_warehouse_id_idx ON stocks(warehouse_id);
 CREATE INDEX stocks_barcode_idx ON stocks(barcode);
+CREATE INDEX stocks_size_id_idx ON stocks(size_id);
 CREATE INDEX stocks_created_at_idx ON stocks(created_at);
 CREATE INDEX stocks_updated_at_idx ON stocks(updated_at);
 
 COMMENT ON TABLE stocks is 'Складские остатки';
 COMMENT ON COLUMN stocks.id is 'Идентификатор';
-COMMENT ON COLUMN stocks.quantity is 'Количество';
+COMMENT ON COLUMN stocks.quantity is 'Количество на складе';
+COMMENT ON COLUMN stocks.in_way_to_client is 'Количество в пути к клиенту';
+COMMENT ON COLUMN stocks.in_way_from_client is 'Количество в пути от клиента';
 COMMENT ON COLUMN stocks.warehouse_id is 'Идентификатор склада';
 COMMENT ON COLUMN stocks.card_id is 'Идентификатор номенклатуры';
 COMMENT ON COLUMN stocks.barcode is 'Штрихкод';

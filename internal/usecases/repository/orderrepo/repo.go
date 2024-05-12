@@ -42,13 +42,27 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Order, 
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Order, error) {
 	dbModel := convertToDBOrder(ctx, in)
 
-	query := `INSERT INTO orders (ext_id, price, discount, special_price, status, type, warehouse_id, seller_id, card_id, direction, created_at) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now()) RETURNING id`
+	query := `INSERT INTO orders (
+              ext_id,
+              price,
+              quantity,
+              discount,
+              special_price,
+              status, 
+              type,
+              warehouse_id,
+              seller_id, 
+              card_id, 
+              direction,
+              created_at
+            ) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now()) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
 		dbModel.ExtID,
 		dbModel.Price,
+		dbModel.Quantity,
 		dbModel.Discount,
 		dbModel.SpecialPrice,
 		dbModel.Status,
@@ -56,7 +70,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 		dbModel.WarehouseID,
 		dbModel.SellerID,
 		dbModel.CardID,
-    dbModel.Direction,
+		dbModel.Direction,
 	)
 	if err != nil {
 		return nil, err
@@ -71,19 +85,21 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error 
 	query := `UPDATE orders SET
             ext_id = $1, 
             price = $2,
-            discount = $3, 
-            special_price = $4,
-            status = $5, 
-            type = $6,
-            warehouse_id = $7,
-            seller_id = $8, 
-            card_id = $9,
-            direction = $10,
+            quantity = $3,
+            discount = $4, 
+            special_price = $5,
+            status = $6, 
+            type = $7,
+            warehouse_id = $8,
+            seller_id = $9, 
+            card_id = $10,
+            direction = $11,
             updated_at = now()
-            WHERE id = $11`
+            WHERE id = $12`
 	_, err := repo.getWriteConnection().ExecOne(query,
 		dbModel.ExtID,
 		dbModel.Price,
+		dbModel.Quantity,
 		dbModel.Discount,
 		dbModel.SpecialPrice,
 		dbModel.Status,
@@ -91,7 +107,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error 
 		dbModel.WarehouseID,
 		dbModel.SellerID,
 		dbModel.CardID,
-    dbModel.Direction,
+		dbModel.Direction,
 		dbModel.ID,
 	)
 	if err != nil {

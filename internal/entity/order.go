@@ -6,6 +6,7 @@ type Order struct {
 	ID           int64
 	ExtID        string
 	Price        float32
+	Quantity     int
 	Discount     float32
 	SpecialPrice float32
 	Status       string
@@ -15,6 +16,6 @@ type Order struct {
 	UpdatedAt    time.Time
 
 	WarehouseID int64
-	SellerID int64
-	CardID int64
+	SellerID    int64
+	CardID      int64
 }
