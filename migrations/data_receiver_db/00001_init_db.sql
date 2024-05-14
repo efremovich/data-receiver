@@ -17,7 +17,7 @@ INSERT INTO public.sellers (title) VALUES ('wb'), ('ozon'), ('1c');
 CREATE TABLE public.brands (
   id SERIAL PRIMARY KEY,
   title VARCHAR NOT NULL,
-  seller_id SERIAL NOT NULL,
+  seller_id INTEGER NOT NULL,
   CONSTRAINT brands_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
 );
 CREATE INDEX brands_seller_id_idx ON brands(seller_id);
@@ -30,7 +30,7 @@ COMMENT ON COLUMN brands.seller_id is 'Идентификатор продавц
 CREATE TABLE public.categories (
   id SERIAL PRIMARY KEY,
   title VARCHAR NOT NULL,
-  seller_id SERIAL NOT NULL,
+  seller_id INTEGER NOT NULL,
   CONSTRAINT categories_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
 );
 CREATE INDEX categories_seller_id_idx ON categories(seller_id);
@@ -48,8 +48,8 @@ CREATE TABLE public.cards (
   description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  brand_id SERIAL,  
-  category_id SERIAL
+  brand_id INTEGER,  
+  category_id INTEGER 
 );
 CREATE INDEX cards_vendor_code_idx ON cards(vendor_code);
 CREATE INDEX cards_vendor_id_idx ON cards(vendor_id);
@@ -70,7 +70,7 @@ CREATE TABLE public.characteristics (
 	id SERIAL PRIMARY KEY,
 	title VARCHAR NOT NULL,
 	value TEXT[] NOT NULL,
-	card_id SERIAL NOT NULL,
+	card_id INTEGER NOT NULL,
   CONSTRAINT characteristics_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX characteristics_card_id_idx ON characteristics(card_id);
@@ -84,7 +84,7 @@ COMMENT ON COLUMN characteristics.card_id is 'Идентификатор ном�
 CREATE TABLE public.media_files (
 	id SERIAL PRIMARY KEY,
 	link VARCHAR NOT NULL,
-	card_id SERIAL NOT NULL,
+	card_id INTEGER NOT NULL,
   CONSTRAINT media_files_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX media_files_card_id_idx ON media_files(card_id);
@@ -99,9 +99,9 @@ CREATE TABLE public.prices (
 	price NUMERIC(10,2),
 	discount NUMERIC(10,2),
   special_price NUMERIC(10,2),
-  seller_id SERIAL NOT NULL,
+  seller_id INTEGER NOT NULL,
   CONSTRAINT prices_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
-	card_id SERIAL NOT NULL,
+	card_id INTEGER NOT NULL,
   CONSTRAINT prices_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -135,9 +135,9 @@ CREATE TABLE public.sizes (
 	id SERIAL PRIMARY KEY,
 	tech_size VARCHAR(40) NOT NULL,
 	title text NOT NULL,
-	card_id SERIAL NOT NULL,
+	card_id INTEGER NOT NULL,
   CONSTRAINT sizes_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
-  price_id SERIAL NOT NULL,
+  price_id INTEGER NOT NULL,
   CONSTRAINT sizes_price_id_fkey FOREIGN KEY ("price_id") REFERENCES public.prices("id")
 );
 CREATE INDEX sizes_card_id_idx ON sizes(card_id);
@@ -152,9 +152,9 @@ COMMENT ON COLUMN sizes.price_id is 'Идентификатор цены';
 
 CREATE TABLE public.barcodes(
   barcode VARCHAR(128) PRIMARY KEY,
-  size_id SERIAL NOT NULL,
+  size_id INTEGER NOT NULL,
   CONSTRAINT barcodes_size_id_fkey FOREIGN KEY ("size_id") REFERENCES public.sizes("id"),
-  seller_id SERIAL NOT NULL,
+  seller_id INTEGER NOT NULL,
   CONSTRAINT barcodes_seller_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id")
 );
 CREATE INDEX barcodes_size_id_idx ON barcodes(size_id);
@@ -171,7 +171,7 @@ CREATE TABLE public.wb2cards(
   nmUUID VARCHAR NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  card_id SERIAL NOT NULL,
+  card_id INTEGER NOT NULL,
   CONSTRAINT wb2cards_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX wb2cards_card_id_idx ON wb2cards(card_id);
@@ -188,7 +188,7 @@ CREATE TABLE public.ozon2cards(
   id INTEGER PRIMARY KEY,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  card_id SERIAL NOT NULL,
+  card_id INTEGER NOT NULL,
   CONSTRAINT ozon2cards_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX ozon2cards_card_id_idx ON ozon2cards(card_id);
@@ -231,11 +231,11 @@ CREATE TABLE public.orders(
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   
-  warehouse_id SERIAL NOT NULL,
+  warehouse_id INTEGER NOT NULL,
   CONSTRAINT orders_warehouse_idfkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouses("id"),
-  seller_id SERIAL NOT NULL,
+  seller_id INTEGER NOT NULL,
   CONSTRAINT orders_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
-  card_id SERIAL NOT NULL,
+  card_id INTEGER NOT NULL,
   CONSTRAINT orders_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX orders_card_id_idx ON orders(card_id);
@@ -264,16 +264,17 @@ CREATE TABLE public.stocks(
   quantity INTEGER NOT NULL,
   in_way_to_client INTEGER,
   in_way_from_client INTEGER,
+  in_way_to_warehouse INTEGER,
 
-  warehouse_id SERIAL NOT NULL,
+  warehouse_id INTEGER NOT NULL,
   CONSTRAINT stocks_warehouse_id_fkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouses("id"),
-  card_id SERIAL NOT NULL,
+  card_id INTEGER NOT NULL,
   CONSTRAINT stocks_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id"),
   barcode VARCHAR NOT NULL,
   CONSTRAINT stocks_barcode_fkey FOREIGN KEY ("barcode") REFERENCES public.barcodes("barcode"),
-  seller_id SERIAL NOT NULL,
+  seller_id INTEGER NOT NULL,
   CONSTRAINT stocks_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
-  size_id SERIAL NOT NULL,
+  size_id INTEGER NOT NULL,
   CONSTRAINT stocks_size_id_fkey FOREIGN KEY ("size_id") REFERENCES public.sizes("id"),
   
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -305,7 +306,7 @@ CREATE TABLE public.jobs(
   id BIGSERIAL PRIMARY KEY,
   pub VARCHAR(128) NOT NULL,
   status VARCHAR(128) NOT NULL,
-  event_type_id int NOT NULL,
+  event_type_id INTEGER NOT NULL,
   CONSTRAINT jobs_event_type_id_fkey FOREIGN KEY ("event_type_id") REFERENCES public.event_enum("id"), 
   description VARCHAR, 
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()

@@ -7,7 +7,6 @@ import (
 
 	"github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/controller"
-	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/pkg/alogger"
@@ -26,9 +25,7 @@ func New(ctx context.Context, conf *config.Config) (*Application, error) {
 		Output: os.Stdout,
 	})
 
-	entity.AddUserErrorMessages()
-
-	// Cборщик метрик.
+	// Сборщик метрик.
 	metricsCollector, err := metrics.NewMetricCollector(conf.ServiceName)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при создании сборщика метрик: %s", err.Error())

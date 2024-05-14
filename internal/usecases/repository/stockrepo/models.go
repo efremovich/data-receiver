@@ -9,17 +9,18 @@ import (
 )
 
 type stockDB struct {
-	ID              int64        `db:"id"`
-	Quantity        int          `db:"quantity"`
-	InWayToClient   int          `db:"in_way_to_client"`
-	InWayFromClient int          `db:"in_way_from_client"`
-	CreatedAt       sql.NullTime `db:"created_at"`
-	UpdatedAt       sql.NullTime `db:"updated_at"`
-	SizeID          int64        `db:"size_id"`
-	Barcode         string       `db:"barcode"`
-	WarehouseID     int64        `db:"warehouse_id"`
-	CardID          int64        `db:"card_id"`
-	SellerID        int64        `db:"seller_id"`
+	ID               int64        `db:"id"`
+	Quantity         int          `db:"quantity"`
+	InWayToClient    int          `db:"in_way_to_client"`
+	InWayFromClient  int          `db:"in_way_from_client"`
+	InWayToWarehouse int          `db:"in_way_to_warehouse"`
+	CreatedAt        sql.NullTime `db:"created_at"`
+	UpdatedAt        sql.NullTime `db:"updated_at"`
+	SizeID           int64        `db:"size_id"`
+	Barcode          string       `db:"barcode"`
+	WarehouseID      int64        `db:"warehouse_id"`
+	CardID           int64        `db:"card_id"`
+	SellerID         int64        `db:"seller_id"`
 }
 
 func convertToDBStock(_ context.Context, in entity.Stock) *stockDB {

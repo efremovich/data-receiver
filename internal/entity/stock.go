@@ -7,6 +7,7 @@ type Stock struct {
 	Quantity        int
 	InWayToClient   int
 	InWayFromClient int
+  InWayToWarehouse int
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 

@@ -6,14 +6,16 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	
-  "github.com/efremovich/data-receiver/internal/entity"
+
+	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
-
 )
 
 func TestCardRepo(t *testing.T) {
@@ -40,14 +42,53 @@ func TestCardRepo(t *testing.T) {
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	// sqlCategoryRepo, err := categoryrepo.NewCategoryRepo(ctx, conn)
-	// if err != nil {
-	// 	t.Fatalf(err.Error())
-	// }
+	sqlCategoryRepo, err := categoryrepo.NewCategoryRepo(ctx, conn)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	sqlSellerRepo, err := sellerrepo.NewSellerRepo(ctx, conn)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	sqlBrandRepo, err := brandrepo.NewBrandRepo(ctx, conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	err = sqlCardRepo.Ping(context.Background())
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
+
+	newSeller := entity.Seller{
+		Title:    "WB",
+		IsEnable: true,
+		ExtID:    "106-456-456",
+	}
+
+	sellerModel, err := sqlSellerRepo.Insert(ctx, newSeller)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	assert.Equal(t, newSeller.Title, sellerModel.Title)
+	assert.Equal(t, newSeller.IsEnable, sellerModel.IsEnable)
+	assert.Equal(t, newSeller.ExtID, sellerModel.ExtID)
+	assert.Equal(t, newSeller.ID, sellerModel.ID)
+
+	newBrand := entity.Brand{
+		Title:    "Loretto",
+		SellerID: sellerModel.ID,
+	}
+
+	brandModel, err := sqlBrandRepo.Insert(ctx, newBrand)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+  assert.Equal(t, newBrand.Title, brandModel.Title)
+  //TODO Доделать тест
 	newCard := entity.Card{
 		VendorID:    uuid.NewString(),
 		VendorCode:  uuid.NewString(),
@@ -139,39 +180,17 @@ func TestCardRepo(t *testing.T) {
 
 	assert.Equal(t, newCard.Title, cardModel.Title)
 
-	// sqlCharRepo, err := charrepo.NewCharRepo(ctx, conn)
-	// if err != nil {
-	// 	t.Fatalf(err.Error())
-	// }
+	newCategory := entity.Category{
+		Title:    "Шубы",
+		CardID:   cardModel.ID,
+		SellerID: newSeller.ID,
+	}
 
-	// reposChar := []charrepo.CharRepo{sqlCharRepo, charrepo.NewCharRepoMock()}
-
-	// for _, charRepo := range reposChar {
-	// 	err = charRepo.Ping(context.Background())
-	// 	if err != nil {
-	// 		t.Fatalf(err.Error())
-	// 	}
-	// 	newChar := entity.Characteristic{
-	// 		Title:  uuid.NewString(),
-	// 		Value:  []string{uuid.NewString(), uuid.NewString()},
-	// 		CardID: 1,
-	// 	}
-	// 	charModel, err := charRepo.Insert(ctx, newChar)
-	// 	if err != nil {
-	// 		t.Fatal(err)
-	// 	}
-
-	// 	assert.Equal(t, newChar.Title, charModel.Title)
-	// 	assert.Equal(t, newChar.Value, charModel.Value)
-	// 	assert.Equal(t, newChar.CardID, charModel.CardID)
-
-	// 	charModel, err = charRepo.SelectByID(ctx, charModel.ID)
-	// 	if err != nil {
-	// 		t.Fatal(err)
-	// 	}
-
-	// 	assert.Equal(t, newChar.Title, charModel.Title)
-	// 	assert.Equal(t, newChar.Value, charModel.Value)
-	// 	assert.Equal(t, newChar.CardID, charModel.CardID)
-	// }
+	categoryModel, err := sqlCategoryRepo.Insert(ctx, newCategory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, newCategory.Title, categoryModel.Title)
+	assert.Equal(t, newCategory.CardID, categoryModel.CardID)
+	assert.Equal(t, newCategory.SellerID, categoryModel.SellerID)
 }
