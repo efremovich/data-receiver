@@ -66,6 +66,24 @@ COMMENT ON COLUMN cards.description is 'Описание номенклатур�
 COMMENT ON COLUMN cards.created_at is 'Дата создания';
 COMMENT ON COLUMN cards.updated_at is 'Дата обновления';
 
+CREATE TABLE public.dimensions(
+  id SERIAL PRIMARY KEY,
+  width INTEGER,
+  height INTEGER,
+  length INTEGER,
+
+  card_id SERIAL NOT NULL,
+  CONSTRAINT dimensions_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+);
+CREATE INDEX dimensions_card_id_idx ON dimensions(card_id);
+
+COMMENT ON TABLE dimensions is 'Размеры';
+COMMENT ON COLUMN dimensions.id is 'Идентификатор';
+COMMENT ON COLUMN dimensions.width is 'Ширина';
+COMMENT ON COLUMN dimensions.height is 'Высота';
+COMMENT ON COLUMN dimensions.length is 'Длина';
+COMMENT ON COLUMN dimensions.card_id is 'Идентификатор номенклатуры';
+
 CREATE TABLE public.characteristics (
 	id SERIAL PRIMARY KEY,
 	title VARCHAR NOT NULL,
@@ -119,18 +137,17 @@ COMMENT ON COLUMN prices.card_id is 'Идентификатор номенкла
 COMMENT ON COLUMN prices.created_at is 'Дата создания';
 
 -- CREATE TABLE public.price_history (
---   id SERIAL PRIMARY KEY,
---   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
---   card_id SERIAL NOT NULL,
---   CONSTRAINT price_history_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+-- id SERIAL PRIMARY KEY,
+-- updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+-- card_id SERIAL NOT NULL,
+-- CONSTRAINT price_history_card_id_fkey FOREIGN KEY ("card_id") REFERENCES
+-- public.cards("id")
 -- );
 -- CREATE INDEX price_history_card_id_idx ON price_history(card_id);
-
 -- COMMENT ON TABLE price_history is 'История цен';
 -- COMMENT ON COLUMN price_history.id is 'Идентификатор';
 -- COMMENT ON COLUMN price_history.updated_at is 'Дата обновления';
 -- COMMENT ON COLUMN price_history.card_id is 'Идентификатор номенклатуры'; 
-
 CREATE TABLE public.sizes (
 	id SERIAL PRIMARY KEY,
 	tech_size VARCHAR(40) NOT NULL,
@@ -230,7 +247,7 @@ CREATE TABLE public.orders(
   type VARCHAR,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  
+
   warehouse_id INTEGER NOT NULL,
   CONSTRAINT orders_warehouse_idfkey FOREIGN KEY ("warehouse_id") REFERENCES public.warehouses("id"),
   seller_id INTEGER NOT NULL,
@@ -276,7 +293,7 @@ CREATE TABLE public.stocks(
   CONSTRAINT stocks_seller_id_fkey FOREIGN KEY ("seller_id") REFERENCES public.sellers("id"),
   size_id INTEGER NOT NULL,
   CONSTRAINT stocks_size_id_fkey FOREIGN KEY ("size_id") REFERENCES public.sizes("id"),
-  
+
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -317,6 +334,7 @@ CREATE INDEX jobs_created_at_idx ON jobs(created_at);
 -- +goose Down
 -- +goose StatementBegin
 -- не будем сносить всю бд
-SELECT 1;
+select 1
+;
 -- +goose StatementEnd
 

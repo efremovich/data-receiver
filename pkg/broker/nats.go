@@ -20,7 +20,7 @@ type natsImpl struct {
 
 func NewNats(ctx context.Context, c config.NATS, updateStream bool) (NATS, error) {
 	cfg := anats.NatsClientConfig{
-		Urls:               []string{c.URL},
+		Urls:               []string{c.URLS},
 		StreamName:         ReceiverStreamName,
 		Subjects:           []string{ReceiverSubjectNormalPriority},
 		CreateUpdateStream: updateStream,

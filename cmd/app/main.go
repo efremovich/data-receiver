@@ -14,7 +14,7 @@ import (
 func main() {
 	var envPath string
 
-	flag.StringVar(&envPath, "envPath", "", "путь к local.env")
+	flag.StringVar(&envPath, "envPath", "./config/local.env", "путь к local.env")
 	flag.Parse()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)

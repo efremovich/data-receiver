@@ -7,12 +7,13 @@ import (
 )
 
 type Config struct {
-	ServiceName  string `env:"SERVICE_NAME, default=receiver"`
-	NATS         `env:", prefix=NATS_"`
+	ServiceName  string  `env:"SERVICE_NAME, default=receiver"`
 	PGWriterConn string  `env:"POSTGRES_WRITER_CONN"`
 	PGReaderConn string  `env:"POSTGRES_READER_CONN"`
 	LogLevel     int     `env:"LOG_LEVEL, default=-4"` // debug = -4, info = 0, warn = 4
 	Gateway      Gateway `env:", prefix=GATEWAY_"`
+	Nats         NATS    `env:", prefix=NATS_"`
+	Seller       Seller  `env:", prefix=SELLER_"`
 }
 
 type Gateway struct {
@@ -28,12 +29,7 @@ type Adr struct {
 }
 
 type NATS struct {
-	URL             string            `env:"URL" validate:"required"`
-	ServiceSubjects map[string]string `env:"SERVICE_SUBJECTS"`
-
-	QueueReceiver Queue `env:", prefix=QUEUE_RECEIVER_"`
-	QueueSender   Queue `env:", prefix=QUEUE_SENDER_"`
-	QueueMarking  Queue `env:", prefix=QUEUE_MARKING_"`
+	URLS string `env:"URLS" validate:"required"`
 }
 
 type Queue struct {
@@ -42,6 +38,12 @@ type Queue struct {
 	NakTimeoutSeconds     int `env:"NAK_TIMEOUT_SECONDS"`
 	ProcessTimeoutSeconds int `env:"PROCESS_TIMEOUT_SECONDS"`
 	MaxAckPending         int `env:"MAX_ACK_PENDING"`
+}
+
+type Seller struct {
+	URL                   string `env:"URL"`
+	Token                 string `env:"TOKEN"`
+	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=10"`
 }
 
 func NewConfig(envPath string) (*Config, error) {

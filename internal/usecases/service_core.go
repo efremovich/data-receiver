@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/wbcontentrepo"
 	"github.com/efremovich/data-receiver/pkg/broker"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 
@@ -18,16 +19,20 @@ type ReceiverCoreService interface {
 }
 
 type receiverCoreServiceImpl struct {
-  cardRepo cardrepo.CardRepo
+	cardRepo         cardrepo.CardRepo
 	brokerNats       broker.NATS
 	metricsCollector metrics.Collector
+	wbContentRepo    wbcontentrepo.WBContentRepo
 }
 
-func NewPackageReceiverService(cardR cardrepo.CardRepo,nats broker.NATS, metricsCollector metrics.Collector) ReceiverCoreService {
+func NewPackageReceiverService(wbContentRepo wbcontentrepo.WBContentRepo,
+	cardR cardrepo.CardRepo, nats broker.NATS, metricsCollector metrics.Collector,
+) ReceiverCoreService {
 	service := receiverCoreServiceImpl{
 		brokerNats:       nats,
 		metricsCollector: metricsCollector,
-    cardRepo:         cardR,
+		cardRepo:         cardR,
+		wbContentRepo:    wbContentRepo,
 	}
 
 	return &service

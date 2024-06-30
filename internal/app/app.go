@@ -9,6 +9,8 @@ import (
 	"github.com/efremovich/data-receiver/internal/controller"
 	"github.com/efremovich/data-receiver/internal/usecases"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/wbcontentrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi/wbfetcher"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/broker"
 	"github.com/efremovich/data-receiver/pkg/metrics"
@@ -32,7 +34,7 @@ func New(ctx context.Context, conf *config.Config) (*Application, error) {
 	}
 
 	// Брокер сообщений.
-	natsClient, err := broker.NewNats(ctx, conf.NATS, true)
+	natsClient, err := broker.NewNats(ctx, conf.Nats, true)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при создании подключения к NATS: %s", err.Error())
 	}
@@ -42,15 +44,21 @@ func New(ctx context.Context, conf *config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	wbfetcher := wbfetcher.New(ctx, conf.Seller)
 
-	// Репозиторий ТП.
+	wbContentRepo, err := wbcontentrepo.NewWBContentRepo(ctx, wbfetcher)
+	if err != err {
+		return nil, err
+	}
+
+	// Репозиторий Cards.
 	cardRepo, err := cardrepo.NewCardRepo(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
 
 	// Основной бизнес-сервис.
-	packageReceiverCoreService := usecases.NewPackageReceiverService(cardRepo, natsClient, metricsCollector)
+	packageReceiverCoreService := usecases.NewPackageReceiverService(wbContentRepo, cardRepo, natsClient, metricsCollector)
 
 	gw, err := controller.NewGatewayServer(conf.Gateway, packageReceiverCoreService, metricsCollector)
 	if err != nil {
