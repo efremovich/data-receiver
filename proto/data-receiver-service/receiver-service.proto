@@ -44,8 +44,7 @@ service CardReceiver {
 }
 
 message GetCardRequest {
-  string id = 1;
-  string article = 2;
+  string seller = 1;
 }
 
 message GetCardResponse {

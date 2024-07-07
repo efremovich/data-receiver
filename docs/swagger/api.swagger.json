@@ -39,13 +39,7 @@
         },
         "parameters": [
           {
-            "name": "id",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "article",
+            "name": "seller",
             "in": "query",
             "required": false,
             "type": "string"

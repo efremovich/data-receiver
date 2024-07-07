@@ -1,19 +1,16 @@
 package config
 
-import (
-	"fmt"
-
-	"github.com/efremovich/data-receiver/pkg/aconf/v3"
-)
-
 type Config struct {
-	ServiceName  string  `env:"SERVICE_NAME, default=receiver"`
-	PGWriterConn string  `env:"POSTGRES_WRITER_CONN"`
-	PGReaderConn string  `env:"POSTGRES_READER_CONN"`
-	LogLevel     int     `env:"LOG_LEVEL, default=-4"` // debug = -4, info = 0, warn = 4
-	Gateway      Gateway `env:", prefix=GATEWAY_"`
-	Nats         NATS    `env:", prefix=NATS_"`
-	Seller       Seller  `env:", prefix=SELLER_"`
+	ServiceName        string   `env:"SERVICE_NAME, default=receiver"`
+	PGWriterConn       string   `env:"POSTGRES_WRITER_CONN"`
+	PGReaderConn       string   `env:"POSTGRES_READER_CONN"`
+	LogLevel           int      `env:"LOG_LEVEL, default=-4"` // debug = -4, info = 0, warn = 4
+	BrokerConsumerURL  []string `env:"BROKER_CONSUMER_URL" validate:"required"`
+	BrokerPublisherURL []string `env:"BROKER_PUBLISHER_URL" validate:"required"`
+	Gateway            Gateway  `env:", prefix=GATEWAY_"`
+	Nats               NATS     `env:", prefix=NATS_"`
+	Seller             Seller   `env:", prefix=SELLER_"`
+	Queue              Queue    `env:", prefix=QUEUE_"`
 }
 
 type Gateway struct {
@@ -32,33 +29,17 @@ type NATS struct {
 	URLS string `env:"URLS" validate:"required"`
 }
 
+// Настройки очереди.
 type Queue struct {
-	Workers               int `env:"WORKERS"`
-	Repeats               int `env:"REPEATS"`
-	NakTimeoutSeconds     int `env:"NAK_TIMEOUT_SECONDS"`
-	ProcessTimeoutSeconds int `env:"PROCESS_TIMEOUT_SECONDS"`
-	MaxAckPending         int `env:"MAX_ACK_PENDING"`
+	Workers           int `env:"WORKERS, default=1"`             // Количество потоков получения сообщений из очереди.
+	MaxDeliver        int `env:"MAX_DELIVER, default=1"`         // Максимальное количество попыток получить сообщение.
+	NakTimeoutSeconds int `env:"NAK_TIMEOUT_SECONDS, default=2"` // Время через которое будет повторяться попытка получить сообщение.
+	AckWaitSeconds    int `env:"ACK_WAIT_SECONDS, default=3"`    // Время на обработку полученного сообщения.
+	MaxAckPending     int `env:"MAX_ACK_PENDING, default=10000"` // Максимальное количество сообщений, которые могут быть ожидающими подтверждения.
 }
 
 type Seller struct {
 	URL                   string `env:"URL"`
 	Token                 string `env:"TOKEN"`
 	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=10"`
-}
-
-func NewConfig(envPath string) (*Config, error) {
-	cfg := &Config{}
-
-	if envPath != "" {
-		err := aconf.PreloadEnvsFile(envPath)
-		if err != nil {
-			return nil, fmt.Errorf("ошибка при обработке файла env: %s", err.Error())
-		}
-	}
-
-	if err := aconf.Load(cfg); err != nil {
-		return nil, fmt.Errorf("aconf.Load failed: %s", err.Error())
-	}
-
-	return cfg, nil
 }

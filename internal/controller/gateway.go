@@ -15,8 +15,9 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/efremovich/data-receiver/pkg/alogger"
+	"github.com/efremovich/data-receiver/pkg/broker/brokerconsumer"
 
-	"github.com/efremovich/data-receiver/config"
+	conf "github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/controller/middleware"
 	"github.com/efremovich/data-receiver/internal/usecases"
 	desc "github.com/efremovich/data-receiver/pkg/data-receiver-service"
@@ -31,17 +32,18 @@ type GrpcGatewayServer interface {
 type grpcGatewayServerImpl struct {
 	httpServer *fiber.App
 	grpcServer *grpc.Server
-
-	cfgGateway config.Gateway
+	cfg        conf.Config
 
 	metricsCollector metrics.Collector
 
-	packageReceiver usecases.ReceiverCoreService
+	core usecases.ReceiverCoreService
+
+	brokerConsumer brokerconsumer.BrokerConsumer
 
 	desc.UnimplementedCardReceiverServer
 }
 
-func NewGatewayServer(cfg config.Gateway, packageReceiver usecases.ReceiverCoreService, metricsCollector metrics.Collector) (GrpcGatewayServer, error) {
+func NewGatewayServer(ctx context.Context, cfg conf.Config, packageReceiver usecases.ReceiverCoreService, metricsCollector metrics.Collector, broker brokerconsumer.BrokerConsumer) (GrpcGatewayServer, error) {
 	gwmux := runtime.NewServeMux()
 
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
@@ -49,7 +51,7 @@ func NewGatewayServer(cfg config.Gateway, packageReceiver usecases.ReceiverCoreS
 	err := desc.RegisterCardReceiverHandlerFromEndpoint(
 		context.Background(),
 		gwmux,
-		cfg.GRPC.Host+":"+cfg.GRPC.Port,
+		cfg.Gateway.GRPC.Host+":"+cfg.Gateway.GRPC.Port,
 		opts,
 	)
 	if err != nil {
@@ -57,17 +59,18 @@ func NewGatewayServer(cfg config.Gateway, packageReceiver usecases.ReceiverCoreS
 	}
 
 	gateway := &grpcGatewayServerImpl{
-		cfgGateway:       cfg,
-		packageReceiver:  packageReceiver,
+		cfg:              cfg,
+		core:             packageReceiver,
 		metricsCollector: metricsCollector,
+		brokerConsumer:   broker,
 	}
 
-	router := newRouter(gwmux, cfg, gateway.CardReceiveV1Handler, metricsCollector)
+	router := newRouter(gwmux, cfg.Gateway, gateway.CardReceiveV1Handler, metricsCollector)
 
 	interceptors := grpc.ChainUnaryInterceptor(
 		alogger.UnaryTraceIdInterceptor,
 		middleware.MetricInterceptor(metricsCollector),
-		middleware.AuthInterceptor(cfg.AuthToken),
+		middleware.AuthInterceptor(cfg.Gateway.AuthToken),
 	)
 
 	grpcServer := grpc.NewServer(
@@ -85,11 +88,17 @@ func NewGatewayServer(cfg config.Gateway, packageReceiver usecases.ReceiverCoreS
 }
 
 func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
+	// Запуск брокера потребителя.
+	err := gw.makeBrokerSubscribers(ctx)
+	if err != nil {
+		return fmt.Errorf("ошибка при запуске брокера потребителя для создания пакетов: %w", err)
+	}
+
 	g, ctx := errgroup.WithContext(ctx)
 
 	// GRPC
 	g.Go(func() error {
-		adr := gw.cfgGateway.GRPC.Host + ":" + gw.cfgGateway.GRPC.Port
+		adr := gw.cfg.Gateway.GRPC.Host + ":" + gw.cfg.Gateway.GRPC.Port
 
 		grpcListener, err := reuseport.Listen("tcp4", adr)
 		if err != nil {
@@ -107,7 +116,7 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 
 	// REST
 	g.Go(func() error {
-		adr := gw.cfgGateway.HTTP.Host + ":" + gw.cfgGateway.HTTP.Port
+		adr := gw.cfg.Gateway.HTTP.Host + ":" + gw.cfg.Gateway.HTTP.Port
 
 		alogger.InfoFromCtx(ctx, "запуск HTTP сервера на "+adr, nil, nil, false)
 		defer alogger.InfoFromCtx(ctx, "HTTP сервер остановлен", nil, nil, false)

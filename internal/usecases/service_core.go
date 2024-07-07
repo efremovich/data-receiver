@@ -3,9 +3,11 @@ package usecases
 import (
 	"context"
 
+	conf "github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/wbcontentrepo"
-	"github.com/efremovich/data-receiver/pkg/broker"
+	"github.com/efremovich/data-receiver/pkg/broker/brokerpublisher"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 
 	aerror "github.com/efremovich/data-receiver/pkg/aerror"
@@ -19,19 +21,23 @@ type ReceiverCoreService interface {
 }
 
 type receiverCoreServiceImpl struct {
+	cfg              conf.Config
+	sellerRepo       sellerrepo.SellerRepo
 	cardRepo         cardrepo.CardRepo
-	brokerNats       broker.NATS
+	brokerPublisher  brokerpublisher.BrokerPublisher
 	metricsCollector metrics.Collector
 	wbContentRepo    wbcontentrepo.WBContentRepo
 }
 
-func NewPackageReceiverService(wbContentRepo wbcontentrepo.WBContentRepo,
-	cardR cardrepo.CardRepo, nats broker.NATS, metricsCollector metrics.Collector,
+func NewPackageReceiverService(cfg conf.Config, wbContentRepo wbcontentrepo.WBContentRepo,
+	cardR cardrepo.CardRepo, sellerR sellerrepo.SellerRepo, brokerPublisher brokerpublisher.BrokerPublisher, metricsCollector metrics.Collector,
 ) ReceiverCoreService {
 	service := receiverCoreServiceImpl{
-		brokerNats:       nats,
+		cfg:              cfg,
+		brokerPublisher:  brokerPublisher,
 		metricsCollector: metricsCollector,
 		cardRepo:         cardR,
+		sellerRepo:       sellerR,
 		wbContentRepo:    wbContentRepo,
 	}
 
@@ -39,7 +45,7 @@ func NewPackageReceiverService(wbContentRepo wbcontentrepo.WBContentRepo,
 }
 
 func (s *receiverCoreServiceImpl) PingNATS(_ context.Context) error {
-	return s.brokerNats.Ping()
+	return s.brokerPublisher.Ping()
 }
 
 func (s *receiverCoreServiceImpl) PingDB(ctx context.Context) error {

@@ -7,8 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/efremovich/data-receiver/config"
+	conf "github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/app"
+	"github.com/efremovich/data-receiver/pkg/aconf/v3"
 )
 
 func main() {
@@ -20,9 +21,17 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	cfg, err := config.NewConfig(envPath)
-	if err != nil {
-		log.Fatalf("Config error: %s", err)
+	cfg := conf.Config{}
+
+	if envPath != "" {
+		err := aconf.PreloadEnvsFile(envPath)
+		if err != nil {
+			log.Fatalf("Ошибка загрузки конфигурационного файла: %s", err.Error())
+		}
+	}
+
+	if err := aconf.Load(&cfg); err != nil {
+		log.Fatalf("Ошибка инициализации конфигурации: %s", err.Error())
 	}
 
 	app, err := app.New(ctx, cfg)
