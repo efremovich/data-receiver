@@ -28,5 +28,18 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, sellerTitle 
 			return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
 		}
 	}
+	p := entity.Package{
+		ID:        0,
+		Type:      "",
+		Name:      "",
+		SendURL:   "",
+		Status:    "",
+		ErrorText: "",
+		ErrorCode: "",
+	}
+	err = s.brokerPublisher.SendPackage(ctx, &p, "")
+	if err != nil {
+		return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
+	}
 	return nil
 }

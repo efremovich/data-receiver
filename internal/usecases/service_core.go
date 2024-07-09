@@ -14,7 +14,7 @@ import (
 )
 
 type ReceiverCoreService interface {
-	ReceiveData(ctx context.Context) aerror.AError
+	ReceiveCards(ctx context.Context, sellerTitle string) aerror.AError
 
 	PingDB(ctx context.Context) error
 	PingNATS(_ context.Context) error
