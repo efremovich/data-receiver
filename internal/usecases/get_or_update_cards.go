@@ -23,7 +23,7 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, sellerTitle 
 	}
 
 	for _, card := range cards {
-		err = s.cardRepo.UpdateExecOne(ctx, card)
+		_, err = s.cardRepo.Insert(ctx, card)
 		if err != nil {
 			return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
 		}
