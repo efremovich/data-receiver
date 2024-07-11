@@ -38,16 +38,16 @@ service CardReceiver {
     option (google.api.http) = {get: "/receiver/health"};
   }
 
-  rpc GetCard(GetCardRequest) returns (GetCardResponse) {
+  rpc ReceiveCard(ReceiveCardRequest) returns (ReceiveCardResponse) {
     option (google.api.http) = {get: "/receiver/card"};
   }
 }
 
-message GetCardRequest {
+message ReceiveCardRequest {
   string seller = 1;
 }
 
-message GetCardResponse {
+message ReceiveCardResponse {
   string id = 1;
   string group_id = 2;
   string subject_id = 3;

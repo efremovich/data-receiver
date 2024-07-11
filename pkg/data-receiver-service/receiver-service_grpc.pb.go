@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CardReceiverClient interface {
 	CheckHealth(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetCard(ctx context.Context, in *GetCardRequest, opts ...grpc.CallOption) (*GetCardResponse, error)
+	ReceiveCard(ctx context.Context, in *ReceiveCardRequest, opts ...grpc.CallOption) (*ReceiveCardResponse, error)
 }
 
 type cardReceiverClient struct {
@@ -44,9 +44,9 @@ func (c *cardReceiverClient) CheckHealth(ctx context.Context, in *emptypb.Empty,
 	return out, nil
 }
 
-func (c *cardReceiverClient) GetCard(ctx context.Context, in *GetCardRequest, opts ...grpc.CallOption) (*GetCardResponse, error) {
-	out := new(GetCardResponse)
-	err := c.cc.Invoke(ctx, "/package_receiver.CardReceiver/GetCard", in, out, opts...)
+func (c *cardReceiverClient) ReceiveCard(ctx context.Context, in *ReceiveCardRequest, opts ...grpc.CallOption) (*ReceiveCardResponse, error) {
+	out := new(ReceiveCardResponse)
+	err := c.cc.Invoke(ctx, "/package_receiver.CardReceiver/ReceiveCard", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (c *cardReceiverClient) GetCard(ctx context.Context, in *GetCardRequest, op
 // for forward compatibility
 type CardReceiverServer interface {
 	CheckHealth(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	GetCard(context.Context, *GetCardRequest) (*GetCardResponse, error)
+	ReceiveCard(context.Context, *ReceiveCardRequest) (*ReceiveCardResponse, error)
 	mustEmbedUnimplementedCardReceiverServer()
 }
 
@@ -69,8 +69,8 @@ type UnimplementedCardReceiverServer struct {
 func (UnimplementedCardReceiverServer) CheckHealth(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckHealth not implemented")
 }
-func (UnimplementedCardReceiverServer) GetCard(context.Context, *GetCardRequest) (*GetCardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCard not implemented")
+func (UnimplementedCardReceiverServer) ReceiveCard(context.Context, *ReceiveCardRequest) (*ReceiveCardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReceiveCard not implemented")
 }
 func (UnimplementedCardReceiverServer) mustEmbedUnimplementedCardReceiverServer() {}
 
@@ -103,20 +103,20 @@ func _CardReceiver_CheckHealth_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CardReceiver_GetCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCardRequest)
+func _CardReceiver_ReceiveCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReceiveCardRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CardReceiverServer).GetCard(ctx, in)
+		return srv.(CardReceiverServer).ReceiveCard(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/package_receiver.CardReceiver/GetCard",
+		FullMethod: "/package_receiver.CardReceiver/ReceiveCard",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CardReceiverServer).GetCard(ctx, req.(*GetCardRequest))
+		return srv.(CardReceiverServer).ReceiveCard(ctx, req.(*ReceiveCardRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -133,8 +133,8 @@ var CardReceiver_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CardReceiver_CheckHealth_Handler,
 		},
 		{
-			MethodName: "GetCard",
-			Handler:    _CardReceiver_GetCard_Handler,
+			MethodName: "ReceiveCard",
+			Handler:    _CardReceiver_ReceiveCard_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

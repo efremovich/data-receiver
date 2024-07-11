@@ -22,12 +22,12 @@
   "paths": {
     "/receiver/card": {
       "get": {
-        "operationId": "CardReceiver_GetCard",
+        "operationId": "CardReceiver_ReceiveCard",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/package_receiverGetCardResponse"
+              "$ref": "#/definitions/package_receiverReceiveCardResponse"
             }
           },
           "default": {
@@ -75,7 +75,7 @@
     }
   },
   "definitions": {
-    "package_receiverGetCardResponse": {
+    "package_receiverReceiveCardResponse": {
       "type": "object",
       "properties": {
         "id": {
