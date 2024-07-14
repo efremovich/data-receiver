@@ -48,7 +48,7 @@ func TestBrandRepo(t *testing.T) {
 	assert.Equal(t, model.SellerID, newBrand.SellerID)
 
 	// Выборка по названию
-	model, err = sqlRepo.SelectByTitle(ctx, newBrand.Title)
+	model, err = sqlRepo.SelectByTitleAndSeller(ctx, newBrand.Title, newBrand.SellerID)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -22,11 +22,11 @@ gen-envs:
 	conf2env -struct Config -file config/config.go -out config/local.env
 
 create-migration: ### make create-migration name=init_db создает миграцию для бд маркировки
-	cd migrations/package_receiver_db && goose create $(name) sql && cd ../..
+	cd migrations/data_receiver_db && goose create $(name) sql && cd ../..
 name ?= default_name
 
 migrate-up:
-	cd migrations/package_receiver_db && goose postgres "user=$(PG_USER) password=$(PG_PASSWORD) dbname=$(PG_DBNAME) host=$(PG_HOST) port=$(PG_PORT) sslmode=disable" up && cd ../..
+	cd migrations/data_receiver_db && goose postgres "user=$(PG_USER) password=$(PG_PASSWORD) dbname=$(PG_DBNAME) host=$(PG_HOST) port=$(PG_PORT) sslmode=disable" up && cd ../..
 
 generate-data-receiver-api:
 	mkdir -p pkg/data-receiver-service

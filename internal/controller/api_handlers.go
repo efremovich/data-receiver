@@ -7,7 +7,7 @@ import (
 )
 
 func (gw *grpcGatewayServerImpl) ReceiveCard(ctx context.Context, in *package_receiver.ReceiveCardRequest) (*package_receiver.ReceiveCardResponse, error) {
-	err := gw.core.ReceiveCards(ctx, "")
+	err := gw.core.ReceiveCards(ctx, 0)
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ type Card struct {
 	UpdatedAt       time.Time         // Дана обновления
 	Brand           Brand             // Бренд
 	Dimensions      Dimensions        // Размеры упаковки
-	Characteristics []*Characteristic // Характеристики номенклатуры
+	Characteristics []*CardCharacteristic // Характеристики номенклатуры
 	Categories      []*Category       // Категории номенклатуры
 	Sizes           []*Size           // Размеры
 	Barcodes        []*Barcode        // Штрихкоды
@@ -21,12 +21,16 @@ type Card struct {
 }
 
 type Characteristic struct {
-	ID         int64
-	ExternalID int64    // id в магазине
-	Title      string   // Наименование характеристики
-	Value      []string // Значение характеристики
+	ID    int64
+	Title string // Наименование характеристики
+}
 
-	CardID int64 // Номенклатура владелец
+type CardCharacteristic struct {
+	ID               int64
+	Value            []string // Значение характеристики
+	Title            string   // Текстовое значение характеристики
+	CharacteristicID int64    // Ссылка на справочник характеристики
+	CardID           int64    // Номенклатура владелец
 }
 
 type Brand struct {

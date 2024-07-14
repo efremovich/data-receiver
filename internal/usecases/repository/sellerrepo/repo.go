@@ -54,9 +54,9 @@ func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.
 }
 
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Seller) (*entity.Seller, error) {
+	charIDWrap := repository.IDWrapper{}
 	query := `INSERT INTO sellers (title, is_enable, ext_id) 
             VALUES ($1, $2, $3) RETURNING id`
-	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title, in.IsEnable, in.ExtID)
 	if err != nil {

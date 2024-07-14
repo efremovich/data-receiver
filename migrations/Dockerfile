@@ -11,7 +11,7 @@ ENV DB_HOST=db
 ENV DB_PORT=5432
 ENV DB_USER=postgres
 ENV DB_PASSWORD=postgres
-ENV DB_NAME=data_receiver_db
+ENV DB_NAME=erp_db
 
 ADD migrations/data_receiver_db/*.sql data_receiver_db/
 ADD migrations/database-init-up.sh .

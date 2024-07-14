@@ -9,7 +9,7 @@ type Config struct {
 	BrokerPublisherURL []string `env:"BROKER_PUBLISHER_URL" validate:"required"`
 	Gateway            Gateway  `env:", prefix=GATEWAY_"`
 	Nats               NATS     `env:", prefix=NATS_"`
-	Seller             Seller   `env:", prefix=SELLER_"`
+	Seller             Sellers  `env:", prefix=SELLER_"`
 	Queue              Queue    `env:", prefix=QUEUE_"`
 }
 
@@ -38,8 +38,14 @@ type Queue struct {
 	MaxAckPending     int `env:"MAX_ACK_PENDING, default=10000"` // Максимальное количество сообщений, которые могут быть ожидающими подтверждения.
 }
 
+// Конфигурация для создания api клиентов для получения данных
+type Sellers struct {
+	WB    Seller `env:", prefix=WB_"`
+	OZON  Seller `env:", prefix=OZON_"`
+	OdinC Seller `env:", prefix=1C_"`
+}
 type Seller struct {
 	URL                   string `env:"URL"`
 	Token                 string `env:"TOKEN"`
-	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=10"`
+	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=1"`
 }

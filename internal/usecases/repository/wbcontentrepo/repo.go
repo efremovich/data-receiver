@@ -14,12 +14,12 @@ type WBContentRepo interface {
 }
 
 type wbContentRepoImpl struct {
-	client wbfetcher.WildberriesFetcher
+	client wbfetcher.ExtApiFetcher
 	cards  []entity.Card
 	mu     sync.RWMutex
 }
 
-func NewWBContentRepo(ctx context.Context, client wbfetcher.WildberriesFetcher) (WBContentRepo, error) {
+func NewWBContentRepo(ctx context.Context, client wbfetcher.ExtApiFetcher) (WBContentRepo, error) {
 	repo := &wbContentRepoImpl{
 		client: client,
 		mu:     sync.RWMutex{},
@@ -42,7 +42,7 @@ func (wb *wbContentRepoImpl) Ping(ctx context.Context) error {
 }
 
 func (wb *wbContentRepoImpl) update(ctx context.Context) error {
-	cards, err := wb.client.GetCards(ctx)
+	cards, _, err := wb.client.GetCards(ctx,0)
 	if err != nil {
 		return err
 	}

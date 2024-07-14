@@ -34,7 +34,7 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 	start := time.Now()
 	alogger.DebugFromCtx(ctx, fmt.Sprintf("начало обработки сообщения %s", desc.PackageName), nil, nil, false)
 
-	aerr := gw.core.ReceiveCards(ctx, "")
+	aerr := gw.core.ReceiveCards(ctx, desc.Cursor)
 	if aerr != nil {
 		alogger.ErrorFromCtx(ctx, fmt.Sprintf("ошибка обработки пакета %s: %s", desc.PackageName, aerr.DeveloperMessage()), aerr, nil, false)
 		if aerr.IsCritical() {

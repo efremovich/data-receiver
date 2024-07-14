@@ -10,7 +10,7 @@ import (
 
 type BrandRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Brand, error)
-	SelectByTitle(ctx context.Context, title string) (*entity.Brand, error)
+	SelectByTitleAndSeller(ctx context.Context, title string, sellerID int64) (*entity.Brand, error)
 	Insert(ctx context.Context, in entity.Brand) (*entity.Brand, error)
 	UpdateExecOne(ctx context.Context, in entity.Brand) error
 
@@ -40,12 +40,12 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Brand, 
 	return result.convertToEntityBrand(ctx), nil
 }
 
-func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Brand, error) {
+func (repo *repoImpl) SelectByTitleAndSeller(ctx context.Context, title string, sellerID int64) (*entity.Brand, error) {
 	var result brandDB
 
-	query := "SELECT * FROM brands WHERE title = $1"
+	query := "SELECT * FROM brands WHERE title = $1 and seller_id = $2"
 
-	err := repo.getReadConnection().Get(&result, query, title)
+	err := repo.getReadConnection().Get(&result, query, title, sellerID)
 	if err != nil {
 		return nil, err
 	}
@@ -54,9 +54,12 @@ func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.
 }
 
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Brand) (*entity.Brand, error) {
-	query := `INSERT INTO brands (title, seller_id) 
-            VALUES ($1, $2) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
+
+	query := `INSERT INTO brands (title, seller_id) 
+            VALUES ($1, $2)
+            ON CONFLICT (id) DO NOTHING
+            RETURNING id`
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title, in.SellerID)
 	if err != nil {

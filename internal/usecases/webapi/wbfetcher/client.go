@@ -32,9 +32,9 @@ type Dimensions struct {
 	IsValid bool `json:"isValid"`
 }
 type Characteristics struct {
-	ID    int           `json:"id"`
-	Name  string        `json:"name"`
-	Value []interface{} `json:"value"`
+	ID    int      `json:"id"`
+	Name  string   `json:"name"`
+	Value []string `json:"value,omitempty"`
 }
 type Sizes struct {
 	ChrtID   int      `json:"chrtID"`
@@ -91,12 +91,12 @@ type Setting struct {
 	Setting Settings `json:"settings"`
 }
 
-type WildberriesFetcher interface {
-	GetCards(ctx context.Context) ([]entity.Card, error)
+type ExtApiFetcher interface {
+	GetCards(ctx context.Context, cursor int) ([]entity.Card, int, error)
 	Ping(ctx context.Context) error
 }
 
-func New(_ context.Context, cfg config.Seller) WildberriesFetcher {
+func New(_ context.Context, cfg config.Seller) ExtApiFetcher {
 	timeout := time.Second * time.Duration(cfg.ProcessTimeoutSeconds)
 
 	c := &http.Client{
@@ -113,36 +113,36 @@ type wbAPIclientImp struct {
 	token  string
 }
 
-func (wb *wbAPIclientImp) GetCards(ctx context.Context) ([]entity.Card, error) {
+func (wb *wbAPIclientImp) GetCards(ctx context.Context, cursor int) ([]entity.Card, int, error) {
 	const methodName = "/content/v2/get/cards/list?locale=ru"
-
+	// TODO вынести настройки и передавать их в теле сообщения nats
 	requestSettings := Settings{
 		Sort:   Sort{Ascending: false},
 		Filter: Filter{WithPhoto: -1},
-		Cursor: Cursor{Limit: 100},
+		Cursor: Cursor{Limit: 2, NmID: cursor},
 	}
 
 	requestData, err := json.Marshal(Setting{Setting: requestSettings})
 	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
+		return nil, 0, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", wb.addr, methodName), bytes.NewReader(requestData))
 	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
+		return nil, 0, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}
 	req.Header.Set("Authorization", wb.token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
 	resp, err := wb.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
+	if err != nil && resp.StatusCode != http.StatusOK {
+		return nil, 0, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
 	}
 
 	var wbResponse WbResponse
 	if err := json.NewDecoder(resp.Body).Decode(&wbResponse); err != nil {
-		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
+		return nil, 0, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
 	}
 
 	var cardsList []entity.Card
@@ -153,11 +153,11 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context) ([]entity.Card, error) {
 			Title: v.Brand,
 		}
 
-		characteristics := []*entity.Characteristic{}
+		characteristics := []*entity.CardCharacteristic{}
 		for _, c := range v.Characteristics {
-			char := entity.Characteristic{
+			char := entity.CardCharacteristic{
 				Title: c.Name,
-				// Value: c.Value,
+				Value: c.Value,
 			}
 			characteristics = append(characteristics, &char)
 		}
@@ -214,7 +214,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context) ([]entity.Card, error) {
 		cardsList = append(cardsList, card)
 	}
 
-	return cardsList, nil
+	return cardsList, wbResponse.Cursor.NmID, nil
 }
 
 func (wb *wbAPIclientImp) Ping(ctx context.Context) error {

@@ -87,8 +87,6 @@ COMMENT ON COLUMN dimensions.card_id is 'Идентификатор номенк
 CREATE TABLE public.characteristics (
 	id SERIAL PRIMARY KEY,
 	title VARCHAR NOT NULL,
-	value TEXT[] NOT NULL,
-	card_id INTEGER NOT NULL,
   CONSTRAINT characteristics_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
 );
 CREATE INDEX characteristics_card_id_idx ON characteristics(card_id);
@@ -98,6 +96,21 @@ COMMENT ON COLUMN characteristics.id is 'Идентификатор';
 COMMENT ON COLUMN characteristics.title is 'Наименование';
 COMMENT ON COLUMN characteristics.value is 'Значение';
 COMMENT ON COLUMN characteristics.card_id is 'Идентификатор номенклатуры';
+
+CREATE TABLE public.card_characteristics (
+	id SERIAL PRIMARY KEY,
+  characteristics_id integer,
+	value TEXT[] NOT NULL,
+  card_id INTEGER NOT NULL,
+  CONSTRAINT characteristics_card_id_fkey FOREIGN KEY ("card_id") REFERENCES public.cards("id")
+);
+CREATE INDEX card_characteristics_card_id_idx ON card_characteristics(card_id);
+
+COMMENT ON TABLE card_characteristics is 'Характеристики';
+COMMENT ON COLUMN card_characteristics.id is 'Идентификатор';
+COMMENT ON COLUMN card_characteristics.title is 'Наименование';
+COMMENT ON COLUMN card_characteristics.value is 'Значение';
+COMMENT ON COLUMN card_characteristics.card_id is 'Идентификатор номенклатуры';
 
 CREATE TABLE public.media_files (
 	id SERIAL PRIMARY KEY,

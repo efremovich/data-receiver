@@ -10,6 +10,7 @@ import (
 // Описание пакета по которому создается пакет.
 type PackageDescription struct {
 	PackageName string          // Наименование пакета.
+  Cursor      int             // Курсор пакета.
 	SendURL     string          // URL для отправки.
 	PackageType PackageType     // Тип пакета.
 	Description json.RawMessage // Описание пакета.
@@ -43,8 +44,8 @@ func StringToPackageType(s string) (PackageType, error) {
 type Package struct {
 	ID        int64         // Идентификатор в БД.
 	Type      PackageType   // Тип пакета.
-	Name      string        // Наименование пакета.
 	SendURL   string        // URL для отправки пакета.
+  Cursor    int           // Курсор пакета.
 	CreatedAt time.Time     // Дата создания пакета.
 	Status    PackageStatus // Статус пакета.
 	ErrorText string        // Текст ошибки.

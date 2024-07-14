@@ -10,18 +10,19 @@ import (
 type characteristicDB struct {
 	ID    int64  `db:"id"`
 	Title string `db:"title"`
-	Value string `db:"value"`
+}
 
-	CardID int64 `db:"card_id"`
+type cardCharacteristicDB struct {
+	ID               int64  `db:"id"`
+	Value            string `db:"value"`
+	CharacteristicID int64  `db:"characteristic_id"`
+	CardID           int64  `db:"card_id"`
 }
 
 func convertToDBCharacteristic(_ context.Context, in entity.Characteristic) *characteristicDB {
 	return &characteristicDB{
 		ID:    in.ID,
 		Title: in.Title,
-		Value: strings.Join(in.Value, ","),
-
-		CardID: in.CardID,
 	}
 }
 
@@ -29,8 +30,26 @@ func (c characteristicDB) ConvertToEntityCharacteristic(_ context.Context) *enti
 	return &entity.Characteristic{
 		ID:    c.ID,
 		Title: c.Title,
-		Value: strings.Split(c.Value, ","),
+		// Value: strings.Split(c.Value, ","),
 
-		CardID: c.CardID,
+		// CardID: c.CardID,
+	}
+}
+
+func convertToDBCardCharacteristic(_ context.Context, in entity.CardCharacteristic) *cardCharacteristicDB {
+	return &cardCharacteristicDB{
+		ID:               in.ID,
+		Value:            strings.Join(in.Value, ","),
+		CharacteristicID: in.CharacteristicID,
+		CardID:           in.CardID,
+	}
+}
+
+func (c cardCharacteristicDB) ConvertToEntityCardCharacteristic(_ context.Context) *entity.CardCharacteristic {
+	return &entity.CardCharacteristic{
+		ID:               c.ID,
+		Value:            strings.Split(c.Value, ","),
+		CharacteristicID: c.CharacteristicID,
+		CardID:           c.CardID,
 	}
 }
