@@ -9,7 +9,7 @@ import (
 )
 
 type sellerDB struct {
-	ID       int64          `db:"id"`
+	ID       int64          `db:"seller_id"`
 	Title    string         `db:"title"`
 	IsEnable bool           `db:"is_enable"`
 	ExtID    sql.NullString `db:"ext_id"`

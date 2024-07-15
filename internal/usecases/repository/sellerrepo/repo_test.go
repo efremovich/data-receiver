@@ -15,7 +15,7 @@ import (
 func TestSellerRepo(t *testing.T) {
 	ctx := context.Background()
 
-	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_receiver_db")
+	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_base")
 	if err != nil {
 		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
 	}

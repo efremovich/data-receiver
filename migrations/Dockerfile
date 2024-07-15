@@ -8,20 +8,20 @@ RUN wget -O /usr/bin/goose https://github.com/pressly/goose/releases/download/v3
 	chown postgres:postgres /usr/bin/goose
 
 # local
-# ENV DB_HOST=db
-# ENV DB_PORT=5432
-# ENV DB_USER=postgres
-# ENV DB_PASSWORD=postgres
-# ENV DB_NAME=erp_db
+ENV DB_HOST=db
+ENV DB_PORT=5432
+ENV DB_USER=postgres
+ENV DB_PASSWORD=postgres
+ENV DB_NAME=postgres
 
 # remote
-ENV DB_HOST=31.131.254.247
-ENV DB_PORT=5432
-ENV DB_USER=erp_db_usr
-ENV DB_PASSWORD=E4SeIFlKFSCRBQIz
-ENV DB_NAME=erp_db
+# ENV DB_HOST=31.131.254.247
+# ENV DB_PORT=5432
+# ENV DB_USER=erp_db_usr
+# ENV DB_PASSWORD=E4SeIFlKFSCRBQIz
+# ENV DB_NAME=erp_db
 
-ADD migrations/data_receiver_db/*.sql data_receiver_db/
+ADD migrations/data_base/*.sql data_base/
 ADD migrations/database-init-up.sh .
 COPY . .
 RUN chmod +x database-init-up.sh

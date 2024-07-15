@@ -21,9 +21,9 @@ CREATE INDEX wb2cards_card_id_idx ON shop_dev.wb2cards USING btree (card_id);
 
 COMMENT ON TABLE shop_dev.wb2cards IS 'Товары WB';
 COMMENT ON COLUMN shop_dev.wb2cards.wb2card_id IS 'Уникальный идентификатор';
-COMMENT ON COLUMN shop_dev.wb2cards."nmID" IS 'Артикул WB';
+COMMENT ON COLUMN shop_dev.wb2cards.nmID IS 'Артикул WB';
 COMMENT ON COLUMN shop_dev.wb2cards."int" IS 'Идентификатор КТ';
-COMMENT ON COLUMN shop_dev.wb2cards."nmUUID" IS 'Внуттренний технический идентификатор товара';
+COMMENT ON COLUMN shop_dev.wb2cards.nmUUID IS 'Внуттренний технический идентификатор товара';
 COMMENT ON COLUMN shop_dev.wb2cards.created_at IS 'Дата создания';
 COMMENT ON COLUMN shop_dev.wb2cards.updated_at IS 'Дата обновления';
 COMMENT ON COLUMN shop_dev.wb2cards.card_id IS 'Идентификатор номенклатуры';

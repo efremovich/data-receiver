@@ -10,8 +10,8 @@ import (
 
 type CategoryRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Category, error)
-	SelectByCardID(ctx context.Context, CardID int64) ([]*entity.Category, error)
-	SelectByPriceID(ctx context.Context, CardID int64) ([]*entity.Category, error)
+	SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Category, error)
+	SelectByTitle(ctx context.Context, title string) (*entity.Category, error)
 	Insert(ctx context.Context, in entity.Category) (*entity.Category, error)
 	UpdateExecOne(ctx context.Context, in entity.Category) error
 
@@ -41,12 +41,12 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Cat
 	return result.convertToEntityCategory(ctx), nil
 }
 
-func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*entity.Category, error) {
+func (repo *charRepoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Category, error) {
 	var result []categoryDB
 
-	query := "SELECT * FROM categories WHERE card_id = $1"
+	query := "SELECT * FROM categories WHERE seller_id = $1"
 
-	err := repo.getReadConnection().Select(&result, query, cardID)
+	err := repo.getReadConnection().Select(&result, query, sellerID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,29 +58,25 @@ func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*
 	return resEntity, nil
 }
 
-func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, cardID int64) ([]*entity.Category, error) {
-	var result []categoryDB
+func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Category, error) {
+	var result categoryDB
 
-	query := "SELECT * FROM categories WHERE price_id = $1"
+	query := "SELECT * FROM categories WHERE title = $1"
 
-	err := repo.getReadConnection().Select(&result, query, cardID)
+	err := repo.getReadConnection().Select(&result, query, title)
 	if err != nil {
 		return nil, err
 	}
 
-	var resEntity []*entity.Category
-	for _, v := range result {
-		resEntity = append(resEntity, v.convertToEntityCategory(ctx))
-	}
-	return resEntity, nil
+	return result.convertToEntityCategory(ctx), nil
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Category) (*entity.Category, error) {
-	query := `INSERT INTO categories (card_id, title, seller_id) 
+	query := `INSERT INTO categories (External_id, title, seller_id) 
             VALUES ($1, $2, $3) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.CardID, in.Title, in.SellerID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.ExternalID, in.Title, in.SellerID)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +87,8 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Category) (*enti
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Category) error {
 	dbModel := convertToDBCategory(ctx, in)
 
-	query := `UPDATE categorys SET card_id = $1, title = $2, seller_id = $3 WHERE id = $4`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.CardID, dbModel.Title, dbModel.SellerID, dbModel.ID)
+	query := `UPDATE categorys SET title = $1, seller_id = $2 WHERE id = $3`
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.SellerID, dbModel.ID)
 	if err != nil {
 		return err
 	}

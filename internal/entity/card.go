@@ -46,7 +46,6 @@ type Category struct {
 	ExternalID int64 // id в магазине
 	Title      string
 
-	CardID   int64
 	SellerID int64
 }
 

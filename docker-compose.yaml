@@ -41,7 +41,7 @@ services:
   db_creator:
     image: postgres:15.4
     restart: 'on-failure' # контейнер может не отработать с первого раза, если postgres медленно стартует
-    entrypoint: ["psql", "postgres://erp_db_usr:E4SeIFlKFSCRBQIz@31.131.254.247:5432", 
+    entrypoint: ["psql", "postgres://postgres:postgres@postgres_db:5432", 
       "-c", "CREATE DATABASE \"erp_db\" WITH ENCODING = \"UTF8\""]
     depends_on:
       - postgres_db
