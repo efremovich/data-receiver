@@ -83,17 +83,15 @@ func (repo *charRepoImpl) SelectCardCharByID(ctx context.Context, id int64) (*en
 func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64, value string) ([]*entity.CardCharacteristic, error) {
 	var result []cardCharacteristicDB
 
-	query := `Select
-            cc.id,
-            cc.title,
-            array_to_string(cc.value, ',') as value, 
-            cc.card_id,
-            c.characteristic_id
+	query := `select
+              cc.id,
+              cc.card_id,
+              cc.value,
+              cc.characteristics_id
             from
-            shop.cards_characteristics cc
-            join shop."characteristics" c on
-            c.characteristic_id = cc.card_characteristic_id 
-            WHERE card_id = $1 and value::text = $2`
+              card_characteristics cc
+            where
+              cc.card_id = $1 and cc.value::text = $2`
 
 	err := repo.getReadConnection().Select(&result, query, cardID, value)
 	if err != nil {
@@ -104,6 +102,7 @@ func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64, valu
 	for _, v := range result {
 		resEntity = append(resEntity, v.ConvertToEntityCardCharacteristic(ctx))
 	}
+
 	return resEntity, nil
 }
 
