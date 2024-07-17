@@ -31,7 +31,7 @@ func NewSellerRepo(_ context.Context, db *postgresdb.DBConnection) (SellerRepo, 
 func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Seller, error) {
 	var result sellerDB
 
-	query := "SELECT * FROM sellers WHERE id = $1"
+	query := "SELECT * FROM shop.sellers WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -43,7 +43,7 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Seller,
 func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Seller, error) {
 	var result sellerDB
 
-	query := "SELECT * FROM sellers WHERE title = $1"
+	query := "SELECT * FROM shop.sellers WHERE title = $1"
 
 	err := repo.getReadConnection().Get(&result, query, title)
 	if err != nil {
@@ -55,10 +55,10 @@ func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.
 
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Seller) (*entity.Seller, error) {
 	charIDWrap := repository.IDWrapper{}
-	query := `INSERT INTO sellers (title, is_enable, ext_id) 
+	query := `INSERT INTO shop.sellers (title, is_enabled, external_id) 
             VALUES ($1, $2, $3) RETURNING id`
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title, in.IsEnable, in.ExtID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title, in.IsEnabled, in.ExternalID)
 	if err != nil {
 		return nil, err
 	}
@@ -69,10 +69,10 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Seller) (*entity.Sel
 func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Seller) error {
 	dbModel := convertToDBSeller(ctx, in)
 
-	query := `UPDATE sellers SET 
-            title = $1, is_enable = $2, ext_id = $3
+	query := `UPDATE shop.sellers SET 
+            title = $1, is_enabled = $2, external_id = $3
             WHERE id = $4`
-	_, err := repo.getWriteConnection().ExecOne(query, in.Title, in.IsEnable, in.ExtID, dbModel.ID)
+	_, err := repo.getWriteConnection().ExecOne(query, in.Title, in.IsEnabled, in.ExternalID, dbModel.ID)
 	if err != nil {
 		return err
 	}

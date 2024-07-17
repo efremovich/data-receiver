@@ -29,7 +29,7 @@ func TestWarehouseRepo(t *testing.T) {
 	newSeller := entity.Seller{
 		Title:    uuid.NewString(),
 		IsEnable: true,
-		ExtID:    uuid.NewString(),
+		ExternalID:    uuid.NewString(),
 	}
 	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
 	if err != nil {
@@ -41,7 +41,7 @@ func TestWarehouseRepo(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	newWarehouse := entity.Warehouse{
-		ExtID:    uuid.NewString(),
+		ExternalID:    uuid.NewString(),
 		Title:    uuid.NewString(),
 		Address:  uuid.NewString(),
 		Type:     uuid.NewString(),
@@ -52,7 +52,7 @@ func TestWarehouseRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, model.ExtID, newWarehouse.ExtID)
+	assert.Equal(t, model.ExternalID, newWarehouse.ExternalID)
 	assert.Equal(t, model.Title, newWarehouse.Title)
 	assert.Equal(t, model.Address, newWarehouse.Address)
 	assert.Equal(t, model.Type, newWarehouse.Type)
@@ -64,7 +64,7 @@ func TestWarehouseRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, model.ExtID, newWarehouse.ExtID)
+	assert.Equal(t, model.ExternalID, newWarehouse.ExternalID)
 	assert.Equal(t, model.Title, newWarehouse.Title)
 	assert.Equal(t, model.Address, newWarehouse.Address)
 	assert.Equal(t, model.Type, newWarehouse.Type)
@@ -76,7 +76,7 @@ func TestWarehouseRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, model := range models {
-		assert.Equal(t, model.ExtID, newWarehouse.ExtID)
+		assert.Equal(t, model.ExternalID, newWarehouse.ExternalID)
 		assert.Equal(t, model.Title, newWarehouse.Title)
 		assert.Equal(t, model.Address, newWarehouse.Address)
 		assert.Equal(t, model.Type, newWarehouse.Type)
@@ -85,7 +85,7 @@ func TestWarehouseRepo(t *testing.T) {
 
 	// Обновление
 	newWarehouse.Title = uuid.NewString()
-	newWarehouse.ExtID = uuid.NewString()
+	newWarehouse.ExternalID = uuid.NewString()
 	newWarehouse.Address = uuid.NewString()
 	newWarehouse.Type = uuid.NewString()
 	newWarehouse.SellerID = modelSeller.ID
@@ -102,7 +102,7 @@ func TestWarehouseRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, model.ExtID, newWarehouse.ExtID)
+	assert.Equal(t, model.ExternalID, newWarehouse.ExternalID)
 	assert.Equal(t, model.Title, newWarehouse.Title)
 	assert.Equal(t, model.Address, newWarehouse.Address)
 	assert.Equal(t, model.Type, newWarehouse.Type)

@@ -2,7 +2,7 @@ package entity
 
 type Sale struct {
 	ID       int64
-	ExtID    string // Уникальный номер продажи
+	ExternalID    string // Уникальный номер продажи
 
   Country  string // Страна
 	Area     string // Область / край

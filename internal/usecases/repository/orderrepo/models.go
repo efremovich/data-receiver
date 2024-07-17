@@ -10,7 +10,7 @@ import (
 
 type orderDB struct {
 	ID           int64        `db:"id"`
-	ExtID        string       `db:"ext_id"`
+	ExternalID        string       `db:"external_id"`
 	Price        float32      `db:"price"`
 	Discount     float32      `db:"discount"`
 	SpecialPrice float32      `db:"special_price"`
@@ -29,7 +29,7 @@ type orderDB struct {
 func convertToDBOrder(_ context.Context, in entity.Order) *orderDB {
 	return &orderDB{
 		ID:           in.ID,
-		ExtID:        in.ExtID,
+		ExternalID:        in.ExternalID,
 		Price:        in.Price,
 		Quantity:     in.Quantity,
 		Discount:     in.Discount,
@@ -49,7 +49,7 @@ func convertToDBOrder(_ context.Context, in entity.Order) *orderDB {
 func (c orderDB) convertToEntityOrder(_ context.Context) *entity.Order {
 	return &entity.Order{
 		ID:           c.ID,
-		ExtID:        c.ExtID,
+		ExternalID:        c.ExternalID,
 		Price:        c.Price,
 		Quantity:     c.Quantity,
 		Discount:     c.Discount,

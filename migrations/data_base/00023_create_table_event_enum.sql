@@ -1,15 +1,17 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE shop_dev.event_enum (
-    event_enum_id integer NOT NULL,
+CREATE TABLE shop.event_enum (
+    id serial NOT NULL,
     event_desc text NOT NULL
 );
-ALTER TABLE shop_dev.event_enum OWNER TO shop_user_rw;
-ALTER TABLE ONLY shop_dev.event_enum
-    ADD CONSTRAINT event_enum_pkey PRIMARY KEY (event_enum_id);
+ALTER TABLE shop.event_enum OWNER TO shop_user_rw;
+ALTER TABLE ONLY shop.event_enum
+    ADD CONSTRAINT event_enum_pkey PRIMARY KEY (id);
+
+INSERT INTO shop.event_enum (event_desc) VALUES ('CREATED'), ('SUCCESS'), ('GOT_AGAIN'), ('REPROCESS'), ('ERROR'), ('SEND_TASK_NEXT');
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE shop_dev.event_enum;
+DROP TABLE shop.event_enum;
 -- +goose StatementEnd

@@ -3,21 +3,21 @@ package entity
 import "time"
 
 type Card struct {
-	ID              int64             // id в бд
-	ExternalID      int64             // id в магазине
-	VendorID        string            // Код номенклатура
-	VendorCode      string            // Артикул
-	Title           string            // Наименование
-	Description     string            // Описание номенклатуры
-	CreatedAt       time.Time         // Дата создания
-	UpdatedAt       time.Time         // Дана обновления
-	Brand           Brand             // Бренд
-	Dimensions      Dimensions        // Размеры упаковки
+	ID              int64                 // id в бд
+	ExternalID      int64                 // id в магазине
+	VendorID        string                // Код номенклатура
+	VendorCode      string                // Артикул
+	Title           string                // Наименование
+	Description     string                // Описание номенклатуры
+	CreatedAt       time.Time             // Дата создания
+	UpdatedAt       time.Time             // Дана обновления
+	Brand           Brand                 // Бренд
+	Dimensions      Dimensions            // Размеры упаковки
 	Characteristics []*CardCharacteristic // Характеристики номенклатуры
-	Categories      []*Category       // Категории номенклатуры
-	Sizes           []*Size           // Размеры
-	Barcodes        []*Barcode        // Штрихкоды
-	MediaFile       []*MediaFile      // Фоточки
+	Categories      []*Category           // Категории номенклатуры
+	Sizes           []*Size               // Размеры
+	Barcodes        []*Barcode            // Штрихкоды
+	MediaFile       []*MediaFile          // Фоточки
 }
 
 type Characteristic struct {
@@ -60,6 +60,7 @@ type Size struct {
 }
 
 type Barcode struct {
+	ID         int64  // идентификатор
 	Barcode    string // Штрихкод
 	ExternalID int64  // id в магазине
 

@@ -26,19 +26,19 @@ func TestSellerRepo(t *testing.T) {
 	}
 
 	newSeller := entity.Seller{
-		Title:    uuid.NewString(),
-		ExtID:    uuid.NewString(),
-		IsEnable: true,
+		Title:      uuid.NewString(),
+		ExternalID: uuid.NewString(),
+		IsEnabled:  true,
 	}
 	// Создание
 	model, err := sqlRepo.Insert(ctx, newSeller)
-	if err != nil {
+  if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Equal(t, model.Title, newSeller.Title)
-	assert.Equal(t, model.IsEnable, newSeller.IsEnable)
-	assert.Equal(t, model.ExtID, newSeller.ExtID)
+	assert.Equal(t, model.IsEnabled, newSeller.IsEnabled)
+	assert.Equal(t, model.ExternalID, newSeller.ExternalID)
 
 	// Выборка по ID
 	model, err = sqlRepo.SelectByID(ctx, model.ID)
@@ -47,8 +47,8 @@ func TestSellerRepo(t *testing.T) {
 	}
 
 	assert.Equal(t, model.Title, newSeller.Title)
-	assert.Equal(t, model.IsEnable, newSeller.IsEnable)
-	assert.Equal(t, model.ExtID, newSeller.ExtID)
+	assert.Equal(t, model.IsEnabled, newSeller.IsEnabled)
+	assert.Equal(t, model.ExternalID, newSeller.ExternalID)
 
 	// Выборка по названию
 	model, err = sqlRepo.SelectByTitle(ctx, newSeller.Title)
@@ -57,13 +57,13 @@ func TestSellerRepo(t *testing.T) {
 	}
 
 	assert.Equal(t, model.Title, newSeller.Title)
-	assert.Equal(t, model.IsEnable, newSeller.IsEnable)
-	assert.Equal(t, model.ExtID, newSeller.ExtID)
+	assert.Equal(t, model.IsEnabled, newSeller.IsEnabled)
+	assert.Equal(t, model.ExternalID, newSeller.ExternalID)
 
 	// Обновление
 	newSeller.Title = uuid.NewString()
-	newSeller.ExtID = uuid.NewString()
-	newSeller.IsEnable = false
+	newSeller.ExternalID = uuid.NewString()
+	newSeller.IsEnabled = false
 	newSeller.ID = model.ID
 
 	err = sqlRepo.UpdateExecOne(ctx, newSeller)
@@ -78,6 +78,6 @@ func TestSellerRepo(t *testing.T) {
 	}
 
 	assert.Equal(t, model.Title, newSeller.Title)
-	assert.Equal(t, model.IsEnable, newSeller.IsEnable)
-	assert.Equal(t, model.ExtID, newSeller.ExtID)
+	assert.Equal(t, model.IsEnabled, newSeller.IsEnabled)
+	assert.Equal(t, model.ExternalID, newSeller.ExternalID)
 }

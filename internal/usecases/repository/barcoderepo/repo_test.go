@@ -9,7 +9,9 @@ import (
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/barcoderepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
@@ -19,9 +21,56 @@ import (
 func TestBarcodeRepo(t *testing.T) {
 	ctx := context.Background()
 
-	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_receiver_db")
+	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_base")
 	if err != nil {
 		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
+	}
+
+	// Создание продавца
+	sqlSellerRepo, err := sellerrepo.NewSellerRepo(ctx, conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newSeller := entity.Seller{
+		Title:      uuid.NewString(),
+		IsEnabled:  true,
+		ExternalID: uuid.NewString(),
+	}
+	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Создание бренда
+
+	sqlBrandRepo, err := brandrepo.NewBrandRepo(ctx, conn)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	newBrand := entity.Brand{
+		ExternalID: 1,
+		Title:      uuid.NewString(),
+		SellerID:   modelSeller.ID,
+	}
+	modelBrand, err := sqlBrandRepo.Insert(ctx, newBrand)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Создание категории
+	sqlCategoryRepo, err := categoryrepo.NewCategoryRepo(ctx, conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newCategory := entity.Category{
+		ExternalID: 1,
+		Title:      uuid.NewString(),
+		SellerID:   modelSeller.ID,
+	}
+
+	modelCategory, err := sqlCategoryRepo.Insert(ctx, newCategory)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	// Создание карточки
@@ -30,6 +79,8 @@ func TestBarcodeRepo(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	newCard := entity.Card{
+		Categories:  []*entity.Category{modelCategory},
+		Brand:       *modelBrand,
 		VendorID:    uuid.NewString(),
 		VendorCode:  uuid.NewString(),
 		Title:       uuid.NewString(),
@@ -37,21 +88,6 @@ func TestBarcodeRepo(t *testing.T) {
 	}
 
 	modelCard, err := sqlCardRepo.Insert(ctx, newCard)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Создание цены
-	sqlSellerRepo, err := sellerrepo.NewSellerRepo(ctx, conn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	newSeller := entity.Seller{
-		Title:    uuid.NewString(),
-		IsEnable: true,
-		ExtID:    uuid.NewString(),
-	}
-	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
 	if err != nil {
 		t.Fatal(err)
 	}

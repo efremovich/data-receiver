@@ -4,7 +4,7 @@ import "time"
 
 type Order struct {
 	ID           int64
-	ExtID        string
+	ExternalID        string
 	Price        float32
 	Quantity     int
 	Discount     float32

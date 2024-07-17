@@ -9,25 +9,25 @@ import (
 )
 
 type sellerDB struct {
-	ID       int64          `db:"seller_id"`
-	Title    string         `db:"title"`
-	IsEnable bool           `db:"is_enable"`
-	ExtID    sql.NullString `db:"ext_id"`
+	ID         int64          `db:"id"`
+	Title      string         `db:"title"`
+	IsEnabled  bool           `db:"is_enabled"`
+	ExternalID sql.NullString `db:"external_id"`
 }
 
 func convertToDBSeller(_ context.Context, in entity.Seller) *sellerDB {
 	return &sellerDB{
-		ID:       in.ID,
-		Title:    in.Title,
-		IsEnable: in.IsEnable,
+		ID:        in.ID,
+		Title:     in.Title,
+		IsEnabled: in.IsEnabled,
 	}
 }
 
 func (c sellerDB) convertToEntitySeller(_ context.Context) *entity.Seller {
 	return &entity.Seller{
-		ID:       c.ID,
-		Title:    c.Title,
-		IsEnable: c.IsEnable,
-		ExtID:    repository.NullStringToString(c.ExtID),
+		ID:         c.ID,
+		Title:      c.Title,
+		IsEnabled:  c.IsEnabled,
+		ExternalID: repository.NullStringToString(c.ExternalID),
 	}
 }

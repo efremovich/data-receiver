@@ -50,7 +50,7 @@ func TestStockRepo(t *testing.T) {
 	newSeller := entity.Seller{
 		Title:    uuid.NewString(),
 		IsEnable: true,
-		ExtID:    uuid.NewString(),
+		ExternalID:    uuid.NewString(),
 	}
 	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
 	if err != nil {
@@ -110,7 +110,7 @@ func TestStockRepo(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	newWarehouse := entity.Warehouse{
-		ExtID:    uuid.NewString(),
+		ExternalID:    uuid.NewString(),
 		Title:    uuid.NewString(),
 		Address:  uuid.NewString(),
 		Type:     uuid.NewString(),

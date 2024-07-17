@@ -31,7 +31,7 @@ func NewBrandRepo(_ context.Context, db *postgresdb.DBConnection) (BrandRepo, er
 func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Brand, error) {
 	var result brandDB
 
-	query := "SELECT * FROM brands WHERE id = $1"
+	query := "SELECT * FROM shop.brands WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -43,7 +43,7 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Brand, 
 func (repo *repoImpl) SelectByTitleAndSeller(ctx context.Context, title string, sellerID int64) (*entity.Brand, error) {
 	var result brandDB
 
-	query := "SELECT * FROM brands WHERE title = $1 and seller_id = $2"
+	query := "SELECT * FROM shop.brands WHERE title = $1 and seller_id = $2"
 
 	err := repo.getReadConnection().Get(&result, query, title, sellerID)
 	if err != nil {
@@ -56,7 +56,7 @@ func (repo *repoImpl) SelectByTitleAndSeller(ctx context.Context, title string, 
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Brand) (*entity.Brand, error) {
 	charIDWrap := repository.IDWrapper{}
 
-	query := `INSERT INTO brands (title, seller_id) 
+	query := `INSERT INTO shop.brands (title, seller_id) 
             VALUES ($1, $2)
             ON CONFLICT (id) DO NOTHING
             RETURNING id`
@@ -72,7 +72,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Brand) (*entity.Bran
 func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Brand) error {
 	dbModel := convertToDBBrand(ctx, in)
 
-	query := `UPDATE brands SET 
+	query := `UPDATE shop.brands SET 
             title = $1, seller_id = $2
             WHERE id = $3`
 	_, err := repo.getWriteConnection().ExecOne(query, in.Title, in.SellerID, dbModel.ID)

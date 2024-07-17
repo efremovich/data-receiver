@@ -64,7 +64,7 @@ func TestCardRepo(t *testing.T) {
 	newSeller := entity.Seller{
 		Title:    "WB",
 		IsEnable: true,
-		ExtID:    "106-456-456",
+		ExternalID:    "106-456-456",
 	}
 
 	sellerModel, err := sqlSellerRepo.Insert(ctx, newSeller)
@@ -74,7 +74,7 @@ func TestCardRepo(t *testing.T) {
 
 	assert.Equal(t, newSeller.Title, sellerModel.Title)
 	assert.Equal(t, newSeller.IsEnable, sellerModel.IsEnable)
-	assert.Equal(t, newSeller.ExtID, sellerModel.ExtID)
+	assert.Equal(t, newSeller.ExternalID, sellerModel.ExternalID)
 	assert.Equal(t, newSeller.ID, sellerModel.ID)
 
 	newBrand := entity.Brand{

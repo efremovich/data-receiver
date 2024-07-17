@@ -48,7 +48,7 @@ func TestSizeRepo(t *testing.T) {
 	newSeller := entity.Seller{
 		Title:    uuid.NewString(),
 		IsEnable: true,
-		ExtID:    uuid.NewString(),
+		ExternalID:    uuid.NewString(),
 	}
 	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
 	if err != nil {

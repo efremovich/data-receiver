@@ -1,13 +1,13 @@
 -- +goose no transaction
 -- +goose Up
 -- +goose StatementBegin
-CREATE SCHEMA IF NOT EXISTS shop_dev;
-CREATE USER shop_user_rw PASSWORD '${DB_PASSWORD}';
-ALTER SCHEMA shop_dev OWNER TO shop_user_rw;
+CREATE SCHEMA IF NOT EXISTS shop;
+CREATE USER shop_user_rw PASSWORD '${USER_RW}';
+ALTER SCHEMA shop OWNER TO shop_user_rw;
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 DROP USER IF EXISTS shop_user_rw;
-DROP SCHEMA shop_dev;
+DROP SCHEMA shop;
 -- +goose StatementEnd

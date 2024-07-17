@@ -32,7 +32,7 @@ func NewCategoryRepo(_ context.Context, db *postgresdb.DBConnection) (CategoryRe
 func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Category, error) {
 	var result categoryDB
 
-	query := "SELECT * FROM categories WHERE id = $1"
+	query := "SELECT * FROM shop.categories WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -44,7 +44,7 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Cat
 func (repo *charRepoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Category, error) {
 	var result []categoryDB
 
-	query := "SELECT * FROM categories WHERE seller_id = $1"
+	query := "SELECT * FROM shop.categories WHERE seller_id = $1"
 
 	err := repo.getReadConnection().Select(&result, query, sellerID)
 	if err != nil {
@@ -61,7 +61,7 @@ func (repo *charRepoImpl) SelectBySellerID(ctx context.Context, sellerID int64) 
 func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Category, error) {
 	var result categoryDB
 
-	query := "SELECT * FROM categories WHERE title = $1"
+	query := "SELECT * FROM shop.categories WHERE title = $1"
 
 	err := repo.getReadConnection().Select(&result, query, title)
 	if err != nil {
@@ -72,7 +72,7 @@ func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*ent
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Category) (*entity.Category, error) {
-	query := `INSERT INTO categories (External_id, title, seller_id) 
+	query := `INSERT INTO shop.categories (external_id, title, seller_id) 
             VALUES ($1, $2, $3) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
@@ -87,7 +87,7 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Category) (*enti
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Category) error {
 	dbModel := convertToDBCategory(ctx, in)
 
-	query := `UPDATE categorys SET title = $1, seller_id = $2 WHERE id = $3`
+	query := `UPDATE shop.categories SET title = $1, seller_id = $2 WHERE id = $3`
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.SellerID, dbModel.ID)
 	if err != nil {
 		return err

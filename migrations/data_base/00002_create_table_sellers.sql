@@ -1,24 +1,24 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE shop_dev.sellers (
-    seller_id serial NOT NULL,
+CREATE TABLE shop.sellers (
+    id serial NOT NULL,
     title text NOT NULL,
     is_enabled boolean DEFAULT true,
-    ext_id text
+    external_id text
 );
-ALTER TABLE shop_dev.sellers OWNER TO shop_user_rw;
-ALTER TABLE ONLY shop_dev.sellers
-    ADD CONSTRAINT sellers_pkey PRIMARY KEY (seller_id);
+ALTER TABLE shop.sellers OWNER TO shop_user_rw;
+ALTER TABLE ONLY shop.sellers
+    ADD CONSTRAINT sellers_pkey PRIMARY KEY (id);
 
-COMMENT ON TABLE shop_dev.sellers IS 'Продавцы';
-COMMENT ON COLUMN shop_dev.sellers.seller_id IS 'Идентификатор';
-COMMENT ON COLUMN shop_dev.sellers.title IS 'Наименование продавца';
-COMMENT ON COLUMN shop_dev.sellers.is_enabled IS 'Признак активности';
-COMMENT ON COLUMN shop_dev.sellers.ext_id IS 'Внешний идентификатор';
+COMMENT ON TABLE shop.sellers IS 'Продавцы';
+COMMENT ON COLUMN shop.sellers.id IS 'Идентификатор';
+COMMENT ON COLUMN shop.sellers.title IS 'Наименование продавца';
+COMMENT ON COLUMN shop.sellers.is_enabled IS 'Признак активности';
+COMMENT ON COLUMN shop.sellers.external_id IS 'Внешний идентификатор продавца';
 
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE shop_dev.sellers;
+DROP TABLE shop.sellers;
 -- +goose StatementEnd

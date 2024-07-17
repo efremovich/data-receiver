@@ -3,9 +3,11 @@ package categoryrepo_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -19,6 +21,23 @@ func TestCategoryRepo(t *testing.T) {
 		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
 	}
 
+	sellerRepo, err := sellerrepo.NewSellerRepo(ctx, conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newSeller := entity.Seller{
+		Title:      uuid.NewString(),
+		IsEnabled:  true,
+		ExternalID: uuid.NewString(),
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+	seller, err := sellerRepo.Insert(ctx, newSeller)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	sqlRepo, err := categoryrepo.NewCategoryRepo(ctx, conn)
 	if err != nil {
 		t.Fatal(err)
@@ -27,7 +46,7 @@ func TestCategoryRepo(t *testing.T) {
 	newCategory := entity.Category{
 		ExternalID: 1,
 		Title:      uuid.NewString(),
-		SellerID:   1,
+		SellerID:   seller.ID,
 	}
 	// Вставка
 	model, err := sqlRepo.Insert(ctx, newCategory)
@@ -35,7 +54,7 @@ func TestCategoryRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, model.Title, newCategory.Title)
-	assert.Equal(t, model.SellerID, newCategory.Title)
+	assert.Equal(t, model.SellerID, newCategory.SellerID)
 	assert.Equal(t, model.ExternalID, newCategory.ExternalID)
 
 	// Выборка по ID
@@ -45,7 +64,7 @@ func TestCategoryRepo(t *testing.T) {
 	}
 
 	assert.Equal(t, model.Title, newCategory.Title)
-	assert.Equal(t, model.SellerID, newCategory.Title)
+	assert.Equal(t, model.SellerID, newCategory.SellerID)
 	assert.Equal(t, model.ExternalID, newCategory.ExternalID)
 
 	// Выборка по ID
@@ -55,7 +74,7 @@ func TestCategoryRepo(t *testing.T) {
 	}
 	for _, model := range models {
 		assert.Equal(t, model.Title, newCategory.Title)
-		assert.Equal(t, model.SellerID, newCategory.Title)
+		assert.Equal(t, model.SellerID, newCategory.SellerID)
 		assert.Equal(t, model.ExternalID, newCategory.ExternalID)
 
 	}

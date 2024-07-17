@@ -85,7 +85,6 @@ func convertToDBCategories(_ context.Context, in entity.Category) *categoryDB {
 		ID:    in.ID,
 		Title: in.Title,
 
-		CardID:   in.CardID,
 		SellerID: in.SellerID,
 	}
 }
@@ -95,7 +94,6 @@ func (c categoryDB) ConvertToEntityCategory(_ context.Context) *entity.Category 
 		ID:    c.ID,
 		Title: c.Title,
 
-		CardID:   c.CardID,
 		SellerID: c.SellerID,
 	}
 }
