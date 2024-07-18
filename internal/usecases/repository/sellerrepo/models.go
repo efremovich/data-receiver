@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/efremovich/data-receiver/internal/entity"
-	"github.com/efremovich/data-receiver/internal/usecases/repository"
+ 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 )
 
 type sellerDB struct {

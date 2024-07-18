@@ -9,8 +9,7 @@ CREATE TABLE shop.cards (
     description text,
     created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone DEFAULT now(),
-    brand_id integer NOT NULL,
-    category_id integer NOT NULL
+    brand_id integer NOT NULL
 );
 ALTER TABLE shop.cards OWNER TO shop_user_rw;
 
@@ -18,8 +17,6 @@ ALTER TABLE ONLY shop.cards
     ADD CONSTRAINT cards_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY shop.cards
     ADD CONSTRAINT cards_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES shop.brands(id);
-ALTER TABLE ONLY shop.cards
-    ADD CONSTRAINT cards_category_id_fkey FOREIGN KEY (category_id) REFERENCES shop.categories(id);
 
 CREATE INDEX cards_created_at_idx ON shop.cards USING btree (created_at);
 CREATE INDEX cards_title_idx ON shop.cards USING btree (title);

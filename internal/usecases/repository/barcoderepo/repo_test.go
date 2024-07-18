@@ -42,7 +42,6 @@ func TestBarcodeRepo(t *testing.T) {
 	}
 
 	// Создание бренда
-
 	sqlBrandRepo, err := brandrepo.NewBrandRepo(ctx, conn)
 	if err != nil {
 		t.Fatalf(err.Error())

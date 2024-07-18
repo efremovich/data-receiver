@@ -32,7 +32,7 @@ func TestSellerRepo(t *testing.T) {
 	}
 	// Создание
 	model, err := sqlRepo.Insert(ctx, newSeller)
-  if err != nil {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -81,3 +81,4 @@ func TestSellerRepo(t *testing.T) {
 	assert.Equal(t, model.IsEnabled, newSeller.IsEnabled)
 	assert.Equal(t, model.ExternalID, newSeller.ExternalID)
 }
+

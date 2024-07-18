@@ -47,6 +47,7 @@ type Category struct {
 	Title      string
 
 	SellerID int64
+  ParentID int64 // Родительская категория
 }
 
 type Size struct {

@@ -13,6 +13,7 @@ ENV DB_PORT=5432
 ENV DB_USER=postgres
 ENV DB_PASSWORD=postgres
 ENV DB_NAME=postgres
+ENV DB_USER_RW_PASSWORD=postgres
 
 # remote
 # ENV DB_HOST=31.131.254.247
