@@ -72,11 +72,11 @@ func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*ent
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Category) (*entity.Category, error) {
-	query := `INSERT INTO shop.categories (external_id, title, seller_id) 
-            VALUES ($1, $2, $3) RETURNING id`
+	query := `INSERT INTO shop.categories (title, seller_id, card_id, external_id, parent_id)
+            VALUES ($1, $2, $3, $4, $5) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.ExternalID, in.Title, in.SellerID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,in.Title, in.Title, in.CardID, in.ExternalID, in.ParentID)
 	if err != nil {
 		return nil, err
 	}
@@ -87,8 +87,8 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Category) (*enti
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Category) error {
 	dbModel := convertToDBCategory(ctx, in)
 
-	query := `UPDATE shop.categories SET title = $1, seller_id = $2 WHERE id = $3`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.SellerID, dbModel.ID)
+	query := `UPDATE shop.categories SET title = $1, seller_id = $2, card_id = $3, external_id = $4, parent_id = $5 WHERE id = $6`
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.SellerID, dbModel.CardID, dbModel.ExternalID, dbModel.ParentID, dbModel.ID)
 	if err != nil {
 		return err
 	}

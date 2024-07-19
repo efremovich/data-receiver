@@ -43,11 +43,12 @@ type Brand struct {
 
 type Category struct {
 	ID         int64
-	ExternalID int64 // id в магазине
 	Title      string
+	ExternalID int64 // id в магазине
 
+	CardID   int64
 	SellerID int64
-  ParentID int64 // Родительская категория
+	ParentID int64 // Родительская категория
 }
 
 type Size struct {
