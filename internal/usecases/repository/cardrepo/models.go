@@ -17,42 +17,7 @@ type cardDB struct {
 	Description sql.NullString `db:"description"`
 	CreatedAt   time.Time      `db:"created_at"`
 	UpdatedAt   time.Time      `db:"updated_at"`
-	BrandID     int            `db:"brand_id"`
-  CategoryID  int            `db:"category_id"`
-}
-
-
-type categoryDB struct {
-	ID    int64  `db:"id"`
-	Title string `db:"title"`
-
-	CardID   int64 `db:"card_id"`
-	SellerID int64 `db:"seller_id"`
-}
-
-type BarcodeDB struct {
-	Barcode string `db:"barcode"`
-
-	SizeID   int64 `db:"size_id"`
-	SellerID int64 `db:"seller_id"`
-}
-
-func convertToBarcodeDB(_ context.Context, in entity.Barcode) *BarcodeDB {
-	return &BarcodeDB{
-		Barcode: in.Barcode,
-
-		SizeID:   in.SizeID,
-		SellerID: in.SellerID,
-	}
-}
-
-func (c BarcodeDB) ConvertToEntityBarcode(_ context.Context) *entity.Barcode {
-	return &entity.Barcode{
-		Barcode: c.Barcode,
-
-		SizeID:   c.SizeID,
-		SellerID: c.SellerID,
-	}
+	BrandID     int64          `db:"brand_id"`
 }
 
 func convertToDBCard(_ context.Context, in entity.Card) *cardDB {
@@ -62,6 +27,7 @@ func convertToDBCard(_ context.Context, in entity.Card) *cardDB {
 		VendorCode:  repository.StringToNullString(in.VendorCode),
 		Title:       in.Title,
 		Description: repository.StringToNullString(in.Description),
+		BrandID:     in.Brand.ID,
 		CreatedAt:   in.CreatedAt,
 		UpdatedAt:   in.UpdatedAt,
 	}
@@ -74,26 +40,8 @@ func (c cardDB) ConvertToEntityCard(_ context.Context) *entity.Card {
 		VendorCode:  repository.NullStringToString(c.VendorCode),
 		Title:       c.Title,
 		Description: repository.NullStringToString(c.Description),
+		Brand:       entity.Brand{ID: c.BrandID},
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
-	}
-}
-
-
-func convertToDBCategories(_ context.Context, in entity.Category) *categoryDB {
-	return &categoryDB{
-		ID:    in.ID,
-		Title: in.Title,
-
-		SellerID: in.SellerID,
-	}
-}
-
-func (c categoryDB) ConvertToEntityCategory(_ context.Context) *entity.Category {
-	return &entity.Category{
-		ID:    c.ID,
-		Title: c.Title,
-
-		SellerID: c.SellerID,
 	}
 }

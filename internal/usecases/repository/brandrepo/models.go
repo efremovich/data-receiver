@@ -7,7 +7,7 @@ import (
 )
 
 type brandDB struct {
-	ID       int64  `db:"brand_id"`
+	ID       int64  `db:"id"`
 	Title    string `db:"title"`
 	SellerID int64  `db:"seller_id"`
 }

@@ -8,9 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/efremovich/data-receiver/internal/entity"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
@@ -18,61 +15,11 @@ import (
 func TestSizeRepo(t *testing.T) {
 	ctx := context.Background()
 
-	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_receiver_db")
+	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_base")
 	if err != nil {
 		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
 	}
-
-	// Создание карточки
-	sqlCardRepo, err := cardrepo.NewCardRepo(ctx, conn)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	newCard := entity.Card{
-		VendorID:    uuid.NewString(),
-		VendorCode:  uuid.NewString(),
-		Title:       uuid.NewString(),
-		Description: uuid.NewString(),
-	}
-
-	modelCard, err := sqlCardRepo.Insert(ctx, newCard)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Создание цены
-	sqlSellerRepo, err := sellerrepo.NewSellerRepo(ctx, conn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	newSeller := entity.Seller{
-		Title:    uuid.NewString(),
-		IsEnable: true,
-		ExternalID:    uuid.NewString(),
-	}
-	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Создание цены
-	sqlPriceRepo, err := pricerepo.NewPriceRepo(ctx, conn)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	newPrice := entity.Price{
-		Price:        5.5,
-		Discount:     1.5,
-		SpecialPrice: 8.0,
-		SellerID:     modelSeller.ID,
-		CardID:       modelCard.ID,
-	}
-
-	modelPrice, err := sqlPriceRepo.Insert(ctx, newPrice)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+  // Создание размера
 	sqlRepo, err := sizerepo.NewSizeRepo(ctx, conn)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -80,8 +27,6 @@ func TestSizeRepo(t *testing.T) {
 	newSize := entity.Size{
 		TechSize: uuid.NewString(),
 		Title:    uuid.NewString(),
-		CardID:   modelCard.ID,
-		PriceID:  modelPrice.ID,
 	}
 	// Создание
 	model, err := sqlRepo.Insert(ctx, newSize)
@@ -91,8 +36,6 @@ func TestSizeRepo(t *testing.T) {
 
 	assert.Equal(t, model.TechSize, newSize.TechSize)
 	assert.Equal(t, model.Title, newSize.Title)
-	assert.Equal(t, model.CardID, newSize.CardID)
-	assert.Equal(t, model.PriceID, newSize.PriceID)
 
 	// Выборка по ID
 	model, err = sqlRepo.SelectByID(ctx, model.ID)
@@ -102,38 +45,28 @@ func TestSizeRepo(t *testing.T) {
 
 	assert.Equal(t, model.TechSize, newSize.TechSize)
 	assert.Equal(t, model.Title, newSize.Title)
-	assert.Equal(t, model.CardID, newSize.CardID)
-	assert.Equal(t, model.PriceID, newSize.PriceID)
 
-	// Выборка по id карточки
-	models, err := sqlRepo.SelectByCardID(ctx, newSize.CardID)
+	// Выборка по Title
+	model, err = sqlRepo.SelectByTitle(ctx, model.Title)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, model := range models {
-		assert.Equal(t, model.TechSize, newSize.TechSize)
-		assert.Equal(t, model.Title, newSize.Title)
-		assert.Equal(t, model.CardID, newSize.CardID)
-		assert.Equal(t, model.PriceID, newSize.PriceID)
-	}
 
-	// Выборка по id карточки
-	models, err = sqlRepo.SelectByPriceID(ctx, newSize.CardID)
+	assert.Equal(t, model.TechSize, newSize.TechSize)
+	assert.Equal(t, model.Title, newSize.Title)
+
+	// Выборка по Title
+	model, err = sqlRepo.SelectByTechSize(ctx, model.TechSize)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, model := range models {
-		assert.Equal(t, model.TechSize, newSize.TechSize)
-		assert.Equal(t, model.Title, newSize.Title)
-		assert.Equal(t, model.CardID, newSize.CardID)
-		assert.Equal(t, model.PriceID, newSize.PriceID)
-	}
+
+	assert.Equal(t, model.TechSize, newSize.TechSize)
+	assert.Equal(t, model.Title, newSize.Title)
 
 	// Обновление
 	newSize.Title = uuid.NewString()
 	newSize.TechSize = uuid.NewString()
-	newSize.CardID = modelCard.ID
-	newSize.PriceID = modelPrice.ID
 	newSize.ID = model.ID
 
 	err = sqlRepo.UpdateExecOne(ctx, newSize)
@@ -149,6 +82,4 @@ func TestSizeRepo(t *testing.T) {
 
 	assert.Equal(t, model.TechSize, newSize.TechSize)
 	assert.Equal(t, model.Title, newSize.Title)
-	assert.Equal(t, model.CardID, newSize.CardID)
-	assert.Equal(t, model.PriceID, newSize.PriceID)
 }

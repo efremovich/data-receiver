@@ -15,8 +15,6 @@ ALTER TABLE ONLY shop.categories
     ADD CONSTRAINT categories_card_id_fkey FOREIGN KEY (card_id) REFERENCES shop.cards(id);
 ALTER TABLE ONLY shop.categories
     ADD CONSTRAINT categories_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES shop.sellers(id);
-ALTER TABLE ONLY shop.categories
-    ADD CONSTRAINT categories_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES shop.categories(id);
 
 CREATE INDEX categories_seller_id_idx ON shop.categories USING btree (seller_id);
 

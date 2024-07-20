@@ -30,7 +30,7 @@ func NewBarcodeRepo(_ context.Context, db *postgresdb.DBConnection) (BarcodeRepo
 func (repo *charRepoImpl) SelectByBarcode(ctx context.Context, barcode string) (*entity.Barcode, error) {
 	var result barcodeDB
 
-	query := "SELECT * FROM barcodes WHERE barcode = $1"
+	query := "SELECT * FROM shop.barcodes WHERE barcode = $1"
 
 	err := repo.getReadConnection().Get(&result, query, barcode)
 	if err != nil {
@@ -40,11 +40,11 @@ func (repo *charRepoImpl) SelectByBarcode(ctx context.Context, barcode string) (
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Barcode) (*entity.Barcode, error) {
-	query := `INSERT INTO barcodes (barcode, size_id, seller_id) 
+	query := `INSERT INTO shop.barcodes (barcode, price_size_id, seller_id) 
             VALUES ($1, $2, $3) RETURNING barcode`
 	charIDWrap := repository.BarcodeWraper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Barcode, in.SizeID, in.SellerID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Barcode, in.PriceSizeID, in.SellerID)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +54,8 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Barcode) (*entit
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Barcode) error {
 	dbModel := convertToDBBarcode(ctx, in)
 
-	query := `UPDATE barcodes SET size_id = $1, seller_id = $2 WHERE barcode = $3`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.SizeID, dbModel.SellerID, dbModel.Barcode)
+	query := `UPDATE shop.barcodes SET price_size_id = $1, seller_id = $2 WHERE barcode = $3`
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.PriceSizeID, dbModel.SellerID, dbModel.Barcode)
 	if err != nil {
 		return err
 	}

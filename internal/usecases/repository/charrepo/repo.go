@@ -14,7 +14,7 @@ type CharRepo interface {
 	Insert(ctx context.Context, in entity.Characteristic) (*entity.Characteristic, error)
 	UpdateExecOne(ctx context.Context, in entity.Characteristic) error
 
-	SelectByCardID(ctx context.Context, cardID int64, value string) ([]*entity.CardCharacteristic, error)
+	// SelectByCardIDAndCharID(ctx context.Context, cardID, charID int64) ([]*entity.CardCharacteristic, error)
 
 	SelectCardCharByID(ctx context.Context, id int64) (*entity.CardCharacteristic, error)
 	InsertCardChar(ctx context.Context, in entity.CardCharacteristic) (*entity.CardCharacteristic, error)
@@ -37,7 +37,7 @@ func NewCharRepo(_ context.Context, db *postgresdb.DBConnection) (CharRepo, erro
 func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Characteristic, error) {
 	var result characteristicDB
 
-	query := "SELECT id, title FROM characteristics WHERE id = $1"
+	query := "SELECT id, title FROM shop.characteristics WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -49,7 +49,7 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Cha
 func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Characteristic, error) {
 	var result characteristicDB
 
-	query := "SELECT id, title FROM characteristics WHERE title = $1"
+	query := "SELECT id, title FROM shop.characteristics WHERE title = $1"
 
 	err := repo.getReadConnection().Get(&result, query, title)
 	if err != nil {
@@ -80,34 +80,8 @@ func (repo *charRepoImpl) SelectCardCharByID(ctx context.Context, id int64) (*en
 	return result.ConvertToEntityCardCharacteristic(ctx), nil
 }
 
-func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64, value string) ([]*entity.CardCharacteristic, error) {
-	var result []cardCharacteristicDB
-
-	query := `select
-              cc.id,
-              cc.card_id,
-              cc.value,
-              cc.characteristics_id
-            from
-              card_characteristics cc
-            where
-              cc.card_id = $1 and cc.value::text = $2`
-
-	err := repo.getReadConnection().Select(&result, query, cardID, value)
-	if err != nil {
-		return nil, err
-	}
-
-	var resEntity []*entity.CardCharacteristic
-	for _, v := range result {
-		resEntity = append(resEntity, v.ConvertToEntityCardCharacteristic(ctx))
-	}
-
-	return resEntity, nil
-}
-
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Characteristic) (*entity.Characteristic, error) {
-	query := `INSERT INTO characteristics (title) 
+	query := `INSERT INTO shop.characteristics (title) 
             VALUES ($1) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
@@ -120,7 +94,7 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Characteristic) 
 }
 
 func (repo *charRepoImpl) InsertCardChar(ctx context.Context, in entity.CardCharacteristic) (*entity.CardCharacteristic, error) {
-	query := `INSERT INTO card_characteristics (card_id, value, characteristic_id) 
+	query := `INSERT INTO shop.cards_characteristics (card_id, value, characteristic_id) 
             VALUES ($1, $2, $3) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
@@ -135,7 +109,7 @@ func (repo *charRepoImpl) InsertCardChar(ctx context.Context, in entity.CardChar
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Characteristic) error {
 	dbModel := convertToDBCharacteristic(ctx, in)
 
-	query := `UPDATE characteristics SET title = $1 WHERE id = $2`
+	query := `UPDATE shop.characteristics SET title = $1 WHERE id = $2`
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.ID)
 	if err != nil {
 		return err
@@ -147,7 +121,7 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Character
 func (repo *charRepoImpl) UpdateExecOneCardChar(ctx context.Context, in entity.CardCharacteristic) error {
 	dbModel := convertToDBCardCharacteristic(ctx, in)
 
-	query := `UPDATE characteristics SET card_id = $1, value = $2, characteristic_id = $3 WHERE id = $4`
+	query := `UPDATE shop.characteristics SET card_id = $1, value = $2, characteristic_id = $3 WHERE id = $4`
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.CardID, dbModel.Value, dbModel.CharacteristicID, dbModel.ID)
 	if err != nil {
 		return err

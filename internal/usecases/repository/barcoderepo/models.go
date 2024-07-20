@@ -7,26 +7,26 @@ import (
 )
 
 type barcodeDB struct {
-	ID       int64  `db:"id"`
-	Barcode  string `db:"barcode"`
-	SizeID   int64  `db:"size_id"`
-	SellerID int64  `db:"seller_id"`
+	ID          int64  `db:"id"`
+	Barcode     string `db:"barcode"`
+	SellerID    int64  `db:"seller_id"`
+	PriceSizeID int64  `db:"price_size_id"`
 }
 
 func convertToDBBarcode(_ context.Context, in entity.Barcode) *barcodeDB {
 	return &barcodeDB{
-		ID:       in.ID,
-		Barcode:  in.Barcode,
-		SizeID:   in.SizeID,
-		SellerID: in.SellerID,
+		ID:          in.ID,
+		Barcode:     in.Barcode,
+		SellerID:    in.SellerID,
+		PriceSizeID: in.PriceSizeID,
 	}
 }
 
 func (c barcodeDB) convertToEntityBarcode(_ context.Context) *entity.Barcode {
 	return &entity.Barcode{
-		ID:       c.ID,
-		Barcode:  c.Barcode,
-		SizeID:   c.SizeID,
-		SellerID: c.SellerID,
+		ID:          c.ID,
+		Barcode:     c.Barcode,
+		PriceSizeID: c.PriceSizeID,
+		SellerID:    c.SellerID,
 	}
 }

@@ -56,9 +56,6 @@ type Size struct {
 	ExternalID int64  // id в магазине
 	TechSize   string // Технический размер (64-127)
 	Title      string // Произвольное написание
-
-	CardID  int64
-	PriceID int64 // Цена размера
 }
 
 type Barcode struct {
@@ -66,7 +63,7 @@ type Barcode struct {
 	Barcode    string // Штрихкод
 	ExternalID int64  // id в магазине
 
-	SizeID   int64
+  PriceSizeID int64 
 	SellerID int64
 }
 

@@ -3,96 +3,163 @@ package charrepo_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
 
 func TestCharRepo(t *testing.T) {
 	ctx := context.Background()
 
-	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_receiver_db")
+	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_base")
 	if err != nil {
 		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
 	}
 
-	// Создание карточки
+	// Создание Characteristic
+	sqlCharacteristicRepo, err := charrepo.NewCharRepo(ctx, conn)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	newChar := entity.Characteristic{
+		Title: uuid.NewString(),
+	}
+
+	modelChar, err := sqlCharacteristicRepo.Insert(ctx, newChar)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	assert.Equal(t, modelChar.Title, newChar.Title)
+
+	modelSelectChar, err := sqlCharacteristicRepo.SelectByID(ctx, modelChar.ID)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	assert.Equal(t, modelChar.ID, modelSelectChar.ID)
+	assert.Equal(t, modelChar.Title, modelSelectChar.Title)
+
+	modelSelectChar, err = sqlCharacteristicRepo.SelectByTitle(ctx, modelChar.Title)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	assert.Equal(t, modelChar.ID, modelSelectChar.ID)
+	assert.Equal(t, modelChar.Title, modelSelectChar.Title)
+}
+
+func TestCharCardRepo(t *testing.T) {
+	ctx := context.Background()
+
+	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_base")
+	if err != nil {
+		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
+	}
+
+	// Создание Seller
+	sellerRepo, err := sellerrepo.NewSellerRepo(ctx, conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newSeller := entity.Seller{
+		Title:      uuid.NewString(),
+		IsEnabled:  true,
+		ExternalID: uuid.NewString(),
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+	modelSeller, err := sellerRepo.Insert(ctx, newSeller)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Создание Brand
+	sqlBrandRepo, err := brandrepo.NewBrandRepo(ctx, conn)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	newBrand := entity.Brand{
+		Title:    uuid.NewString(),
+		SellerID: modelSeller.ID,
+	}
+	modelBrand, err := sqlBrandRepo.Insert(ctx, newBrand)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Создание Card
 	sqlCardRepo, err := cardrepo.NewCardRepo(ctx, conn)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
+
 	newCard := entity.Card{
+		ExternalID:  0,
 		VendorID:    uuid.NewString(),
 		VendorCode:  uuid.NewString(),
 		Title:       uuid.NewString(),
 		Description: uuid.NewString(),
+		Brand:       *modelBrand,
 	}
 
 	modelCard, err := sqlCardRepo.Insert(ctx, newCard)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	sqlRepo, err := charrepo.NewCharRepo(ctx, conn)
+	// Создание Characteristic
+	sqlCharacteristicRepo, err := charrepo.NewCharRepo(ctx, conn)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 
 	newChar := entity.Characteristic{
-		Title:  uuid.NewString(),
-		Value:  []string{"22", "33", "44", "55", "66", "77", "88", "99"},
-		CardID: modelCard.ID,
+		Title: uuid.NewString(),
 	}
 
-	// Создание
-	model, err := sqlRepo.Insert(ctx, newChar)
+	modelChar, err := sqlCharacteristicRepo.Insert(ctx, newChar)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf(err.Error())
 	}
-	assert.Equal(t, newChar.Title, model.Title)
-	assert.Equal(t, newChar.Value, model.Value)
 
-	// Выборка по ID
-	model, err = sqlRepo.SelectByID(ctx, model.ID)
+	// Создание CardCharacteristic
+	sqlCardCharacteristicRepo, err := charrepo.NewCharRepo(ctx, conn)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf(err.Error())
+	}
+	newCardChar := entity.CardCharacteristic{
+		Value:            []string{"1", "2", "3"},
+		Title:            uuid.NewString(),
+		CharacteristicID: modelChar.ID,
+		CardID:           modelCard.ID,
 	}
 
-	assert.Equal(t, newChar.Title, model.Title)
-	assert.Equal(t, newChar.Value, model.Value)
-
-	// Выборка по названию
-	models, err := sqlRepo.SelectByCardID(ctx, modelCard.ID)
+	modelCardChar, err := sqlCardCharacteristicRepo.InsertCardChar(ctx, newCardChar)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf(err.Error())
 	}
-	for _, model := range models {
-		assert.Equal(t, newChar.Title, model.Title)
-		assert.Equal(t, newChar.Value, model.Value)
-	}
+	assert.Equal(t, modelCardChar.Title, newCardChar.Title)
+	assert.Equal(t, modelCardChar.CharacteristicID, newCardChar.CharacteristicID)
+	assert.Equal(t, modelCardChar.CardID, newCardChar.CardID)
+	assert.Equal(t, modelCardChar.Value, newCardChar.Value)
 
-	// Обновление
-  newChar.ID = model.ID
-	newChar.Title = uuid.NewString()
-	newChar.Value = []string{"11", "22", "33", "44", "55", "66", "77", "88", "99"}
-	newChar.CardID = modelCard.ID
-
-	err = sqlRepo.UpdateExecOne(ctx, newChar)
+  modelSelectCardChar, err := sqlCardCharacteristicRepo.SelectCardCharByID(ctx, modelCardChar.CardID)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf(err.Error())
 	}
-
-	// Выборка по ID
-	model, err = sqlRepo.SelectByID(ctx, newChar.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, newChar.Title, model.Title)
-	assert.Equal(t, newChar.Value, model.Value)
+	assert.Equal(t, modelCardChar.Title, modelSelectCardChar.Title)
+	assert.Equal(t, modelCardChar.CharacteristicID, modelSelectCardChar.CharacteristicID)
+	assert.Equal(t, modelCardChar.CardID, modelSelectCardChar.CardID)
+	assert.Equal(t, modelCardChar.Value, modelSelectCardChar.Value)
 }

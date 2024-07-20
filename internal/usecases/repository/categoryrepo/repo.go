@@ -75,8 +75,7 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Category) (*enti
 	query := `INSERT INTO shop.categories (title, seller_id, card_id, external_id, parent_id)
             VALUES ($1, $2, $3, $4, $5) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
-
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,in.Title, in.Title, in.CardID, in.ExternalID, in.ParentID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title, in.SellerID, in.CardID, in.ExternalID, in.ParentID)
 	if err != nil {
 		return nil, err
 	}

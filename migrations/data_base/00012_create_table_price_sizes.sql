@@ -6,6 +6,7 @@ CREATE TABLE shop.price_sizes (
     size_id integer NOT NULL,
     price numeric(10,2) NOT NULL,
     discount numeric(10,2) NOT NULL,
+    special_price numeric(10,2) NOT NULL,
     updated_at timestamp NOT NULL
 );
 ALTER TABLE shop.price_sizes OWNER TO shop_user_rw;
@@ -26,13 +27,14 @@ COMMENT ON COLUMN shop.price_sizes.id IS 'Уникальный идентифи�
 COMMENT ON COLUMN shop.price_sizes.card_id IS 'Идентификатор номенклатуры';
 COMMENT ON COLUMN shop.price_sizes.size_id IS 'Размер';
 COMMENT ON COLUMN shop.price_sizes.price IS 'Цена';
+COMMENT ON COLUMN shop.price_sizes.special_price IS 'Специальная цена';
 COMMENT ON COLUMN shop.price_sizes.discount IS 'Скидка';
 
 -- +goose StatementEnd
-
 -- +goose Down
 -- +goose StatementBegin
 DROP INDEX price_sizes_card_id_idx;
 DROP INDEX price_sizes_size_id_idx;
 DROP TABLE shop.price_sizes;
 -- +goose StatementEnd
+

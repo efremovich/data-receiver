@@ -30,9 +30,6 @@ func (c characteristicDB) ConvertToEntityCharacteristic(_ context.Context) *enti
 	return &entity.Characteristic{
 		ID:    c.ID,
 		Title: c.Title,
-		// Value: strings.Split(c.Value, ","),
-
-		// CardID: c.CardID,
 	}
 }
 
