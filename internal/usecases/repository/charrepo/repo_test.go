@@ -140,7 +140,7 @@ func TestCharCardRepo(t *testing.T) {
 	}
 	newCardChar := entity.CardCharacteristic{
 		Value:            []string{"1", "2", "3"},
-		Title:            uuid.NewString(),
+		Title:            modelChar.Title,
 		CharacteristicID: modelChar.ID,
 		CardID:           modelCard.ID,
 	}

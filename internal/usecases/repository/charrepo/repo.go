@@ -61,17 +61,17 @@ func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*ent
 func (repo *charRepoImpl) SelectCardCharByID(ctx context.Context, id int64) (*entity.CardCharacteristic, error) {
 	var result cardCharacteristicDB
 
-	query := `Select
-            cc.id,
-            cc.title,
-            array_to_string(cc.value, ',') as value, 
-            cc.card_id,
-            c.characteristic_id
+	query := `select
+              cc.id,
+              cc.value as value,
+              cc.card_id,
+              cc.characteristic_id,
+              c.title
             from
-            shop.cards_characteristics cc
-            join shop."characteristics" c on
-            c.characteristic_id = cc.card_characteristic_id 
-            WHERE id = $1`
+              shop.cards_characteristics cc
+              left join shop.characteristics c on c.id = cc.characteristic_id 
+            where
+              cc.id = $1`
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -97,8 +97,9 @@ func (repo *charRepoImpl) InsertCardChar(ctx context.Context, in entity.CardChar
 	query := `INSERT INTO shop.cards_characteristics (card_id, value, characteristic_id) 
             VALUES ($1, $2, $3) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
+	dbModel := convertToDBCardCharacteristic(ctx, in)
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.CardID, in.Value, in.CharacteristicID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.CardID, dbModel.Value, dbModel.CharacteristicID)
 	if err != nil {
 		return nil, err
 	}
