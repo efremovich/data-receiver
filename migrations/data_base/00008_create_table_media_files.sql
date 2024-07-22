@@ -9,7 +9,7 @@ ALTER TABLE shop.media_files_types_enum OWNER TO shop_user_rw;
 ALTER TABLE ONLY shop.media_files_types_enum
     ADD CONSTRAINT media_file_types_enum_pkey PRIMARY KEY (id);
 
-COMMENT ON TABLE shop.media_files_types_enum IS 'Медиафайлы';
+COMMENT ON TABLE shop.media_files_types_enum IS 'Типы медиафайлов';
 COMMENT ON COLUMN shop.media_files_types_enum.id IS 'Идентификатор';
 COMMENT ON COLUMN shop.media_files_types_enum.type IS 'Тип медиа файла';
 
@@ -47,5 +47,6 @@ DROP TABLE shop.media_files_types_enum
 DROP INDEX media_files_card_id_idx;
 DROP TABLE shop.media_files;
 -- +goose StatementEnd
+
 
 

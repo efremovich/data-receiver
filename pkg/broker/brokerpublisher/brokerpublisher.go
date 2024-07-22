@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	anats "github.com/efremovich/data-receiver/pkg/anats"
@@ -55,7 +56,9 @@ func (b brokerPublisherImpl) Ping() error {
 func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageDescription) error {
 	// Преобразование пакета приложения в сообщение.
 	msg := tmpPackageSenderMsg{
-    Cursor: p.Cursor,
+		Cursor:    p.Cursor,
+		UpdatedAt: p.UpdatedAt,
+		Limit:     p.Limit,
 	}
 
 	// Сериализация пакета.
@@ -69,5 +72,7 @@ func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageD
 }
 
 type tmpPackageSenderMsg struct {
-	Cursor      int // Указатель на последнюю полученную запись из внешнего источника
+	Cursor    int // Указатель на последнюю полученную запись из внешнего источника
+	UpdatedAt *time.Time
+	Limit     int
 }

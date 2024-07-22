@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/efremovich/data-receiver/config"
@@ -32,9 +33,9 @@ type Dimensions struct {
 	IsValid bool `json:"isValid"`
 }
 type Characteristics struct {
-	ID    int      `json:"id"`
-	Name  string   `json:"name"`
-	Value []string `json:"value,omitempty"`
+	ID    int         `json:"id"`
+	Name  string      `json:"name"`
+	Value interface{} `json:"value,omitempty"`
 }
 type Sizes struct {
 	ChrtID   int      `json:"chrtID"`
@@ -68,9 +69,10 @@ type Cards struct {
 }
 
 type Cursor struct {
-	NmID  int `json:"nmID,omitempty"`
-	Total int `json:"total,omitempty"`
-	Limit int `json:"limit,omitempty"`
+	NmID      int        `json:"nmID,omitempty"`
+	Total     int        `json:"total,omitempty"`
+	Limit     int        `json:"limit,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 type Filter struct {
@@ -92,7 +94,7 @@ type Setting struct {
 }
 
 type ExtApiFetcher interface {
-	GetCards(ctx context.Context, cursor int) ([]entity.Card, int, error)
+	GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error)
 	Ping(ctx context.Context) error
 }
 
@@ -113,23 +115,23 @@ type wbAPIclientImp struct {
 	token  string
 }
 
-func (wb *wbAPIclientImp) GetCards(ctx context.Context, cursor int) ([]entity.Card, int, error) {
+func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
 	const methodName = "/content/v2/get/cards/list?locale=ru"
 	// TODO вынести настройки и передавать их в теле сообщения nats
 	requestSettings := Settings{
-		Sort:   Sort{Ascending: false},
+		Sort:   Sort{Ascending: true},
 		Filter: Filter{WithPhoto: -1},
-		Cursor: Cursor{Limit: 2, NmID: cursor},
+		Cursor: Cursor{Limit: desc.Limit, NmID: desc.Cursor, UpdatedAt: desc.UpdatedAt},
 	}
 
 	requestData, err := json.Marshal(Setting{Setting: requestSettings})
 	if err != nil {
-		return nil, 0, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
+		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", wb.addr, methodName), bytes.NewReader(requestData))
 	if err != nil {
-		return nil, 0, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
+		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}
 	req.Header.Set("Authorization", wb.token)
 	req.Header.Set("Content-Type", "application/json")
@@ -137,12 +139,12 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, cursor int) ([]entity.Ca
 
 	resp, err := wb.client.Do(req)
 	if err != nil && resp.StatusCode != http.StatusOK {
-		return nil, 0, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
+		return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
 	}
 
 	var wbResponse WbResponse
 	if err := json.NewDecoder(resp.Body).Decode(&wbResponse); err != nil {
-		return nil, 0, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
+		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
 	}
 
 	var cardsList []entity.Card
@@ -157,7 +159,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, cursor int) ([]entity.Ca
 		for _, c := range v.Characteristics {
 			char := entity.CardCharacteristic{
 				Title: c.Name,
-				Value: c.Value,
+				Value: convertInterfaceToStringSlice(c.Value),
 			}
 			characteristics = append(characteristics, &char)
 		}
@@ -210,13 +212,32 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, cursor int) ([]entity.Ca
 			Sizes:           sizes,
 			MediaFile:       mediaFile,
 			Dimensions:      dimensions,
+			UpdatedAt:       v.UpdatedAt,
 		}
 		cardsList = append(cardsList, card)
 	}
 
-	return cardsList, wbResponse.Cursor.NmID, nil
+	return cardsList, nil
 }
 
 func (wb *wbAPIclientImp) Ping(ctx context.Context) error {
+	return nil
+}
+
+func convertInterfaceToStringSlice(input interface{}) []string {
+	switch v := input.(type) {
+	case int:
+		return []string{strconv.Itoa(v)}
+	case string:
+		return []string{v}
+	case []string:
+		return v
+	case []interface{}:
+		var output []string
+		for _, vv := range v {
+			output = append(output, convertInterfaceToStringSlice(vv)...)
+		}
+		return output
+	}
 	return nil
 }

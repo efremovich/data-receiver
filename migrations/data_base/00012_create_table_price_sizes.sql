@@ -31,10 +31,10 @@ COMMENT ON COLUMN shop.price_sizes.special_price IS 'Специальная це
 COMMENT ON COLUMN shop.price_sizes.discount IS 'Скидка';
 
 -- +goose StatementEnd
+
 -- +goose Down
 -- +goose StatementBegin
 DROP INDEX price_sizes_card_id_idx;
 DROP INDEX price_sizes_size_id_idx;
 DROP TABLE shop.price_sizes;
 -- +goose StatementEnd
-

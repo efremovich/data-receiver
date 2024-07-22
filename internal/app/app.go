@@ -9,10 +9,12 @@ import (
 	"github.com/efremovich/data-receiver/internal/controller"
 	"github.com/efremovich/data-receiver/internal/usecases"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcharrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi/wbfetcher"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/broker/brokerconsumer"
@@ -87,7 +89,17 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+  // Репозиторий CardCharacteristic
+  cardcharrepo, err := cardcharrepo.NewCharRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 
+  // Репозиторий Wb2Card
+	wb2carRepo, err := wb2cardrepo.NewWb2CardRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 	// Основной бизнес-сервис.
 	packageReceiverCoreService := usecases.NewPackageReceiverService(
 		conf,
@@ -96,8 +108,10 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		sellerRepo,
 		brandRepo,
 		charRepo,
+    cardcharrepo,
 		categoryRepo,
- 
+		wb2carRepo,
+
 		brokerPublisher,
 		apiFetcher,
 		metricsCollector)

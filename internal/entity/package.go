@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -9,11 +8,10 @@ import (
 
 // Описание пакета по которому создается пакет.
 type PackageDescription struct {
-	PackageName string          // Наименование пакета.
-  Cursor      int             // Курсор пакета.
-	SendURL     string          // URL для отправки.
-	PackageType PackageType     // Тип пакета.
-	Description json.RawMessage // Описание пакета.
+	Cursor      int         // Курсор пакета.
+	Limit       int         // Количество записей в запросе
+	UpdatedAt   *time.Time  // Дата обновления.
+	PackageType PackageType // Тип пакета.
 }
 
 // Тип пакета.
@@ -45,7 +43,7 @@ type Package struct {
 	ID        int64         // Идентификатор в БД.
 	Type      PackageType   // Тип пакета.
 	SendURL   string        // URL для отправки пакета.
-  Cursor    int           // Курсор пакета.
+	Cursor    int           // Курсор пакета.
 	CreatedAt time.Time     // Дата создания пакета.
 	Status    PackageStatus // Статус пакета.
 	ErrorText string        // Текст ошибки.

@@ -4,24 +4,33 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"strings"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	aerror "github.com/efremovich/data-receiver/pkg/aerror"
 )
 
-func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, cursor int) aerror.AError {
+func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.PackageDescription) aerror.AError {
 	client := s.apiFetcher["wb"]
-	cards, cursor, err := client.GetCards(ctx, cursor)
+	cards, err := client.GetCards(ctx, desc)
 	if err != nil {
 		return aerror.New(ctx, entity.GetDataFromExSources, err, "ошибка получение данные из внешнего источника %s в БД: %s ", "", err.Error())
 	}
-
 	for _, card := range cards {
 		// Seller
 		seller, err := s.sellerRepo.SelectByTitle(ctx, "wb")
-		if err != nil {
-			return aerror.New(ctx, entity.SelectPkgErrorID, err, "Ошибка при получении Seller %s в БД.", "wb")
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении Seller %s в БД.", "wb")
+		}
+
+		if seller == nil {
+			seller, err = s.sellerRepo.Insert(ctx, entity.Seller{
+				Title:     "wb",
+				IsEnabled: true,
+			})
+			if err != nil {
+				return aerror.New(ctx, entity.InsertDataErrorID, err, "Ошибка при сохранении Seller товара %s в БД.", card.Title)
+			}
 		}
 
 		// Brands
@@ -43,53 +52,78 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, cursor int) 
 		}
 
 		card.Brand = *brand
-
-		// Card
-		upCard, err := s.cardRepo.Insert(ctx, card)
-		if err != nil {
-			return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
+		wb2card, err := s.wb2cardrepo.SelectByNmid(ctx, card.ExternalID)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении Wb2Card %s в БД.", card.Title)
+		}
+		if wb2card == nil {
+			newCard, err := s.cardRepo.Insert(ctx, card)
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
+			}
+			card.ID = newCard.ID
+			_, err = s.wb2cardrepo.Insert(ctx, entity.Wb2Card{
+				NMID:   card.ExternalID,
+				KTID:   0,
+				NMUUID: "",
+				CardID: card.ID,
+			})
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
+			}
+		} else {
+			card.ID = wb2card.CardID
+			err = s.cardRepo.UpdateExecOne(ctx, card)
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
+			}
 		}
 
 		// Characteristics
 		for _, elem := range card.Characteristics {
 			char, err := s.charRepo.SelectByTitle(ctx, elem.Title)
 			if err != nil && !errors.Is(err, sql.ErrNoRows) {
-				return aerror.New(ctx, entity.SelectPkgErrorID, err, "Ошибка при получении CardCharactristic %s в БД.", card.Title)
+				return aerror.New(ctx, entity.SelectPkgErrorID, err, "Ошибка при получении Charactristic %s в БД.", card.Title)
 			}
 			if char == nil {
 				char, err = s.charRepo.Insert(ctx, entity.Characteristic{
 					Title: elem.Title,
 				})
 				if err != nil {
-					return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении CardCharactristic %s в БД.", card.Title)
+					return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении Charactristic %s в БД.", card.Title)
 				}
 			}
-
-			cardChar, err := s.charRepo.SelectByCardID(ctx, upCard.ID, strings.Join(elem.Value, ","))
+			cardChar, err := s.cardCharRepo.SelectByCardIDAndCharID(ctx, card.ID, char.ID)
 			if err != nil && !errors.Is(err, sql.ErrNoRows) {
-				return aerror.New(ctx, entity.SelectPkgErrorID, err, "Ошибка при получении CardCharactristic %s в БД.", card.Title)
+				return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении CardCharactristic %s в БД.", card.Title)
 			}
+
 			if cardChar == nil {
-				addedCardChar, err := s.charRepo.InsertCardChar(ctx, entity.CardCharacteristic{
+				_, err = s.cardCharRepo.Insert(ctx, entity.CardCharacteristic{
 					Value:            elem.Value,
 					Title:            elem.Title,
 					CharacteristicID: char.ID,
-					CardID:           upCard.ID,
+					CardID:           card.ID,
 				})
 				if err != nil {
 					return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении CardCharactristic %s в БД.", card.Title)
 				}
-				cardChar = append(cardChar, addedCardChar)
 			}
 		}
 	}
-	p := entity.PackageDescription{
-		PackageType: "CARD",
-		Cursor:      cursor,
-	}
-	err = s.brokerPublisher.SendPackage(ctx, &p)
-	if err != nil {
-		return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
+	if len(cards) == desc.Limit {
+		p := entity.PackageDescription{
+			PackageType: "CARD",
+			Cursor:      int(cards[len(cards)-1].ExternalID),
+			UpdatedAt:   &cards[len(cards)-1].UpdatedAt,
+			Limit:       desc.Limit,
+		}
+		err = s.brokerPublisher.SendPackage(ctx, &p)
+		if err != nil {
+			return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
+		}
+	} else {
+		fmt.Println("its all")
 	}
 	return nil
 }

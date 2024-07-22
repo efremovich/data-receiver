@@ -13,8 +13,8 @@ ALTER TABLE ONLY shop.categories
     ADD CONSTRAINT categories_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY shop.categories
     ADD CONSTRAINT categories_card_id_fkey FOREIGN KEY (card_id) REFERENCES shop.cards(id);
-ALTER TABLE ONLY shop.categories
-    ADD CONSTRAINT categories_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES shop.sellers(id);
+-- ALTER TABLE ONLY shop.categories
+    -- ADD CONSTRAINT categories_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES shop.sellers(id);
 
 CREATE INDEX categories_seller_id_idx ON shop.categories USING btree (seller_id);
 
@@ -32,4 +32,5 @@ COMMENT ON COLUMN shop.categories.parent_id IS 'Родительская кат�
 DROP INDEX categories_seller_id_idx;
 DROP TABLE shop.categories;
 -- +goose StatementEnd
+
 

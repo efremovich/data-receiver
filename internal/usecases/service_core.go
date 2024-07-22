@@ -4,11 +4,14 @@ import (
 	"context"
 
 	conf "github.com/efremovich/data-receiver/config"
+	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcharrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
-	charrepo "github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi/wbfetcher"
 	"github.com/efremovich/data-receiver/pkg/broker/brokerpublisher"
 	"github.com/efremovich/data-receiver/pkg/metrics"
@@ -17,7 +20,7 @@ import (
 )
 
 type ReceiverCoreService interface {
-	ReceiveCards(ctx context.Context, cursor int) aerror.AError
+	ReceiveCards(ctx context.Context, desc entity.PackageDescription) aerror.AError
 
 	PingDB(ctx context.Context) error
 	PingNATS(_ context.Context) error
@@ -30,7 +33,9 @@ type receiverCoreServiceImpl struct {
 	cardRepo     cardrepo.CardRepo
 	brandRepo    brandrepo.BrandRepo
 	charRepo     charrepo.CharRepo
+  cardCharRepo cardcharrepo.CardCharRepo
 	categoryRepo categoryrepo.CategoryRepo
+	wb2cardrepo  wb2cardrepo.Wb2CardRepo
 
 	brokerPublisher  brokerpublisher.BrokerPublisher
 	apiFetcher       map[string]wbfetcher.ExtApiFetcher
@@ -44,7 +49,9 @@ func NewPackageReceiverService(
 	sellerRepo sellerrepo.SellerRepo,
 	brandRepo brandrepo.BrandRepo,
 	charRepo charrepo.CharRepo,
+	cardcharRepo cardcharrepo.CardCharRepo,
 	categoryRepo categoryrepo.CategoryRepo,
+	wb2cardrepo wb2cardrepo.Wb2CardRepo,
 
 	brokerPublisher brokerpublisher.BrokerPublisher,
 	apiFetcher map[string]wbfetcher.ExtApiFetcher,
@@ -57,7 +64,9 @@ func NewPackageReceiverService(
 		sellerRepo:   sellerRepo,
 		brandRepo:    brandRepo,
 		charRepo:     charRepo,
+    cardCharRepo: cardcharRepo,
 		categoryRepo: categoryRepo,
+		wb2cardrepo:  wb2cardrepo,
 
 		brokerPublisher:  brokerPublisher,
 		apiFetcher:       apiFetcher,

@@ -23,9 +23,9 @@ COMMENT ON COLUMN shop.cards_characteristics.card_id IS 'Карточка тов
 COMMENT ON COLUMN shop.cards_characteristics.characteristic_id IS 'Характеристика товара';
 COMMENT ON COLUMN shop.cards_characteristics.value IS 'Значение характеристики';
 -- +goose StatementEnd
+
 -- +goose Down
 -- +goose StatementBegin
 DROP INDEX cards_characteristics_card_id_idx;
 DROP TABLE shop.cards_characteristics;
 -- +goose StatementEnd
-

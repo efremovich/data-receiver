@@ -18,7 +18,7 @@ import (
 func TestOrderRepo(t *testing.T) {
 	ctx := context.Background()
 
-	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_receiver_db")
+	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_base")
 	if err != nil {
 		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
 	}
@@ -29,9 +29,9 @@ func TestOrderRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	newSeller := entity.Seller{
-		Title:    uuid.NewString(),
-		IsEnable: true,
-		ExternalID:    uuid.NewString(),
+		Title:      uuid.NewString(),
+		IsEnabled:  true,
+		ExternalID: uuid.NewString(),
 	}
 	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
 	if err != nil {
@@ -44,9 +44,9 @@ func TestOrderRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	newWarehouse := entity.Warehouse{
-		Title:    uuid.NewString(),
-		ExternalID:    uuid.NewString(),
-		SellerID: modelSeller.ID,
+		Title:      uuid.NewString(),
+		ExternalID: uuid.NewString(),
+		SellerID:   modelSeller.ID,
 	}
 	modelWarehouse, err := sqlWarehouseRepo.Insert(ctx, newWarehouse)
 	if err != nil {
@@ -74,7 +74,7 @@ func TestOrderRepo(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	newOrder := entity.Order{
-		ExternalID:        uuid.NewString(),
+		ExternalID:   uuid.NewString(),
 		Price:        5.5,
 		Discount:     2.5,
 		SpecialPrice: 10.5,
@@ -93,7 +93,7 @@ func TestOrderRepo(t *testing.T) {
 	}
 	assert.Equal(t, model.ExternalID, newOrder.ExternalID)
 	assert.Equal(t, model.Price, newOrder.Price)
-  assert.Equal(t, model.Quantity, newOrder.Quantity)
+	assert.Equal(t, model.Quantity, newOrder.Quantity)
 	assert.Equal(t, model.Direction, newOrder.Direction)
 	assert.Equal(t, model.Discount, newOrder.Discount)
 	assert.Equal(t, model.SpecialPrice, newOrder.SpecialPrice)
@@ -110,7 +110,7 @@ func TestOrderRepo(t *testing.T) {
 
 	assert.Equal(t, model.ExternalID, newOrder.ExternalID)
 	assert.Equal(t, model.Price, newOrder.Price)
-  assert.Equal(t, model.Quantity, newOrder.Quantity)
+	assert.Equal(t, model.Quantity, newOrder.Quantity)
 	assert.Equal(t, model.Direction, newOrder.Direction)
 	assert.Equal(t, model.Discount, newOrder.Discount)
 	assert.Equal(t, model.SpecialPrice, newOrder.SpecialPrice)
@@ -142,7 +142,7 @@ func TestOrderRepo(t *testing.T) {
 
 	assert.Equal(t, model.ExternalID, newOrder.ExternalID)
 	assert.Equal(t, model.Price, newOrder.Price)
-  assert.Equal(t, model.Quantity, newOrder.Quantity)
+	assert.Equal(t, model.Quantity, newOrder.Quantity)
 	assert.Equal(t, model.Direction, newOrder.Direction)
 	assert.Equal(t, model.Discount, newOrder.Discount)
 	assert.Equal(t, model.SpecialPrice, newOrder.SpecialPrice)
