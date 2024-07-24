@@ -14,6 +14,8 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi/wbfetcher"
 	"github.com/efremovich/data-receiver/pkg/alogger"
@@ -89,13 +91,23 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-  // Репозиторий CardCharacteristic
-  cardcharrepo, err := cardcharrepo.NewCharRepo(ctx, conn)
+	// Репозиторий CardCharacteristic
+	cardcharrepo, err := cardcharrepo.NewCharRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+	// Репозиторий WarhouseType
+	warehouseTypeRepo, err := warehousetyperepo.NewWarehouseTypeRepo(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
 
-  // Репозиторий Wb2Card
+	// Репозиторий Warhouse
+	warehouseRepo, err := warehouserepo.NewWarehouseRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+	// Репозиторий Wb2Card
 	wb2carRepo, err := wb2cardrepo.NewWb2CardRepo(ctx, conn)
 	if err != nil {
 		return nil, err
@@ -108,9 +120,12 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		sellerRepo,
 		brandRepo,
 		charRepo,
-    cardcharrepo,
+		cardcharrepo,
 		categoryRepo,
 		wb2carRepo,
+
+		warehouseTypeRepo,
+		warehouseRepo,
 
 		brokerPublisher,
 		apiFetcher,

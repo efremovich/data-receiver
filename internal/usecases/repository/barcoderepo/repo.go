@@ -41,13 +41,14 @@ func (repo *charRepoImpl) SelectByBarcode(ctx context.Context, barcode string) (
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Barcode) (*entity.Barcode, error) {
 	query := `INSERT INTO shop.barcodes (barcode, price_size_id, seller_id) 
-            VALUES ($1, $2, $3) RETURNING barcode`
-	charIDWrap := repository.BarcodeWraper{}
+            VALUES ($1, $2, $3) RETURNING id`
+	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Barcode, in.PriceSizeID, in.SellerID)
 	if err != nil {
 		return nil, err
 	}
+	in.ID = charIDWrap.ID.Int64
 	return &in, nil
 }
 

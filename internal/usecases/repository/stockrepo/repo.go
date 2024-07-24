@@ -10,7 +10,6 @@ import (
 
 type StockRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Stock, error)
-	SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Stock, error)
 	Insert(ctx context.Context, in entity.Stock) (*entity.Stock, error)
 	UpdateExecOne(ctx context.Context, in entity.Stock) error
 
@@ -31,7 +30,7 @@ func NewStockRepo(_ context.Context, db *postgresdb.DBConnection) (StockRepo, er
 func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Stock, error) {
 	var result stockDB
 
-	query := "SELECT * FROM stocks WHERE id = $1"
+	query := "SELECT * FROM shop.stocks WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -43,7 +42,7 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Stock, 
 func (repo *repoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Stock, error) {
 	var result []stockDB
 
-	query := "SELECT * FROM stocks WHERE seller_id = $1"
+	query := "SELECT * FROM shop.stocks WHERE seller_id = $1"
 
 	err := repo.getReadConnection().Select(&result, query, sellerID)
 	if err != nil {
@@ -60,29 +59,21 @@ func (repo *repoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Stock) (*entity.Stock, error) {
 	dbModel := convertToDBStock(ctx, in)
 
-	query := `INSERT INTO stocks (
+	query := `INSERT INTO shop.stocks (
               quantity, 
-              in_way_to_client,
-              in_way_from_client,
-              size_id,
-              barcode,
+              barcode_id,
               warehouse_id,
               card_id,
-              seller_id,
               created_at
             ) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now()) RETURNING id`
+            VALUES ($1, $2, $3, $4, now()) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
 		dbModel.Quantity,
-		dbModel.InWayToClient,
-		dbModel.InWayFromClient,
-		dbModel.SizeID,
-		dbModel.Barcode,
+		dbModel.BarcodeID,
 		dbModel.WarehouseID,
 		dbModel.CardID,
-		dbModel.SellerID,
 	)
 	if err != nil {
 		return nil, err
@@ -94,26 +85,18 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Stock) (*entity.Stoc
 func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Stock) error {
 	dbModel := convertToDBStock(ctx, in)
 
-	query := `UPDATE stocks SET 
+	query := `UPDATE shop.stocks SET 
               quantity = $1, 
-              in_way_to_client = $2,
-              in_way_from_client = $3,
-              size_id = $4,
-              barcode = $5,
-              warehouse_id = $6,
-              card_id = $7,
-              seller_id = $8,
+              barcode_id = $2,
+              warehouse_id = $3,
+              card_id = $4,
               updated_at = now()
-            WHERE id = $9`
+            WHERE id = $5`
 	_, err := repo.getWriteConnection().ExecOne(query,
 		dbModel.Quantity,
-		dbModel.InWayToClient,
-		dbModel.InWayFromClient,
-		dbModel.SizeID,
-		dbModel.Barcode,
+		dbModel.BarcodeID,
 		dbModel.WarehouseID,
 		dbModel.CardID,
-		dbModel.SellerID,
 		dbModel.ID)
 	if err != nil {
 		return err

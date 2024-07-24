@@ -11,6 +11,8 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi/wbfetcher"
 	"github.com/efremovich/data-receiver/pkg/broker/brokerpublisher"
@@ -33,9 +35,13 @@ type receiverCoreServiceImpl struct {
 	cardRepo     cardrepo.CardRepo
 	brandRepo    brandrepo.BrandRepo
 	charRepo     charrepo.CharRepo
-  cardCharRepo cardcharrepo.CardCharRepo
+	cardCharRepo cardcharrepo.CardCharRepo
 	categoryRepo categoryrepo.CategoryRepo
 	wb2cardrepo  wb2cardrepo.Wb2CardRepo
+
+	// Блок остатков
+	warehouserepo     warehouserepo.WarehouseRepo
+	warehousetyperepo warehousetyperepo.WarehouseTypeRepo
 
 	brokerPublisher  brokerpublisher.BrokerPublisher
 	apiFetcher       map[string]wbfetcher.ExtApiFetcher
@@ -53,6 +59,9 @@ func NewPackageReceiverService(
 	categoryRepo categoryrepo.CategoryRepo,
 	wb2cardrepo wb2cardrepo.Wb2CardRepo,
 
+	warehouserepo warehouserepo.WarehouseRepo,
+	warehousetyperepo warehousetyperepo.WarehouseTypeRepo,
+
 	brokerPublisher brokerpublisher.BrokerPublisher,
 	apiFetcher map[string]wbfetcher.ExtApiFetcher,
 	metricsCollector metrics.Collector,
@@ -64,9 +73,12 @@ func NewPackageReceiverService(
 		sellerRepo:   sellerRepo,
 		brandRepo:    brandRepo,
 		charRepo:     charRepo,
-    cardCharRepo: cardcharRepo,
+		cardCharRepo: cardcharRepo,
 		categoryRepo: categoryRepo,
 		wb2cardrepo:  wb2cardrepo,
+
+		warehouserepo:     warehouserepo,
+		warehousetyperepo: warehousetyperepo,
 
 		brokerPublisher:  brokerPublisher,
 		apiFetcher:       apiFetcher,

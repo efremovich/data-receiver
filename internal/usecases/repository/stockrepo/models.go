@@ -17,7 +17,7 @@ type stockDB struct {
 	CreatedAt        sql.NullTime `db:"created_at"`
 	UpdatedAt        sql.NullTime `db:"updated_at"`
 	SizeID           int64        `db:"size_id"`
-	Barcode          string       `db:"barcode"`
+	BarcodeID        int64        `db:"barcode_id"`
 	WarehouseID      int64        `db:"warehouse_id"`
 	CardID           int64        `db:"card_id"`
 	SellerID         int64        `db:"seller_id"`
@@ -32,7 +32,7 @@ func convertToDBStock(_ context.Context, in entity.Stock) *stockDB {
 		CreatedAt:       repository.TimeToNullInt(in.CreatedAt),
 		UpdatedAt:       repository.TimeToNullInt(in.CreatedAt),
 		SizeID:          in.SizeID,
-		Barcode:         in.Barcode,
+		BarcodeID:       in.BarcodeID,
 		WarehouseID:     in.WarehouseID,
 		CardID:          in.CardID,
 		SellerID:        in.SellerID,
@@ -48,7 +48,7 @@ func (c stockDB) convertToEntityStock(_ context.Context) *entity.Stock {
 		CreatedAt:       repository.NullTimeToTime(c.CreatedAt),
 		UpdatedAt:       repository.NullTimeToTime(c.UpdatedAt),
 		SizeID:          c.SizeID,
-		Barcode:         c.Barcode,
+		BarcodeID:       c.BarcodeID,
 		WarehouseID:     c.WarehouseID,
 		CardID:          c.CardID,
 		SellerID:        c.SellerID,

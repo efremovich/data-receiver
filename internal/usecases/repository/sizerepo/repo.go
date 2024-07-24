@@ -44,7 +44,7 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Siz
 func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Size, error) {
 	var result sizeDB
 
-	query := "SELECT * FROM shop.sizes WHERE title = $1"
+	query := "SELECT * FROM shop.sizes WHERE name = $1"
 
 	err := repo.getReadConnection().Get(&result, query, title)
 	if err != nil {
@@ -56,7 +56,7 @@ func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*ent
 func (repo *charRepoImpl) SelectByTechSize(ctx context.Context, techSize string) (*entity.Size, error) {
 	var result sizeDB
 
-	query := "SELECT * FROM shop.sizes WHERE techSize = $1"
+	query := "SELECT * FROM shop.sizes WHERE tech_size = $1"
 
 	err := repo.getReadConnection().Get(&result, query, techSize)
 	if err != nil {
@@ -66,7 +66,7 @@ func (repo *charRepoImpl) SelectByTechSize(ctx context.Context, techSize string)
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Size) (*entity.Size, error) {
-	query := `INSERT INTO shop.sizes (title, tech_size) 
+	query := `INSERT INTO shop.sizes (name, tech_size) 
             VALUES ($1, $2) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
@@ -81,7 +81,7 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Size) (*entity.S
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Size) error {
 	dbModel := convertToDBSize(ctx, in)
 
-	query := `UPDATE shop.sizes SET title = $1, tech_size = $2 WHERE id = $3`
+	query := `UPDATE shop.sizes SET name = $1, tech_size = $2 WHERE id = $3`
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.TechSize, dbModel.ID)
 	if err != nil {
 		return err

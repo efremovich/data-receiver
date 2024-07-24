@@ -9,7 +9,7 @@ import (
 type sizeDB struct {
 	ID       int64  `db:"id"`
 	TechSize string `db:"tech_size"`
-	Title    string `db:"title"`
+	Title    string `db:"name"`
 }
 
 func convertToDBSize(_ context.Context, in entity.Size) *sizeDB {
