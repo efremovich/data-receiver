@@ -10,8 +10,8 @@ import (
 
 type SizeRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Size, error)
-	SelectByCardID(ctx context.Context, CardID int64) ([]*entity.Size, error)
-	SelectByPriceID(ctx context.Context, CardID int64) ([]*entity.Size, error)
+	SelectByTitle(ctx context.Context, title string) (*entity.Size, error)
+	SelectByTechSize(ctx context.Context, techSize string) (*entity.Size, error)
 	Insert(ctx context.Context, in entity.Size) (*entity.Size, error)
 	UpdateExecOne(ctx context.Context, in entity.Size) error
 
@@ -32,7 +32,7 @@ func NewSizeRepo(_ context.Context, db *postgresdb.DBConnection) (SizeRepo, erro
 func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Size, error) {
 	var result sizeDB
 
-	query := "SELECT * FROM sizes WHERE id = $1"
+	query := "SELECT * FROM shop.sizes WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -41,46 +41,36 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Siz
 	return result.convertToEntitySize(ctx), nil
 }
 
-func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*entity.Size, error) {
-	var result []sizeDB
+func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Size, error) {
+	var result sizeDB
 
-	query := "SELECT * FROM sizes WHERE card_id = $1"
+	query := "SELECT * FROM shop.sizes WHERE title = $1"
 
-	err := repo.getReadConnection().Select(&result, query, cardID)
+	err := repo.getReadConnection().Get(&result, query, title)
 	if err != nil {
 		return nil, err
 	}
-
-	var resEntity []*entity.Size
-	for _, v := range result {
-		resEntity = append(resEntity, v.convertToEntitySize(ctx))
-	}
-	return resEntity, nil
+	return result.convertToEntitySize(ctx), nil
 }
 
-func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, cardID int64) ([]*entity.Size, error) {
-	var result []sizeDB
+func (repo *charRepoImpl) SelectByTechSize(ctx context.Context, techSize string) (*entity.Size, error) {
+	var result sizeDB
 
-	query := "SELECT * FROM sizes WHERE price_id = $1"
+	query := "SELECT * FROM shop.sizes WHERE techSize = $1"
 
-	err := repo.getReadConnection().Select(&result, query, cardID)
+	err := repo.getReadConnection().Get(&result, query, techSize)
 	if err != nil {
 		return nil, err
 	}
-
-	var resEntity []*entity.Size
-	for _, v := range result {
-		resEntity = append(resEntity, v.convertToEntitySize(ctx))
-	}
-	return resEntity, nil
+	return result.convertToEntitySize(ctx), nil
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Size) (*entity.Size, error) {
-	query := `INSERT INTO sizes (title, tech_size, card_id, price_id) 
-            VALUES ($1, $2, $3, $4) RETURNING id`
+	query := `INSERT INTO shop.sizes (title, tech_size) 
+            VALUES ($1, $2) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title, in.TechSize, in.CardID, in.PriceID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title, in.TechSize)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +81,8 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Size) (*entity.S
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Size) error {
 	dbModel := convertToDBSize(ctx, in)
 
-	query := `UPDATE sizes SET title = $1, tech_size = $2, card_id = $3, price_id = $4 WHERE id = $5`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.TechSize, dbModel.CardID, dbModel.PriceID, dbModel.ID)
+	query := `UPDATE shop.sizes SET title = $1, tech_size = $2 WHERE id = $3`
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.TechSize, dbModel.ID)
 	if err != nil {
 		return err
 	}

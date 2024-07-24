@@ -60,11 +60,11 @@ func (repo *repoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Warehouse) (*entity.Warehouse, error) {
 	dbModel := convertToDBWarehouse(ctx, in)
 
-	query := `INSERT INTO warehouses (ext_id, title, address, type, seller_id) 
+	query := `INSERT INTO warehouses (external_id, title, address, type, seller_id) 
             VALUES ($1, $2, $3, $4, $5) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.ExtID, dbModel.Title, dbModel.Address, dbModel.Type, dbModel.SellerID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.ExternalID, dbModel.Title, dbModel.Address, dbModel.Type, dbModel.SellerID)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +76,9 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Warehouse) er
 	dbModel := convertToDBWarehouse(ctx, in)
 
 	query := `UPDATE warehouses SET 
-            ext_id = $1, title = $2, address = $3, type = $4, seller_id = $5 
+            external_id = $1, title = $2, address = $3, type = $4, seller_id = $5 
             WHERE id = $6`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.ExtID, dbModel.Title, dbModel.Address, dbModel.Type, dbModel.SellerID, dbModel.ID)
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.ExternalID, dbModel.Title, dbModel.Address, dbModel.Type, dbModel.SellerID, dbModel.ID)
 	if err != nil {
 		return err
 	}

@@ -9,17 +9,32 @@ import (
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
 
 func TestBrandRepo(t *testing.T) {
 	ctx := context.Background()
 
-	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_receiver_db")
+	conn, _, err := postgresdb.GetMockConn("../../../../migrations/data_base")
 	if err != nil {
 		t.Fatalf("ошибка создания мокового соединения. %s", err.Error())
 	}
 
+	// Создание продавца
+	sqlSellerRepo, err := sellerrepo.NewSellerRepo(ctx, conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newSeller := entity.Seller{
+		Title:      uuid.NewString(),
+		IsEnabled:  true,
+		ExternalID: uuid.NewString(),
+	}
+	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
+	if err != nil {
+		t.Fatal(err)
+	}
 	sqlRepo, err := brandrepo.NewBrandRepo(ctx, conn)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -27,7 +42,7 @@ func TestBrandRepo(t *testing.T) {
 
 	newBrand := entity.Brand{
 		Title:    uuid.NewString(),
-		SellerID: 1,
+		SellerID: modelSeller.ID,
 	}
 	// Создание
 	model, err := sqlRepo.Insert(ctx, newBrand)
@@ -48,7 +63,7 @@ func TestBrandRepo(t *testing.T) {
 	assert.Equal(t, model.SellerID, newBrand.SellerID)
 
 	// Выборка по названию
-	model, err = sqlRepo.SelectByTitle(ctx, newBrand.Title)
+	model, err = sqlRepo.SelectByTitleAndSeller(ctx, newBrand.Title, newBrand.SellerID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,8 +73,8 @@ func TestBrandRepo(t *testing.T) {
 
 	// Обновление
 	newBrand.Title = uuid.NewString()
-	newBrand.SellerID = 2
-  newBrand.ID = model.ID
+	newBrand.SellerID = modelSeller.ID
+	newBrand.ID = model.ID
 
 	err = sqlRepo.UpdateExecOne(ctx, newBrand)
 	if err != nil {
@@ -71,7 +86,7 @@ func TestBrandRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
-  assert.Equal(t, model.Title, newBrand.Title)
+
+	assert.Equal(t, model.Title, newBrand.Title)
 	assert.Equal(t, model.SellerID, newBrand.SellerID)
 }

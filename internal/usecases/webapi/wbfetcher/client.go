@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/efremovich/data-receiver/config"
@@ -32,9 +33,9 @@ type Dimensions struct {
 	IsValid bool `json:"isValid"`
 }
 type Characteristics struct {
-	ID    int           `json:"id"`
-	Name  string        `json:"name"`
-	Value []interface{} `json:"value"`
+	ID    int         `json:"id"`
+	Name  string      `json:"name"`
+	Value interface{} `json:"value,omitempty"`
 }
 type Sizes struct {
 	ChrtID   int      `json:"chrtID"`
@@ -68,9 +69,10 @@ type Cards struct {
 }
 
 type Cursor struct {
-	NmID  int `json:"nmID,omitempty"`
-	Total int `json:"total,omitempty"`
-	Limit int `json:"limit,omitempty"`
+	NmID      int        `json:"nmID,omitempty"`
+	Total     int        `json:"total,omitempty"`
+	Limit     int        `json:"limit,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 type Filter struct {
@@ -91,12 +93,12 @@ type Setting struct {
 	Setting Settings `json:"settings"`
 }
 
-type WildberriesFetcher interface {
-	GetCards(ctx context.Context) ([]entity.Card, error)
+type ExtApiFetcher interface {
+	GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error)
 	Ping(ctx context.Context) error
 }
 
-func New(_ context.Context, cfg config.Seller) WildberriesFetcher {
+func New(_ context.Context, cfg config.Seller) ExtApiFetcher {
 	timeout := time.Second * time.Duration(cfg.ProcessTimeoutSeconds)
 
 	c := &http.Client{
@@ -113,13 +115,13 @@ type wbAPIclientImp struct {
 	token  string
 }
 
-func (wb *wbAPIclientImp) GetCards(ctx context.Context) ([]entity.Card, error) {
+func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
 	const methodName = "/content/v2/get/cards/list?locale=ru"
-
+	// TODO вынести настройки и передавать их в теле сообщения nats
 	requestSettings := Settings{
-		Sort:   Sort{Ascending: false},
+		Sort:   Sort{Ascending: true},
 		Filter: Filter{WithPhoto: -1},
-		Cursor: Cursor{Limit: 100},
+		Cursor: Cursor{Limit: desc.Limit, NmID: desc.Cursor, UpdatedAt: desc.UpdatedAt},
 	}
 
 	requestData, err := json.Marshal(Setting{Setting: requestSettings})
@@ -136,7 +138,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context) ([]entity.Card, error) {
 	req.Header.Set("accept", "application/json")
 
 	resp, err := wb.client.Do(req)
-	if err != nil {
+	if err != nil && resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
 	}
 
@@ -153,11 +155,11 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context) ([]entity.Card, error) {
 			Title: v.Brand,
 		}
 
-		characteristics := []*entity.Characteristic{}
+		characteristics := []*entity.CardCharacteristic{}
 		for _, c := range v.Characteristics {
-			char := entity.Characteristic{
+			char := entity.CardCharacteristic{
 				Title: c.Name,
-				// Value: c.Value,
+				Value: convertInterfaceToStringSlice(c.Value),
 			}
 			characteristics = append(characteristics, &char)
 		}
@@ -210,6 +212,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context) ([]entity.Card, error) {
 			Sizes:           sizes,
 			MediaFile:       mediaFile,
 			Dimensions:      dimensions,
+			UpdatedAt:       v.UpdatedAt,
 		}
 		cardsList = append(cardsList, card)
 	}
@@ -218,5 +221,23 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context) ([]entity.Card, error) {
 }
 
 func (wb *wbAPIclientImp) Ping(ctx context.Context) error {
+	return nil
+}
+
+func convertInterfaceToStringSlice(input interface{}) []string {
+	switch v := input.(type) {
+	case int:
+		return []string{strconv.Itoa(v)}
+	case string:
+		return []string{v}
+	case []string:
+		return v
+	case []interface{}:
+		var output []string
+		for _, vv := range v {
+			output = append(output, convertInterfaceToStringSlice(vv)...)
+		}
+		return output
+	}
 	return nil
 }

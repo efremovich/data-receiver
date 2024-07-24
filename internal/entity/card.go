@@ -3,30 +3,34 @@ package entity
 import "time"
 
 type Card struct {
-	ID              int64             // id в бд
-	ExternalID      int64             // id в магазине
-	VendorID        string            // Код номенклатура
-	VendorCode      string            // Артикул
-	Title           string            // Наименование
-	Description     string            // Описание номенклатуры
-	CreatedAt       time.Time         // Дата создания
-	UpdatedAt       time.Time         // Дана обновления
-	Brand           Brand             // Бренд
-	Dimensions      Dimensions        // Размеры упаковки
-	Characteristics []*Characteristic // Характеристики номенклатуры
-	Categories      []*Category       // Категории номенклатуры
-	Sizes           []*Size           // Размеры
-	Barcodes        []*Barcode        // Штрихкоды
-	MediaFile       []*MediaFile      // Фоточки
+	ID              int64                 // id в бд
+	ExternalID      int64                 // id в магазине
+	VendorID        string                // Код номенклатура
+	VendorCode      string                // Артикул
+	Title           string                // Наименование
+	Description     string                // Описание номенклатуры
+	CreatedAt       time.Time             // Дата создания
+	UpdatedAt       time.Time             // Дана обновления
+	Brand           Brand                 // Бренд
+	Dimensions      Dimensions            // Размеры упаковки
+	Characteristics []*CardCharacteristic // Характеристики номенклатуры
+	Categories      []*Category           // Категории номенклатуры
+	Sizes           []*Size               // Размеры
+	Barcodes        []*Barcode            // Штрихкоды
+	MediaFile       []*MediaFile          // Фоточки
 }
 
 type Characteristic struct {
-	ID         int64
-	ExternalID int64    // id в магазине
-	Title      string   // Наименование характеристики
-	Value      []string // Значение характеристики
+	ID    int64
+	Title string // Наименование характеристики
+}
 
-	CardID int64 // Номенклатура владелец
+type CardCharacteristic struct {
+	ID               int64
+	Value            []string // Значение характеристики
+	Title            string   // Текстовое значение характеристики
+	CharacteristicID int64    // Ссылка на справочник характеристики
+	CardID           int64    // Номенклатура владелец
 }
 
 type Brand struct {
@@ -39,11 +43,12 @@ type Brand struct {
 
 type Category struct {
 	ID         int64
-	ExternalID int64 // id в магазине
 	Title      string
+	ExternalID int64 // id в магазине
 
 	CardID   int64
 	SellerID int64
+	ParentID int64 // Родительская категория
 }
 
 type Size struct {
@@ -51,16 +56,14 @@ type Size struct {
 	ExternalID int64  // id в магазине
 	TechSize   string // Технический размер (64-127)
 	Title      string // Произвольное написание
-
-	CardID  int64
-	PriceID int64 // Цена размера
 }
 
 type Barcode struct {
+	ID         int64  // идентификатор
 	Barcode    string // Штрихкод
 	ExternalID int64  // id в магазине
 
-	SizeID   int64
+  PriceSizeID int64 
 	SellerID int64
 }
 

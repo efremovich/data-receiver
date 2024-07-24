@@ -24,6 +24,9 @@ const (
 	UpdatePkgErrorID     aerrors.ErrorId = 1_12_0_009 // 1120009
 	CommitTXErrorID      aerrors.ErrorId = 1_12_0_010 // 1120010
 	GetDataFromExSources aerrors.ErrorId = 1_12_0_011 // 1120011
+
+  SelectDataErrorID    aerrors.ErrorId = 1_12_0_012 // 1120012
+  InsertDataErrorID    aerrors.ErrorId = 1_12_0_013 // 1120013
 )
 
 // UserMessages Дефолтные сообщения ошибок для пользователей.
@@ -35,7 +38,10 @@ var userMessages = map[aerrors.ErrorId]string{
 	UnknownPkgTypeErrorID: "Неизвестный тип пакета",
 	EmptyBodyErrorID:      "Запрос имеет пустое тело",
 
-	SelectPkgErrorID:   "Ошибка выборки пакета из БД",
+	SelectDataErrorID:   "Ошибка выборки данных из БД",
+	InsertDataErrorID:   "Ошибка вставки данных в БД",
+	
+  SelectPkgErrorID:   "Ошибка выборки пакета из БД",
 	InsertPkgErrorID:   "Ошибка вставки пакета в БД",
 	InsertEventErrorID: "Ошибка вставки события в БД",
 	GetStorageErrorID:  "Ошибка получения файла из хранилища",
@@ -44,4 +50,5 @@ var userMessages = map[aerrors.ErrorId]string{
 	OpenTXErrorID:      "Ошибка открытия транзакции",
 	UpdatePkgErrorID:   "Ошибка обновления пакета в БД",
 	CommitTXErrorID:    "Ошибка фиксации транзакции",
+
 }

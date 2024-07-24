@@ -10,7 +10,7 @@ import (
 
 type CharRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Characteristic, error)
-	SelectByCardID(ctx context.Context, cardID int64) ([]*entity.Characteristic, error)
+	SelectByTitle(ctx context.Context, title string) (*entity.Characteristic, error)
 	Insert(ctx context.Context, in entity.Characteristic) (*entity.Characteristic, error)
 	UpdateExecOne(ctx context.Context, in entity.Characteristic) error
 
@@ -31,7 +31,7 @@ func NewCharRepo(_ context.Context, db *postgresdb.DBConnection) (CharRepo, erro
 func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Characteristic, error) {
 	var result characteristicDB
 
-	query := "SELECT id, title, array_to_string(value, ',') as value, card_id FROM characteristics WHERE id = $1"
+	query := "SELECT id, title FROM shop.characteristics WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -40,29 +40,24 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Cha
 	return result.ConvertToEntityCharacteristic(ctx), nil
 }
 
-func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*entity.Characteristic, error) {
-	var result []characteristicDB
+func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Characteristic, error) {
+	var result characteristicDB
 
-	query := "SELECT id, title, array_to_string(value, ',') as value, card_id FROM characteristics WHERE card_id = $1"
+	query := "SELECT id, title FROM shop.characteristics WHERE title = $1"
 
-	err := repo.getReadConnection().Select(&result, query, cardID)
+	err := repo.getReadConnection().Get(&result, query, title)
 	if err != nil {
 		return nil, err
 	}
-
-	var resEntity []*entity.Characteristic
-	for _, v := range result {
-		resEntity = append(resEntity, v.ConvertToEntityCharacteristic(ctx))
-	}
-	return resEntity, nil
+	return result.ConvertToEntityCharacteristic(ctx), nil
 }
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Characteristic) (*entity.Characteristic, error) {
-	query := `INSERT INTO characteristics (card_id, title, value) 
-            VALUES ($1, $2, $3) RETURNING id`
+	query := `INSERT INTO shop.characteristics (title) 
+            VALUES ($1) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.CardID, in.Title, in.Value)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +68,8 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Characteristic) 
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Characteristic) error {
 	dbModel := convertToDBCharacteristic(ctx, in)
 
-	query := `UPDATE characteristics SET card_id = $1, title = $2, value = $3  WHERE id = $4`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.CardID, dbModel.Title, in.Value, dbModel.ID)
+	query := `UPDATE shop.characteristics SET title = $1 WHERE id = $2`
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.ID)
 	if err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	anats "github.com/efremovich/data-receiver/pkg/anats"
@@ -20,7 +21,7 @@ type BrokerPublisher interface {
 	// Проверка работы брокера.
 	Ping() error
 	// Отправка пакета в сервис package-sender.
-	SendPackage(ctx context.Context, p *entity.Package, receiptURL string) error
+	SendPackage(ctx context.Context, p *entity.PackageDescription) error
 }
 
 // Имплементация брокера издателя.
@@ -51,13 +52,13 @@ func (b brokerPublisherImpl) Ping() error {
 	return b.anats.Ping()
 }
 
-// Отправка события в package-sender.
-func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.Package, receiptURL string) error {
-	// Преобразование пакета приложения в сообщение для package-sender.
+// Отправка события.
+func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageDescription) error {
+	// Преобразование пакета приложения в сообщение.
 	msg := tmpPackageSenderMsg{
-		PackageName: p.Name,
-		SendURL:     p.SendURL,
-		ReceiptURL:  receiptURL,
+		Cursor:    p.Cursor,
+		UpdatedAt: p.UpdatedAt,
+		Limit:     p.Limit,
 	}
 
 	// Сериализация пакета.
@@ -70,9 +71,8 @@ func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.Package,
 	return b.anats.PublishMessage(ctx, OutgoingSubjectNormalPriority, msgB)
 }
 
-// TODO структура сообщения которая будет браться из package-sender.
 type tmpPackageSenderMsg struct {
-	PackageName string // Имя пакета для получения из хранилища.
-	SendURL     string // URL для отправки пакета.
-	ReceiptURL  string // URL для получения квитанции.
+	Cursor    int // Указатель на последнюю полученную запись из внешнего источника
+	UpdatedAt *time.Time
+	Limit     int
 }

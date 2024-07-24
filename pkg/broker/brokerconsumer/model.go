@@ -12,15 +12,15 @@ type Task struct {
 	Seller string `json:"seller"`
 }
 
-const PackageCreatorStreamName = "dara-receiver_card-stream"
+const PackageCreatorStreamName = "package-sender-stream"
 
 const (
-	CardCreatorConsumer = "dara-receiver-card-q-inbox"
-	SubjectForGetCards  = "card-getter.inbox"
+	CardCreatorConsumer = "package-sender-q-inbox"
+	SubjectForGetCards  = "package-sender.inbox"
 )
 
-const ReceiverStreamName = "receiver_cards"
+const ReceiverStreamName = "package-sender-stream"
 
-const ReceiverSubjectNormalPriority = "receiver_cards.normal_priority"
+const ReceiverSubjectNormalPriority = "package-sender-stream.normal_priority"
 
 type handlerForCreatePackageAndSend func(ctx context.Context, desc entity.PackageDescription, retry int, isLastRetry bool) anats.MessageResultEnum

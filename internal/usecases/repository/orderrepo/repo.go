@@ -43,7 +43,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 	dbModel := convertToDBOrder(ctx, in)
 
 	query := `INSERT INTO orders (
-              ext_id,
+              external_id,
               price,
               quantity,
               discount,
@@ -60,7 +60,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
-		dbModel.ExtID,
+		dbModel.ExternalID,
 		dbModel.Price,
 		dbModel.Quantity,
 		dbModel.Discount,
@@ -83,7 +83,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error 
 	dbModel := convertToDBOrder(ctx, in)
 
 	query := `UPDATE orders SET
-            ext_id = $1, 
+            external_id = $1, 
             price = $2,
             quantity = $3,
             discount = $4, 
@@ -97,7 +97,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error 
             updated_at = now()
             WHERE id = $12`
 	_, err := repo.getWriteConnection().ExecOne(query,
-		dbModel.ExtID,
+		dbModel.ExternalID,
 		dbModel.Price,
 		dbModel.Quantity,
 		dbModel.Discount,

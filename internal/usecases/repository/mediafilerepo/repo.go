@@ -30,7 +30,7 @@ func NewMediaFileRepo(_ context.Context, db *postgresdb.DBConnection) (MediaFile
 func (repo *mediafileRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*entity.MediaFile, error) {
 	var result []mediaFileDB
 
-	query := "SELECT id, link, card_id FROM media_files WHERE card_id = $1"
+	query := "SELECT id, link, card_id, type_id FROM shop.media_files WHERE card_id = $1"
 
 	err := repo.getReadConnection().Select(&result, query, cardID)
 	if err != nil {
@@ -45,11 +45,11 @@ func (repo *mediafileRepoImpl) SelectByCardID(ctx context.Context, cardID int64)
 }
 
 func (repo *mediafileRepoImpl) Insert(ctx context.Context, in entity.MediaFile) (*entity.MediaFile, error) {
-	query := `INSERT INTO media_files (link, card_id) 
-            VALUES ($1, $2) RETURNING id`
+	query := `INSERT INTO shop.media_files (link, card_id, type_id) 
+            VALUES ($1, $2, $3) RETURNING id`
 	mediafileIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&mediafileIDWrap, query, in.Link, in.CardID)
+	err := repo.getWriteConnection().QueryAndScan(&mediafileIDWrap, query, in.Link, in.CardID, in.TypeID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +60,8 @@ func (repo *mediafileRepoImpl) Insert(ctx context.Context, in entity.MediaFile) 
 func (repo *mediafileRepoImpl) UpdateExecOne(ctx context.Context, in entity.MediaFile) error {
 	dbModel := convertToDBMediaFile(ctx, in)
 
-	query := `UPDATE media_files SET link = $1, card_id = $2  WHERE id = $3`
-	_, err := repo.getWriteConnection().ExecOne(query,dbModel.Link, dbModel.CardID,dbModel.ID)
+	query := `UPDATE shop.media_files SET link = $1, card_id = $2, type_id = $3  WHERE id = $4`
+	_, err := repo.getWriteConnection().ExecOne(query,dbModel.Link, dbModel.CardID, dbModel.TypeID, dbModel.ID)
 	if err != nil {
 		return err
 	}

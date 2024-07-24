@@ -8,7 +8,7 @@ import (
 
 type warehouseDB struct {
 	ID       int64  `db:"id"`
-	ExtID    string `db:"ext_id"`
+	ExternalID    string `db:"external_id"`
 	Title    string `db:"title"`
 	Address  string `db:"address"`
 	Type     string `db:"type"`
@@ -18,7 +18,7 @@ type warehouseDB struct {
 func convertToDBWarehouse(_ context.Context, in entity.Warehouse) *warehouseDB {
 	return &warehouseDB{
 		ID:       in.ID,
-		ExtID:    in.ExtID,
+		ExternalID:    in.ExternalID,
 		Title:    in.Title,
 		Address:  in.Address,
 		Type:     in.Type,
@@ -29,7 +29,7 @@ func convertToDBWarehouse(_ context.Context, in entity.Warehouse) *warehouseDB {
 func (c warehouseDB) convertToEntityWarehouse(_ context.Context) *entity.Warehouse {
 	return &entity.Warehouse{
 		ID:       c.ID,
-		ExtID:    c.ExtID,
+		ExternalID:    c.ExternalID,
 		Title:    c.Title,
 		Address:  c.Address,
 		Type:     c.Type,
