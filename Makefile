@@ -30,7 +30,7 @@ migrate-up:
 
 generate-data-receiver-api:
 	mkdir -p pkg/data-receiver-service
-	protoc --proto_path proto/data-receiver-service --proto_path=vendor.protogen  \
+	protoc --proto_path proto/data-receiver-service --proto_path=proto/vendor  \
 		--go_out=pkg/data-receiver-service/  --go_opt=paths=source_relative \
 		--plugin=protoc-gen-go=bin/protoc-gen-go \
 		--go-grpc_out=pkg/data-receiver-service --go-grpc_opt=paths=source_relative \

@@ -16,5 +16,22 @@ func (gw *grpcGatewayServerImpl) ReceiveCard(ctx context.Context, in *package_re
 	if err != nil {
 		return nil, err
 	}
+
+	return nil, nil
+}
+
+func (gw *grpcGatewayServerImpl) ReceiveWarehouse(ctx context.Context, in *package_receiver.ReceiveWarehouseRequest) (*package_receiver.ReceiveWarehouseResponse, error) {
+	err := gw.core.ReceiveWarehouses(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (gw *grpcGatewayServerImpl) ReceiveStock(ctx context.Context, in *package_receiver.ReceiveStockRequest) (*package_receiver.ReceiveStockResponse, error) {
+	err := gw.core.ReceiveStocks(ctx)
+	if err != nil {
+		return nil, err
+	}
 	return nil, nil
 }

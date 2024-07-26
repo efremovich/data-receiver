@@ -113,7 +113,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 	req.Header.Set("accept", "application/json")
 
 	resp, err := wb.client.Do(req)
-	if err != nil && resp.StatusCode != http.StatusOK {
+	if err != nil || resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
 	}
 
@@ -165,14 +165,22 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 
 		for _, mf := range v.Photos {
 			mediaFile = append(mediaFile, &entity.MediaFile{
-				Link: mf.Big,
+				Link:   mf.Big,
+				TypeID: 1,
+			})
+		}
+		if v.Video != "" {
+			mediaFile = append(mediaFile, &entity.MediaFile{
+				Link:   v.Video,
+				TypeID: 2,
 			})
 		}
 
-		dimensions := entity.Dimensions{
-			Width:  v.Dimensions.Width,
-			Height: v.Dimensions.Height,
-			Length: v.Dimensions.Length,
+		dimension := entity.Dimension{
+			Width:   v.Dimensions.Width,
+			Height:  v.Dimensions.Height,
+			Length:  v.Dimensions.Length,
+			IsVaild: v.Dimensions.IsValid,
 		}
 		card := entity.Card{
 			ExternalID:      int64(v.NmID),
@@ -186,7 +194,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 			Categories:      categories,
 			Sizes:           sizes,
 			MediaFile:       mediaFile,
-			Dimensions:      dimensions,
+			Dimension:       dimension,
 			UpdatedAt:       v.UpdatedAt,
 		}
 		cardsList = append(cardsList, card)

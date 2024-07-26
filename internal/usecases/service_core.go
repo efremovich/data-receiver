@@ -5,12 +5,18 @@ import (
 
 	conf "github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/barcoderepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcharrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/mediafilerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/stockrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
@@ -23,6 +29,8 @@ import (
 
 type ReceiverCoreService interface {
 	ReceiveCards(ctx context.Context, desc entity.PackageDescription) aerror.AError
+	ReceiveWarehouses(ctx context.Context) aerror.AError
+  ReceiveStocks(ctx context.Context) aerror.AError
 
 	PingDB(ctx context.Context) error
 	PingNATS(_ context.Context) error
@@ -31,13 +39,19 @@ type ReceiverCoreService interface {
 type receiverCoreServiceImpl struct {
 	cfg conf.Config
 	// Блок репозиотриев
-	sellerRepo   sellerrepo.SellerRepo
-	cardRepo     cardrepo.CardRepo
-	brandRepo    brandrepo.BrandRepo
-	charRepo     charrepo.CharRepo
-	cardCharRepo cardcharrepo.CardCharRepo
-	categoryRepo categoryrepo.CategoryRepo
-	wb2cardrepo  wb2cardrepo.Wb2CardRepo
+	sellerRepo    sellerrepo.SellerRepo
+	cardRepo      cardrepo.CardRepo
+	sizerepo      sizerepo.SizeRepo
+	brandRepo     brandrepo.BrandRepo
+	charRepo      charrepo.CharRepo
+	cardCharRepo  cardcharrepo.CardCharRepo
+	barcodeRepo   barcoderepo.BarcodeRepo
+	categoryRepo  categoryrepo.CategoryRepo
+	dimensionrepo dimensionrepo.DimensionsRepo
+	mediafilerepo mediafilerepo.MediaFileRepo
+	pricesizerepo pricerepo.PriceRepo
+	stockrepo     stockrepo.StockRepo
+	wb2cardrepo   wb2cardrepo.Wb2CardRepo
 
 	// Блок остатков
 	warehouserepo     warehouserepo.WarehouseRepo
@@ -52,11 +66,17 @@ func NewPackageReceiverService(
 	cfg conf.Config,
 
 	cardRepo cardrepo.CardRepo,
+	sizerepo sizerepo.SizeRepo,
 	sellerRepo sellerrepo.SellerRepo,
 	brandRepo brandrepo.BrandRepo,
 	charRepo charrepo.CharRepo,
 	cardcharRepo cardcharrepo.CardCharRepo,
+	barcoderepo barcoderepo.BarcodeRepo,
 	categoryRepo categoryrepo.CategoryRepo,
+	dimensionrepo dimensionrepo.DimensionsRepo,
+	mediafilerepo mediafilerepo.MediaFileRepo,
+	pricesizerepo pricerepo.PriceRepo,
+	stockrepo stockrepo.StockRepo,
 	wb2cardrepo wb2cardrepo.Wb2CardRepo,
 
 	warehouserepo warehouserepo.WarehouseRepo,
@@ -69,13 +89,19 @@ func NewPackageReceiverService(
 	service := receiverCoreServiceImpl{
 		cfg: cfg,
 
-		cardRepo:     cardRepo,
-		sellerRepo:   sellerRepo,
-		brandRepo:    brandRepo,
-		charRepo:     charRepo,
-		cardCharRepo: cardcharRepo,
-		categoryRepo: categoryRepo,
-		wb2cardrepo:  wb2cardrepo,
+		cardRepo:      cardRepo,
+		sizerepo:      sizerepo,
+		sellerRepo:    sellerRepo,
+		brandRepo:     brandRepo,
+		charRepo:      charRepo,
+		cardCharRepo:  cardcharRepo,
+		barcodeRepo:   barcoderepo,
+		categoryRepo:  categoryRepo,
+		dimensionrepo: dimensionrepo,
+		mediafilerepo: mediafilerepo,
+		pricesizerepo: pricesizerepo,
+		stockrepo:     stockrepo,
+		wb2cardrepo:   wb2cardrepo,
 
 		warehouserepo:     warehouserepo,
 		warehousetyperepo: warehousetyperepo,

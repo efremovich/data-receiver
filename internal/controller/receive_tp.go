@@ -18,3 +18,19 @@ func (gw *grpcGatewayServerImpl) CardReceiveV1Handler(req *fiber.Ctx) error {
 	}
 	return nil
 }
+
+func (gw *grpcGatewayServerImpl) WarehouseReceiveV1Handler(req *fiber.Ctx) error {
+	err := gw.core.ReceiveWarehouses(req.Context())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (gw *grpcGatewayServerImpl) StockReceiverV1Handler(req *fiber.Ctx) error {
+	err := gw.core.ReceiveStocks(req.Context())
+	if err != nil {
+		return err
+	}
+	return nil
+}

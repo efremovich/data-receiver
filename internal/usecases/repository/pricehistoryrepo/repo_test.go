@@ -1,8 +1,9 @@
-package pricerepo_test
+package pricehistoryrepo_test
 
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -10,6 +11,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/pricehistoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
@@ -98,24 +100,40 @@ func TestPriceRepo(t *testing.T) {
 		SizeID:       modelSize.ID,
 	}
 
-	// Создание
-	model, err := sqlPriceRepo.Insert(ctx, newPrice)
+	modelPriceSize, err := sqlPriceRepo.Insert(ctx, newPrice)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, model.Price, newPrice.Price)
-	assert.Equal(t, model.Discount, newPrice.Discount)
-	assert.Equal(t, model.SpecialPrice, newPrice.SpecialPrice)
+
+	sqlPriceHistoryRepo, err := pricehistoryrepo.NewPriceHistoryRepo(ctx, conn)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	newPriceHistory := entity.PriceHistory{
+		Price:        2.2,
+		Discount:     50000.00,
+		SpecialPrice: 0,
+		UpdatedAt:    time.Now(),
+		PriceSizeID:  modelPriceSize.ID,
+	}
+
+	model, err := sqlPriceHistoryRepo.Insert(ctx, newPriceHistory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, model.Price, newPriceHistory.Price)
+	assert.Equal(t, model.Discount, newPriceHistory.Discount)
+	assert.Equal(t, model.SpecialPrice, newPriceHistory.SpecialPrice)
 
 	// Выборка по ID
-	model, err = sqlPriceRepo.SelectByID(ctx, model.ID)
+	model, err = sqlPriceHistoryRepo.SelectByID(ctx, model.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, model.Price, newPrice.Price)
-	assert.Equal(t, model.Discount, newPrice.Discount)
-	assert.Equal(t, model.SpecialPrice, newPrice.SpecialPrice)
+	assert.Equal(t, model.Price, newPriceHistory.Price)
+	assert.Equal(t, model.Discount, newPriceHistory.Discount)
+	assert.Equal(t, model.SpecialPrice, newPriceHistory.SpecialPrice)
 
 	// Выборка по названию
 	models, err := sqlPriceRepo.SelectByCardID(ctx, modelCard.ID)
@@ -123,31 +141,28 @@ func TestPriceRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, model := range models {
-		assert.Equal(t, model.Price, newPrice.Price)
-		assert.Equal(t, model.Discount, newPrice.Discount)
-		assert.Equal(t, model.SpecialPrice, newPrice.SpecialPrice)
+		assert.Equal(t, model.Price, newPriceHistory.Price)
+		assert.Equal(t, model.Discount, newPriceHistory.Discount)
+		assert.Equal(t, model.SpecialPrice, newPriceHistory.SpecialPrice)
 	}
 
 	// Обновление
-	newPrice.Price = 6.6
-	newPrice.Discount = 1.6
-	newPrice.SpecialPrice = 9.0
-	newPrice.ID = model.ID
-	newPrice.CardID = modelCard.ID
-	newPrice.SizeID = modelSize.ID
-
-	err = sqlPriceRepo.UpdateExecOne(ctx, newPrice)
+	newPriceHistory.Price = 6.6
+	newPriceHistory.Discount = 1.6
+	newPriceHistory.SpecialPrice = 9.0
+	newPriceHistory.ID = model.ID
+	err = sqlPriceHistoryRepo.UpdateExecOne(ctx, newPriceHistory)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Выборка по ID
-	model, err = sqlPriceRepo.SelectByID(ctx, newPrice.ID)
+	model, err = sqlPriceHistoryRepo.SelectByID(ctx, newPriceHistory.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, model.Price, newPrice.Price)
-	assert.Equal(t, model.Discount, newPrice.Discount)
-	assert.Equal(t, model.SpecialPrice, newPrice.SpecialPrice)
+	assert.Equal(t, model.Price, newPriceHistory.Price)
+	assert.Equal(t, model.Discount, newPriceHistory.Discount)
+	assert.Equal(t, model.SpecialPrice, newPriceHistory.SpecialPrice)
 }

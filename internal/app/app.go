@@ -8,12 +8,18 @@ import (
 	"github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/controller"
 	"github.com/efremovich/data-receiver/internal/usecases"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/barcoderepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcharrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/mediafilerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/stockrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
@@ -71,6 +77,11 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Репозиторий Size.
+	sizeRepo, err := sizerepo.NewSizeRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 	// Репозиторий Seller
 	sellerRepo, err := sellerrepo.NewSellerRepo(ctx, conn)
 	if err != nil {
@@ -78,6 +89,11 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	}
 	// Репозиторий Brand
 	brandRepo, err := brandrepo.NewBrandRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+	// Репозиторий Dimension
+	dimensionRepo, err := dimensionrepo.NewDimensionRepo(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +107,11 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Репозиторий Barcode
+	barcodeRepo, err := barcoderepo.NewBarcodeRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 	// Репозиторий CardCharacteristic
 	cardcharrepo, err := cardcharrepo.NewCharRepo(ctx, conn)
 	if err != nil {
@@ -101,12 +122,26 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	// Репозиторий Mediafile
+	mediafileRepo, err := mediafilerepo.NewMediaFileRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 	// Репозиторий Warhouse
 	warehouseRepo, err := warehouserepo.NewWarehouseRepo(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
+	// Репозиторий PriceSize
+	priceSizeRepo, err := pricerepo.NewPriceRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+  // Репозиторий Stock
+  stockRepo, err := stockrepo.NewStockRepo(ctx, conn)
+  if err != nil{
+    return nil, err
+  }
 	// Репозиторий Wb2Card
 	wb2carRepo, err := wb2cardrepo.NewWb2CardRepo(ctx, conn)
 	if err != nil {
@@ -117,15 +152,21 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		conf,
 
 		cardRepo,
+		sizeRepo,
 		sellerRepo,
 		brandRepo,
 		charRepo,
 		cardcharrepo,
+		barcodeRepo,
 		categoryRepo,
+		dimensionRepo,
+		mediafileRepo,
+		priceSizeRepo,
+    stockRepo,
 		wb2carRepo,
 
-		warehouseTypeRepo,
 		warehouseRepo,
+		warehouseTypeRepo,
 
 		brokerPublisher,
 		apiFetcher,

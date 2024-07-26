@@ -1,58 +1,49 @@
 package wbfetcher
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
+	"net/url"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 )
 
 type StrockResponce struct {
-	LastChangeDate  string `json:"lastChangeDate"`
-	WarehouseName   string `json:"warehouseName"`
-	SupplierArticle string `json:"supplierArticle"`
-	NmID            int    `json:"nmId"`
-	Barcode         string `json:"barcode"`
-	Quantity        int    `json:"quantity"`
-	InWayToClient   int    `json:"inWayToClient"`
-	InWayFromClient int    `json:"inWayFromClient"`
-	QuantityFull    int    `json:"quantityFull"`
-	Category        string `json:"category"`
-	Subject         string `json:"subject"`
-	Brand           string `json:"brand"`
-	TechSize        string `json:"techSize"`
-	Price           int    `json:"Price"`
-	Discount        int    `json:"Discount"`
-	IsSupply        bool   `json:"isSupply"`
-	IsRealization   bool   `json:"isRealization"`
-	SCCode          string `json:"SCCode"`
+	WarehouseName   string  `json:"warehouseName"`
+	NmID            int     `json:"nmId"`
+	Barcode         string  `json:"barcode"`
+	Quantity        int     `json:"quantity"`
+	InWayToClient   int     `json:"inWayToClient"`
+	InWayFromClient int     `json:"inWayFromClient"`
+	Category        string  `json:"category"`
+	Brand           string  `json:"brand"`
+	TechSize        string  `json:"techSize"`
+	Price           float32 `json:"Price"`
+	Discount        float32 `json:"Discount"`
 }
 
 type StockRequestData struct {
-	DateFrom time.Time `json:"dateFrom"`
+	DateFrom string `json:"dateFrom"`
 }
 
-func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
+func (wb *wbAPIclientImp) GetStocks(ctx context.Context) ([]entity.StockMeta, error) {
 	const methodName = "/api/v1/supplier/stocks"
-	requestData, err := json.Marshal(StockRequestData{DateFrom: time.Now()})
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-	}
+  urlValue := url.Values{}
+  urlValue.Set("dateFrom","2019-01-01")
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", wb.addr, methodName), bytes.NewReader(requestData))
+	reqUrl := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName,urlValue.Encode())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}
-	req.Header.Set("Authorization", wb.token)
+	req.Header.Set("Authorization", wb.tokenStat)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
 	resp, err := wb.client.Do(req)
-	if err != nil && resp.StatusCode != http.StatusOK {
+	if err != nil || resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
 	}
 
@@ -66,10 +57,9 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 		stockMeta := entity.StockMeta{}
 
 		stockMeta.Stock = entity.Stock{
-			Quantity:         elem.Quantity,
-			InWayToClient:    elem.InWayToClient,
-			InWayFromClient:  elem.InWayToClient,
-			Barcode:          elem.Barcode,
+			Quantity:        elem.Quantity,
+			InWayToClient:   elem.InWayToClient,
+			InWayFromClient: elem.InWayToClient,
 		}
 
 		stockMeta.PriceSize = entity.PriceSize{
@@ -78,9 +68,21 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 			SpecialPrice: 0,
 		}
 
-    stockMeta.Wb2Card = entity.Wb2Card{
-    	NMID:      int64(elem.NmID),
-    }
+		stockMeta.Wb2Card = entity.Wb2Card{
+			NMID: int64(elem.NmID),
+		}
+
+		stockMeta.Barcode = entity.Barcode{
+			Barcode: elem.Barcode,
+		}
+
+		stockMeta.Warehouse = entity.Warehouse{
+			Title: elem.WarehouseName,
+		}
+
+		stockMeta.Size = entity.Size{
+			TechSize: elem.TechSize,
+		}
 		stockMetaList = append(stockMetaList, stockMeta)
 	}
 	return stockMetaList, nil

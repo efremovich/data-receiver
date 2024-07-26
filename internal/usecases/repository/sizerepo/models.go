@@ -27,3 +27,4 @@ func (c sizeDB) convertToEntitySize(_ context.Context) *entity.Size {
 		Title:    c.Title,
 	}
 }
+

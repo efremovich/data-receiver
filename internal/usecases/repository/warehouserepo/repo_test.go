@@ -121,4 +121,13 @@ func TestWarehouseRepo(t *testing.T) {
 	assert.Equal(t, model.Address, newWarehouse.Address)
 	assert.Equal(t, model.TypeID, newWarehouse.TypeID)
 	assert.Equal(t, model.SellerID, newWarehouse.SellerID)
+
+	modelSelectBySelecName, err := sqlRepo.SelectBySellerIDAndTitle(ctx, model.SellerID, model.Title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, model.Title, modelSelectBySelecName.Title)
+	assert.Equal(t, model.Address, modelSelectBySelecName.Address)
+	assert.Equal(t, model.TypeID, modelSelectBySelecName.TypeID)
+	assert.Equal(t, model.SellerID, modelSelectBySelecName.SellerID)
 }

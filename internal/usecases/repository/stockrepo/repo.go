@@ -10,6 +10,7 @@ import (
 
 type StockRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Stock, error)
+	SelectByBarcode(ctx context.Context, barcodeID int64) (*entity.Stock, error)
 	Insert(ctx context.Context, in entity.Stock) (*entity.Stock, error)
 	UpdateExecOne(ctx context.Context, in entity.Stock) error
 
@@ -39,6 +40,17 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Stock, 
 	return result.convertToEntityStock(ctx), nil
 }
 
+func (repo *repoImpl) SelectByBarcode(ctx context.Context, barcodeID int64) (*entity.Stock, error) {
+	var result stockDB
+
+	query := "SELECT * FROM shop.stocks WHERE barcode_id = $1"
+
+	err := repo.getReadConnection().Get(&result, query, barcodeID)
+	if err != nil {
+		return nil, err
+	}
+	return result.convertToEntityStock(ctx), nil
+}
 func (repo *repoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Stock, error) {
 	var result []stockDB
 

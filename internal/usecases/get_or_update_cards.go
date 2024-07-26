@@ -110,7 +110,59 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 				}
 			}
 		}
+		// Sizes
+		for _, elem := range card.Sizes {
+			size, err := s.sizerepo.SelectByTitle(ctx, elem.Title)
+			if err != nil && !errors.Is(err, sql.ErrNoRows) {
+				return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении Size %s в БД.", card.Title)
+			}
+			if size == nil {
+				_, err = s.sizerepo.Insert(ctx, entity.Size{
+					ExternalID: elem.ExternalID,
+					TechSize:   elem.TechSize,
+					Title:      elem.Title,
+				})
+				if err != nil {
+					return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении Size %s в БД.", card.Title)
+				}
+			}
+		}
+		// Dimensions
+		dimension, err := s.dimensionrepo.SelectByCardID(ctx, card.ID)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении dimension %d в БД.", card.ID)
+		}
+		if dimension == nil {
+			_, err = s.dimensionrepo.Insert(ctx, entity.Dimension{
+				Width:   card.Dimension.Width,
+				Height:  card.Dimension.Height,
+				Length:  card.Dimension.Length,
+				IsVaild: card.Dimension.IsVaild,
+				CardID:  card.ID,
+			})
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении dimension %d в БД.", card.ID)
+			}
+		}
+		// Mediafile
+		for _, elem := range card.MediaFile {
+			mf, err := s.mediafilerepo.SelectByCardID(ctx, card.ID, elem.Link)
+			if err != nil && !errors.Is(err, sql.ErrNoRows) {
+				return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении dimension %d в БД.", card.ID)
+			}
+			if mf == nil {
+				_, err = s.mediafilerepo.Insert(ctx, entity.MediaFile{
+					Link:   elem.Link,
+					TypeID: elem.TypeID,
+					CardID: card.ID,
+				})
+				if err != nil {
+					return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении MediaFile %d в БД.", card.ID)
+				}
+			}
+		}
 	}
+
 	if len(cards) == desc.Limit {
 		p := entity.PackageDescription{
 			PackageType: "CARD",

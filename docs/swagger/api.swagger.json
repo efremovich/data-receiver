@@ -20,7 +20,7 @@
     "application/json"
   ],
   "paths": {
-    "/receiver/card": {
+    "/card": {
       "get": {
         "operationId": "CardReceiver_ReceiveCard",
         "responses": {
@@ -50,7 +50,7 @@
         ]
       }
     },
-    "/receiver/health": {
+    "/health": {
       "get": {
         "operationId": "CardReceiver_CheckHealth",
         "responses": {
@@ -72,6 +72,66 @@
           "CardReceiver"
         ]
       }
+    },
+    "/stock": {
+      "get": {
+        "operationId": "CardReceiver_ReceiveStock",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/package_receiverReceiveStockResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seller",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CardReceiver"
+        ]
+      }
+    },
+    "/warehouse": {
+      "get": {
+        "operationId": "CardReceiver_ReceiveWarehouse",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/package_receiverReceiveWarehouseResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seller",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CardReceiver"
+        ]
+      }
     }
   },
   "definitions": {
@@ -80,38 +140,21 @@
       "properties": {
         "id": {
           "type": "string"
-        },
-        "groupId": {
+        }
+      }
+    },
+    "package_receiverReceiveStockResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string"
-        },
-        "subjectId": {
-          "type": "string"
-        },
-        "vendorId": {
-          "type": "string"
-        },
-        "vendorCode": {
-          "type": "string"
-        },
-        "subjectName": {
-          "type": "string"
-        },
-        "brand": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "sellerId": {
-          "type": "string"
-        },
-        "createdAt": {
-          "type": "string"
-        },
-        "updatedAt": {
+        }
+      }
+    },
+    "package_receiverReceiveWarehouseResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string"
         }
       }

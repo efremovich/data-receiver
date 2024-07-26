@@ -11,6 +11,7 @@ import (
 type WarehouseRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Warehouse, error)
 	SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Warehouse, error)
+	SelectBySellerIDAndTitle(ctx context.Context, sellerID int64, title string) (*entity.Warehouse, error)
 	Insert(ctx context.Context, in entity.Warehouse) (*entity.Warehouse, error)
 	UpdateExecOne(ctx context.Context, in entity.Warehouse) error
 
@@ -26,6 +27,16 @@ type repoImpl struct {
 
 func NewWarehouseRepo(_ context.Context, db *postgresdb.DBConnection) (WarehouseRepo, error) {
 	return &repoImpl{db: db}, nil
+}
+
+func (repo *repoImpl) SelectBySellerIDAndTitle(ctx context.Context, sellerID int64, title string) (*entity.Warehouse, error) {
+	var result warehouseDB
+	query := "SELECT * FROM shop.warehouses WHERE seller_id = $1 AND name like $2"
+  err := repo.getReadConnection().Get(&result, query, sellerID, "%"+title+"%")
+	if err != nil {
+		return nil, err
+	}
+	return result.convertToEntityWarehouse(ctx), nil
 }
 
 func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Warehouse, error) {

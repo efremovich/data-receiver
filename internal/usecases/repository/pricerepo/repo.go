@@ -10,8 +10,9 @@ import (
 
 type PriceRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.PriceSize, error)
-	SelectByCardID(ctx context.Context, CardID int64) ([]*entity.PriceSize, error)
-	SelectByPriceID(ctx context.Context, CardID int64) ([]*entity.PriceSize, error)
+	SelectByCardID(ctx context.Context, cardID int64) ([]*entity.PriceSize, error)
+	SelectByPriceID(ctx context.Context, cardID int64) ([]*entity.PriceSize, error)
+	SelectByCardIDAndSizeID(ctx context.Context, cardID, sizeID int64) (*entity.PriceSize, error)
 	Insert(ctx context.Context, in entity.PriceSize) (*entity.PriceSize, error)
 	UpdateExecOne(ctx context.Context, in entity.PriceSize) error
 
@@ -56,6 +57,19 @@ func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*
 		resEntity = append(resEntity, v.convertToEntityPrice(ctx))
 	}
 	return resEntity, nil
+}
+
+func (repo *charRepoImpl) SelectByCardIDAndSizeID(ctx context.Context, cardID, sizeID int64) (*entity.PriceSize, error) {
+	var result priceSizeDB
+
+	query := "SELECT * FROM shop.price_sizes WHERE card_id = $1 and size_id = $2"
+
+	err := repo.getReadConnection().Get(&result, query, cardID, sizeID)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.convertToEntityPrice(ctx), nil
 }
 
 func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, priceID int64) ([]*entity.PriceSize, error) {
