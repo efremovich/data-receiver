@@ -5,7 +5,7 @@ CREATE TABLE shop.media_files_types_enum (
     "type" text NOT NULL
 );
 
-ALTER TABLE shop.media_files_types_enum OWNER TO shop_user_rw;
+ALTER TABLE shop.media_files_types_enum OWNER TO erp_db_usr;
 ALTER TABLE ONLY shop.media_files_types_enum
     ADD CONSTRAINT media_file_types_enum_pkey PRIMARY KEY (id);
 
@@ -23,7 +23,7 @@ CREATE TABLE shop.media_files (
     type_id integer NOT NULL,
     card_id integer NOT NULL
 );
-ALTER TABLE shop.media_files OWNER TO shop_user_rw;
+ALTER TABLE shop.media_files OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.media_files
     ADD CONSTRAINT media_files_pkey PRIMARY KEY (id);

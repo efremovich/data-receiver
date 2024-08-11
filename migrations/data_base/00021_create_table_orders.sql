@@ -16,7 +16,7 @@ CREATE TABLE shop.orders (
     region_id integer,
     price_size_id integer NOT NULL
 );
-ALTER TABLE shop.orders OWNER TO shop_user_rw;
+ALTER TABLE shop.orders OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.orders
     ADD CONSTRAINT orders_pkey PRIMARY KEY (id);

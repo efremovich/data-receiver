@@ -9,7 +9,7 @@ CREATE TABLE shop.price_sizes (
     special_price numeric(10,2) NOT NULL,
     updated_at timestamp NOT NULL
 );
-ALTER TABLE shop.price_sizes OWNER TO shop_user_rw;
+ALTER TABLE shop.price_sizes OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.price_sizes
     ADD CONSTRAINT price_sizes_pkey PRIMARY KEY (id);

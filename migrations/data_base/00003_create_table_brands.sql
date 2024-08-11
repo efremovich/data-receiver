@@ -5,7 +5,7 @@ CREATE TABLE shop.brands (
     title text NOT NULL,
     seller_id integer NOT NULL
 );
-ALTER TABLE shop.brands OWNER TO shop_user_rw;
+ALTER TABLE shop.brands OWNER TO erp_db_usr;
 ALTER TABLE ONLY shop.brands
     ADD CONSTRAINT brands_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY shop.brands

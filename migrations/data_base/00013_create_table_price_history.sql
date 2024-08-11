@@ -7,7 +7,7 @@ CREATE TABLE shop.price_history (
     price numeric(10,2) NOT NULL,
     discount numeric(10,2) NOT NULL
 );
-ALTER TABLE shop.price_history OWNER TO shop_user_rw;
+ALTER TABLE shop.price_history OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.price_history
     ADD CONSTRAINT price_history_pkey PRIMARY KEY (id);

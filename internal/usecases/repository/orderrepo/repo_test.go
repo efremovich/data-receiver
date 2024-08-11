@@ -45,7 +45,7 @@ func TestOrderRepo(t *testing.T) {
 	}
 	newWarehouse := entity.Warehouse{
 		Title:      uuid.NewString(),
-		ExternalID: uuid.NewString(),
+		ExternalID: 0,
 		SellerID:   modelSeller.ID,
 	}
 	modelWarehouse, err := sqlWarehouseRepo.Insert(ctx, newWarehouse)

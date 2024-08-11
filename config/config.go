@@ -46,6 +46,8 @@ type Sellers struct {
 }
 type Seller struct {
 	URL                   string `env:"URL"`
+  URLStat               string `env:"URL_STAT"`
 	Token                 string `env:"TOKEN"`
-	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=1"`
+	TokenStat             string `env:"TOKEN_STAT"`
+	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=15"`
 }

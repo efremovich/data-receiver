@@ -6,7 +6,7 @@ CREATE TABLE shop.sellers (
     is_enabled boolean DEFAULT true,
     external_id text
 );
-ALTER TABLE shop.sellers OWNER TO shop_user_rw;
+ALTER TABLE shop.sellers OWNER TO erp_db_usr;
 ALTER TABLE ONLY shop.sellers
     ADD CONSTRAINT sellers_pkey PRIMARY KEY (id);
 

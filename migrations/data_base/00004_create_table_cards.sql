@@ -11,7 +11,7 @@ CREATE TABLE shop.cards (
     updated_at timestamp without time zone DEFAULT now(),
     brand_id integer NOT NULL
 );
-ALTER TABLE shop.cards OWNER TO shop_user_rw;
+ALTER TABLE shop.cards OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.cards
     ADD CONSTRAINT cards_pkey PRIMARY KEY (id);

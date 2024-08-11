@@ -11,6 +11,7 @@ import (
 type WarehouseRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Warehouse, error)
 	SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Warehouse, error)
+	SelectBySellerIDAndTitle(ctx context.Context, sellerID int64, title string) (*entity.Warehouse, error)
 	Insert(ctx context.Context, in entity.Warehouse) (*entity.Warehouse, error)
 	UpdateExecOne(ctx context.Context, in entity.Warehouse) error
 
@@ -28,10 +29,20 @@ func NewWarehouseRepo(_ context.Context, db *postgresdb.DBConnection) (Warehouse
 	return &repoImpl{db: db}, nil
 }
 
+func (repo *repoImpl) SelectBySellerIDAndTitle(ctx context.Context, sellerID int64, title string) (*entity.Warehouse, error) {
+	var result warehouseDB
+	query := "SELECT * FROM shop.warehouses WHERE seller_id = $1 AND name like $2"
+  err := repo.getReadConnection().Get(&result, query, sellerID, "%"+title+"%")
+	if err != nil {
+		return nil, err
+	}
+	return result.convertToEntityWarehouse(ctx), nil
+}
+
 func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Warehouse, error) {
 	var result warehouseDB
 
-	query := "SELECT * FROM warehouses WHERE id = $1"
+	query := "SELECT * FROM shop.warehouses WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -43,7 +54,7 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Warehou
 func (repo *repoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Warehouse, error) {
 	var result []warehouseDB
 
-	query := "SELECT * FROM warehouses WHERE seller_id = $1"
+	query := "SELECT * FROM shop.warehouses WHERE seller_id = $1"
 
 	err := repo.getReadConnection().Select(&result, query, sellerID)
 	if err != nil {
@@ -60,11 +71,11 @@ func (repo *repoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Warehouse) (*entity.Warehouse, error) {
 	dbModel := convertToDBWarehouse(ctx, in)
 
-	query := `INSERT INTO warehouses (external_id, title, address, type, seller_id) 
+	query := `INSERT INTO shop.warehouses (external_id, name, address, warehouse_type_id, seller_id) 
             VALUES ($1, $2, $3, $4, $5) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.ExternalID, dbModel.Title, dbModel.Address, dbModel.Type, dbModel.SellerID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.ExternalID, dbModel.Title, dbModel.Address, dbModel.TypeID, dbModel.SellerID)
 	if err != nil {
 		return nil, err
 	}
@@ -75,10 +86,10 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Warehouse) (*entity.
 func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Warehouse) error {
 	dbModel := convertToDBWarehouse(ctx, in)
 
-	query := `UPDATE warehouses SET 
-            external_id = $1, title = $2, address = $3, type = $4, seller_id = $5 
+	query := `UPDATE shop.warehouses SET 
+            external_id = $1, name = $2, address = $3, warehouse_type_id = $4, seller_id = $5 
             WHERE id = $6`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.ExternalID, dbModel.Title, dbModel.Address, dbModel.Type, dbModel.SellerID, dbModel.ID)
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.ExternalID, dbModel.Title, dbModel.Address, dbModel.TypeID, dbModel.SellerID, dbModel.ID)
 	if err != nil {
 		return err
 	}

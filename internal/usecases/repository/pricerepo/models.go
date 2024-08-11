@@ -41,3 +41,4 @@ func (c priceSizeDB) convertToEntityPrice(_ context.Context) *entity.PriceSize {
 		UpdatedAt:    c.UpdatedAt.Time,
 	}
 }
+

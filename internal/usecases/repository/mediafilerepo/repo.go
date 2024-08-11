@@ -9,7 +9,7 @@ import (
 )
 
 type MediaFileRepo interface {
-	SelectByCardID(ctx context.Context, cardID int64) ([]*entity.MediaFile, error)
+	SelectByCardID(ctx context.Context, cardID int64, link string) ([]*entity.MediaFile, error)
 	Insert(ctx context.Context, in entity.MediaFile) (*entity.MediaFile, error)
 	UpdateExecOne(ctx context.Context, in entity.MediaFile) error
 
@@ -27,12 +27,12 @@ func NewMediaFileRepo(_ context.Context, db *postgresdb.DBConnection) (MediaFile
 	return &mediafileRepoImpl{db: db}, nil
 }
 
-func (repo *mediafileRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*entity.MediaFile, error) {
+func (repo *mediafileRepoImpl) SelectByCardID(ctx context.Context, cardID int64, link string) ([]*entity.MediaFile, error) {
 	var result []mediaFileDB
 
-	query := "SELECT id, link, card_id, type_id FROM shop.media_files WHERE card_id = $1"
+	query := "SELECT id, link, card_id, type_id FROM shop.media_files WHERE card_id = $1 and link = $2"
 
-	err := repo.getReadConnection().Select(&result, query, cardID)
+	err := repo.getReadConnection().Select(&result, query, cardID, link)
 	if err != nil {
 		return nil, err
 	}

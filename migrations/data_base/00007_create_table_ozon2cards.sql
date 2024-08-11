@@ -6,7 +6,7 @@ CREATE TABLE shop.ozon2cards (
     updated_at timestamp without time zone DEFAULT now(),
     card_id integer NOT NULL
 );
-ALTER TABLE shop.ozon2cards OWNER TO shop_user_rw;
+ALTER TABLE shop.ozon2cards OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.ozon2cards
     ADD CONSTRAINT ozon2cards_pkey PRIMARY KEY (id);

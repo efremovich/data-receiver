@@ -6,7 +6,7 @@ CREATE TABLE shop.cards_characteristics (
     characteristic_id integer NOT NULL,
     value text NOT NULL
 );
-ALTER TABLE shop.cards_characteristics OWNER TO shop_user_rw;
+ALTER TABLE shop.cards_characteristics OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.cards_characteristics
     ADD CONSTRAINT cards_characteristics_pkey PRIMARY KEY (id);

@@ -9,7 +9,7 @@ CREATE TABLE shop.stocks (
     created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone DEFAULT now()
 );
-ALTER TABLE shop.stocks OWNER TO shop_user_rw;
+ALTER TABLE shop.stocks OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.stocks
     ADD CONSTRAINT stocks_pkey PRIMARY KEY (id);

@@ -6,7 +6,7 @@ CREATE TABLE shop.regions (
     district_id integer NOT NULL,
     country_id integer
 );
-ALTER TABLE shop.regions OWNER TO shop_user_rw;
+ALTER TABLE shop.regions OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.regions
     ADD CONSTRAINT regions_pk PRIMARY KEY (id);

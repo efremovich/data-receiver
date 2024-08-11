@@ -12,7 +12,7 @@ type Card struct {
 	CreatedAt       time.Time             // Дата создания
 	UpdatedAt       time.Time             // Дана обновления
 	Brand           Brand                 // Бренд
-	Dimensions      Dimensions            // Размеры упаковки
+	Dimension      Dimension            // Размеры упаковки
 	Characteristics []*CardCharacteristic // Характеристики номенклатуры
 	Categories      []*Category           // Категории номенклатуры
 	Sizes           []*Size               // Размеры
@@ -63,14 +63,16 @@ type Barcode struct {
 	Barcode    string // Штрихкод
 	ExternalID int64  // id в магазине
 
-  PriceSizeID int64 
-	SellerID int64
+	PriceSizeID int64
+	SellerID    int64
 }
 
-type Dimensions struct {
-	Width  int
-	Height int
-	Length int
+type Dimension struct {
+	ID      int64
+	Width   int
+	Height  int
+	Length  int
+	IsVaild bool
 
 	CardID int64
 }

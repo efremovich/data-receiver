@@ -35,11 +35,19 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 
 service CardReceiver {
   rpc CheckHealth(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (google.api.http) = {get: "/receiver/health"};
+    option (google.api.http) = {get: "/health"};
   }
 
   rpc ReceiveCard(ReceiveCardRequest) returns (ReceiveCardResponse) {
-    option (google.api.http) = {get: "/receiver/card"};
+    option (google.api.http) = {get: "/card"};
+  }
+
+  rpc ReceiveWarehouse(ReceiveWarehouseRequest) returns (ReceiveWarehouseResponse) {
+    option (google.api.http) = {get: "/warehouse"};
+  }
+  
+  rpc ReceiveStock(ReceiveStockRequest) returns (ReceiveStockResponse) {
+    option (google.api.http) = {get: "/stock"};
   }
 }
 
@@ -49,16 +57,21 @@ message ReceiveCardRequest {
 
 message ReceiveCardResponse {
   string id = 1;
-  string group_id = 2;
-  string subject_id = 3;
-  string vendor_id = 4;
-  string vendor_code = 5;
-  string subject_name = 6;
-  string brand = 7;
-  string title = 8;
-  string description = 9;
-  string seller_id = 10;
-  string created_at = 11;
-  string updated_at = 12;
 }
 
+message ReceiveWarehouseRequest {
+  string seller = 1;
+}
+
+message ReceiveWarehouseResponse {
+  string id = 1;
+}
+
+message ReceiveStockRequest {
+  string seller = 1;
+  string dateFrom = 2;
+}
+
+message ReceiveStockResponse {
+  string id = 1;
+}

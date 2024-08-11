@@ -8,7 +8,7 @@ CREATE TABLE shop.categories (
     external_id integer,
     parent_id integer 
 );
-ALTER TABLE shop.categories OWNER TO shop_user_rw;
+ALTER TABLE shop.categories OWNER TO erp_db_usr;
 ALTER TABLE ONLY shop.categories
     ADD CONSTRAINT categories_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY shop.categories

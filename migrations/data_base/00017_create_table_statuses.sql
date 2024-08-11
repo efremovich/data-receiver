@@ -4,7 +4,7 @@ CREATE TABLE shop.statuses (
     id serial NOT NULL,
     name text NOT NULL
 );
-ALTER TABLE shop.statuses OWNER TO shop_user_rw;
+ALTER TABLE shop.statuses OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.statuses
     ADD CONSTRAINT statuses_name_key UNIQUE (name);

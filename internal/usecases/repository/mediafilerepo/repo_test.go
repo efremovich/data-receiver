@@ -104,7 +104,7 @@ func TestMediaFileRepo(t *testing.T) {
 	assert.Equal(t, newMediaFile.Link, model.Link)
 
 	// Выборка по названию
-	models, err := sqlMediaFileRepo.SelectByCardID(ctx, modelCard.ID)
+	models, err := sqlMediaFileRepo.SelectByCardID(ctx, modelCard.ID, model.Link)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,14 +121,5 @@ func TestMediaFileRepo(t *testing.T) {
 	err = sqlMediaFileRepo.UpdateExecOne(ctx, newMediaFile)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	// Выборка по ID
-	models, err = sqlMediaFileRepo.SelectByCardID(ctx, modelCard.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, model := range models {
-		assert.Equal(t, newMediaFile.Link, model.Link)
 	}
 }

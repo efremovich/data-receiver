@@ -8,7 +8,7 @@ CREATE TABLE shop.jobs (
     description text,
     created_at timestamp without time zone DEFAULT now()
 );
-ALTER TABLE shop.jobs OWNER TO shop_user_rw;
+ALTER TABLE shop.jobs OWNER TO erp_db_usr;
 ALTER TABLE shop.jobs
     ADD CONSTRAINT jobs_pkey PRIMARY KEY (id);
 ALTER TABLE shop.jobs
