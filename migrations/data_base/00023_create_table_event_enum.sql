@@ -4,7 +4,7 @@ CREATE TABLE shop.event_enum (
     id serial NOT NULL,
     event_desc text NOT NULL
 );
-ALTER TABLE shop.event_enum OWNER TO shop_user_rw;
+ALTER TABLE shop.event_enum OWNER TO erp_db_usr;
 ALTER TABLE ONLY shop.event_enum
     ADD CONSTRAINT event_enum_pkey PRIMARY KEY (id);
 

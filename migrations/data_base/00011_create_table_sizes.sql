@@ -5,7 +5,7 @@ CREATE TABLE shop.sizes (
     tech_size text NOT NULL,
     name text NOT NULL
 );
-ALTER TABLE shop.sizes OWNER TO shop_user_rw;
+ALTER TABLE shop.sizes OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.sizes
     ADD CONSTRAINT sizes_pk PRIMARY KEY (id);

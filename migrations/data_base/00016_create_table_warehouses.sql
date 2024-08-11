@@ -8,7 +8,7 @@ CREATE TABLE shop.warehouses (
     warehouse_type_id integer,
     seller_id integer NOT NULL
 );
-ALTER TABLE shop.warehouses OWNER TO shop_user_rw;
+ALTER TABLE shop.warehouses OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.warehouses
     ADD CONSTRAINT warehouses_pkey PRIMARY KEY (id);

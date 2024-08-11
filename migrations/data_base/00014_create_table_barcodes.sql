@@ -6,7 +6,7 @@ CREATE TABLE shop.barcodes (
     seller_id integer NOT NULL,
     price_size_id integer NOT NULL
 );
-ALTER TABLE shop.barcodes OWNER TO shop_user_rw;
+ALTER TABLE shop.barcodes OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.barcodes
     ADD CONSTRAINT barcodes_pkey PRIMARY KEY (id);

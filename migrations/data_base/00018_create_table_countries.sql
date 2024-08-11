@@ -4,7 +4,7 @@ CREATE TABLE shop.countries (
     id serial NOT NULL,
     name text NOT NULL
 );
-ALTER TABLE shop.countries OWNER TO shop_user_rw;
+ALTER TABLE shop.countries OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.countries
     ADD CONSTRAINT countries_pk PRIMARY KEY (id);

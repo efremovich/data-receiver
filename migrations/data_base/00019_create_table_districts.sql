@@ -4,7 +4,7 @@ CREATE TABLE shop.districts (
     id serial NOT NULL,
     name text NOT NULL
 );
-ALTER TABLE shop.districts OWNER TO shop_user_rw;
+ALTER TABLE shop.districts OWNER TO erp_db_usr;
 
 ALTER TABLE ONLY shop.districts
     ADD CONSTRAINT districts_pk PRIMARY KEY (id);
