@@ -30,7 +30,7 @@ import (
 type ReceiverCoreService interface {
 	ReceiveCards(ctx context.Context, desc entity.PackageDescription) aerror.AError
 	ReceiveWarehouses(ctx context.Context) aerror.AError
-  ReceiveStocks(ctx context.Context) aerror.AError
+	ReceiveStocks(ctx context.Context, desc entity.PackageDescription) aerror.AError
 
 	PingDB(ctx context.Context) error
 	PingNATS(_ context.Context) error

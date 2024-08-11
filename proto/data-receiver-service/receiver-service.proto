@@ -69,6 +69,7 @@ message ReceiveWarehouseResponse {
 
 message ReceiveStockRequest {
   string seller = 1;
+  string dateFrom = 2;
 }
 
 message ReceiveStockResponse {

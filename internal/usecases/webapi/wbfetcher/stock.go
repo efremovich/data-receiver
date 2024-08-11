@@ -28,12 +28,15 @@ type StockRequestData struct {
 	DateFrom string `json:"dateFrom"`
 }
 
-func (wb *wbAPIclientImp) GetStocks(ctx context.Context) ([]entity.StockMeta, error) {
+func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
 	const methodName = "/api/v1/supplier/stocks"
-  urlValue := url.Values{}
-  urlValue.Set("dateFrom","2019-01-01")
 
-	reqUrl := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName,urlValue.Encode())
+	urlValue := url.Values{}
+	for key, value := range desc.Query {
+		urlValue.Set(key, value)
+	}
+
+	reqUrl := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)

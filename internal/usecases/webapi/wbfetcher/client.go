@@ -13,7 +13,7 @@ const SellerType = "wb"
 
 type ExtApiFetcher interface {
 	GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error)
-	GetStocks(ctx context.Context) ([]entity.StockMeta, error)
+	GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error)
 	GetWarehouses(ctx context.Context) ([]entity.Warehouse, error)
 
 	Ping(ctx context.Context) error
@@ -26,10 +26,10 @@ func New(_ context.Context, cfg config.Seller) ExtApiFetcher {
 		Timeout: timeout,
 	}
 	client := &wbAPIclientImp{
-		client: c, 
-    token: cfg.Token, 
-    addr: cfg.URL,
-    addrStat: cfg.URLStat,
+		client:    c,
+		token:     cfg.Token,
+		addr:      cfg.URL,
+		addrStat:  cfg.URLStat,
 		tokenStat: cfg.TokenStat,
 	}
 

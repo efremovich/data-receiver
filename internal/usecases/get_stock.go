@@ -7,22 +7,31 @@ import (
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	aerror "github.com/efremovich/data-receiver/pkg/aerror"
+	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
-func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context) aerror.AError {
-	client := s.apiFetcher["wb"]
-	stockMetaList, err := client.GetStocks(ctx)
+func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity.PackageDescription) aerror.AError {
+	client := s.apiFetcher[desc.Seller]
+	stockMetaList, err := client.GetStocks(ctx, desc)
 	if err != nil {
 		return aerror.New(ctx, entity.GetDataFromExSources, err, "ошибка получение данные из внешнего источника %s в БД: %s ", "", err.Error())
 	}
 
-	for _, stock := range stockMetaList {
+	attrs := make(map[string]interface{})
+	attrs["количество данных"] = len(stockMetaList)
+	attrs["seller"] = desc.Seller
+
+	alogger.InfoFromCtx(ctx, "Получение данных об остатках", nil, attrs, false)
+
+	var notFoundElements int
+	for n, stock := range stockMetaList {
 		wb2card, err := s.wb2cardrepo.SelectByNmid(ctx, stock.Wb2Card.NMID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении wb2card %s в БД.", "wb")
 		}
 		// TODO В случае отсутствия в Wb2Card - добавлять в него
 		if wb2card == nil {
+			notFoundElements++
 			continue
 		}
 
@@ -41,13 +50,13 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context) aerror.AErr
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении size %s в БД.", "wb")
 		}
 		if size == nil {
-      size, err = s.sizerepo.Insert(ctx, entity.Size{
+			size, err = s.sizerepo.Insert(ctx, entity.Size{
 				TechSize: stock.Size.TechSize,
 				Title:    stock.Size.TechSize,
 			})
-      if err != nil{
-        return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении size в БД.")
-      }
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении size в БД.")
+			}
 		}
 
 		priceSize, err := s.pricesizerepo.SelectByCardIDAndSizeID(ctx, card.ID, size.ID)
@@ -109,7 +118,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context) aerror.AErr
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении priceSize %s в БД.", "wb")
 		}
 		if stockData == nil {
-			stockData, err = s.stockrepo.Insert(ctx, entity.Stock{
+			_, err = s.stockrepo.Insert(ctx, entity.Stock{
 				Quantity:    stock.Stock.Quantity,
 				BarcodeID:   barcode.ID,
 				WarehouseID: warehouse.ID,
@@ -132,6 +141,12 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context) aerror.AErr
 			}
 		}
 
+		attrs["записей обработано"] = n
+		alogger.InfoFromCtx(ctx, "Добавлена информация о остатке", nil, attrs, false)
 	}
+
+	attrs["не найденных элементов"] = notFoundElements
+	alogger.InfoFromCtx(ctx, "Загружена информация о остатке", nil, attrs, false)
+
 	return nil
 }

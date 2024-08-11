@@ -96,6 +96,12 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
