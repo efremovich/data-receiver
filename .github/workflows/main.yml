@@ -1,0 +1,19 @@
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+
+  server_update:
+    name: Update server buy ssh
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connect and run script
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          script_stop: true
+          script: bash ./deploy/deploy.sh
