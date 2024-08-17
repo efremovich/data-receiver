@@ -10,5 +10,6 @@ RUN apk add --no-cache gcompat
 WORKDIR /app
 COPY --from=builder /build/package-receiver ./
 COPY --from=builder /build/docs/swagger ./docs/swagger
+COPY --from=builder /build/config/vars.env ./config/
 
 CMD ["/app/package-receiver"]

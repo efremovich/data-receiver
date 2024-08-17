@@ -53,7 +53,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, fmt.Errorf("ошибка при создании брокера издателя: %w", err)
 	}
 	if err := brokerPublisher.Ping(); err != nil {
-		return nil, fmt.Errorf("ошибка при подключении к брокеру издателю: %w", err)
+		return nil, fmt.Errorf("ошибка при подключении к брокеру издателю: %w ", err)
 	}
 
 	// Инициализация брокера потребителя.

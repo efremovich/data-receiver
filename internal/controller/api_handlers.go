@@ -2,9 +2,11 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	package_receiver "github.com/efremovich/data-receiver/pkg/data-receiver-service"
+	"github.com/efremovich/data-receiver/pkg/logger"
 )
 
 func (gw *grpcGatewayServerImpl) ReceiveCard(ctx context.Context, in *package_receiver.ReceiveCardRequest) (*package_receiver.ReceiveCardResponse, error) {
@@ -42,9 +44,34 @@ func (gw *grpcGatewayServerImpl) ReceiveStock(ctx context.Context, in *package_r
 		},
 	}
 
-  err := gw.core.ReceiveStocks(ctx, desc)
+	err := gw.core.ReceiveStocks(ctx, desc)
 	if err != nil {
 		return nil, err
 	}
 	return nil, nil
+}
+
+func (gw *grpcGatewayServerImpl) autoupdate(ctx context.Context, upd time.Duration) {
+	t := time.NewTicker(upd)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			desc := entity.PackageDescription{
+				Cursor:      0,
+				Limit:       100,
+				PackageType: entity.PackageTypeCard,
+				Seller:      "wb",
+				Query: map[string]string{
+					"seller": "wb",
+				},
+			}
+			err := gw.core.ReceiveCards(ctx, desc)
+			if err != nil {
+				logger.GetLoggerFromContext(ctx).Errorf("Ошибка получение карточек товара %s", err.Error())
+			}
+		}
+	}
 }

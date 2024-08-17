@@ -19,6 +19,7 @@ import (
 
 	conf "github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/controller/middleware"
+	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases"
 	desc "github.com/efremovich/data-receiver/pkg/data-receiver-service"
 	"github.com/efremovich/data-receiver/pkg/metrics"
@@ -140,6 +141,19 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 		return fmt.Errorf("ошибка: %w", err)
 	}
 
+	desc := entity.PackageDescription{
+		Cursor:      0,
+		Limit:       100,
+		PackageType: entity.PackageTypeCard,
+		Seller:      "wb",
+		Query: map[string]string{
+			"seller": "wb",
+		},
+	}
+  aerr := gw.core.ReceiveCards(ctx, desc) 
+  if aerr != nil{
+    return aerr
+  }
 	return nil
 }
 
