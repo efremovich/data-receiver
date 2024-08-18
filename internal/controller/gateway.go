@@ -100,7 +100,7 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	gw.autoupdate(ctx, updateIntervalDefault)
+	// gw.autoupdate(ctx, updateIntervalDefault)
 
 	g, ctx := errgroup.WithContext(ctx)
 

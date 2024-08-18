@@ -167,7 +167,7 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 		p := entity.PackageDescription{
 			PackageType: entity.PackageTypeCard,
 			Cursor:      int(cards[len(cards)-1].ExternalID),
-			UpdatedAt:   &cards[len(cards)-1].UpdatedAt,
+			UpdatedAt:   cards[len(cards)-1].UpdatedAt,
 			Limit:       desc.Limit,
 			Seller:      desc.Seller,
 		}

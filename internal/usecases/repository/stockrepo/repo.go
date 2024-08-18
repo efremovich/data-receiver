@@ -51,6 +51,7 @@ func (repo *repoImpl) SelectByBarcode(ctx context.Context, barcodeID int64) (*en
 	}
 	return result.convertToEntityStock(ctx), nil
 }
+
 func (repo *repoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Stock, error) {
 	var result []stockDB
 
@@ -78,7 +79,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Stock) (*entity.Stoc
               card_id,
               created_at
             ) 
-            VALUES ($1, $2, $3, $4, now()) RETURNING id`
+            VALUES ($1, $2, $3, $4, $5 RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
@@ -86,6 +87,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Stock) (*entity.Stoc
 		dbModel.BarcodeID,
 		dbModel.WarehouseID,
 		dbModel.CardID,
+		dbModel.CreatedAt,
 	)
 	if err != nil {
 		return nil, err

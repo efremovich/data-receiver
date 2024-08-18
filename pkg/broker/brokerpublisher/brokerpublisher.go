@@ -57,7 +57,7 @@ func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageD
 	// Преобразование пакета приложения в сообщение.
 	msg := tmpPackageSenderMsg{
 		Cursor:    p.Cursor,
-		UpdatedAt: p.UpdatedAt,
+		UpdatedAt: &p.UpdatedAt,
 		Limit:     p.Limit,
 		Seller:    p.Seller,
 	}

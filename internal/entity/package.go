@@ -10,7 +10,7 @@ import (
 type PackageDescription struct {
 	Cursor      int               // Курсор пакета.
 	Limit       int               // Количество записей в запросе
-	UpdatedAt   *time.Time        // Дата обновления.
+	UpdatedAt   time.Time        // Дата обновления.
 	PackageType PackageType       // Тип пакета.
 	Seller      string            // Код продавца (wb, ozon, yandex, 1с)
 	Query       map[string]string // Параметры запроса

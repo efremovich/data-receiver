@@ -68,32 +68,31 @@ func (gw *grpcGatewayServerImpl) autoupdate(ctx context.Context, upd time.Durati
 }
 
 func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
-	desc := entity.PackageDescription{
-		Cursor:      0,
-		Limit:       100,
-		PackageType: entity.PackageTypeCard,
+	// desc := entity.PackageDescription{
+	// 	Cursor:      0,
+	// 	Limit:       100,
+	// 	PackageType: entity.PackageTypeCard,
+	// 	Seller:      "wb",
+	// }
+
+	// err := gw.core.ReceiveCards(ctx, desc)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// err = gw.core.ReceiveWarehouses(ctx)
+	// if err != nil {
+	// 	return err
+	// }
+
+  desc := entity.PackageDescription{
+		PackageType: entity.PackageTypeStock,
+		UpdatedAt:   time.Now(),
 		Seller:      "wb",
+		Limit:       10,
 	}
 
-	err := gw.core.ReceiveCards(ctx, desc)
-	if err != nil {
-		return err
-	}
-
-	err = gw.core.ReceiveWarehouses(ctx)
-	if err != nil {
-		return err
-	}
-
-	desc = entity.PackageDescription{
-		PackageType: entity.PackageTypeCard,
-		Seller:      "wb",
-		Query: map[string]string{
-			"dateFrom": "2024-08-18",
-		},
-	}
-
-	err = gw.core.ReceiveStocks(ctx, desc)
+  err := gw.core.ReceiveStocks(ctx, desc)
 	if err != nil {
 		return err
 	}

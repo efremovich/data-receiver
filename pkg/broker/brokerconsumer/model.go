@@ -2,14 +2,17 @@ package brokerconsumer
 
 import (
 	"context"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	anats "github.com/efremovich/data-receiver/pkg/anats"
 )
 
 type Task struct {
-	Cursor int    `json:"cursor"`
-	Seller string `json:"seller"`
+	Cursor    int        `json:"cursor"`
+	Seller    string     `json:"seller"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	Limit     int        `json:"limit"`
 }
 
 const PackageCreatorStreamName = "package-sender-stream"

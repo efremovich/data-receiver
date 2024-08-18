@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	aerror "github.com/efremovich/data-receiver/pkg/aerror"
@@ -24,7 +25,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 	alogger.InfoFromCtx(ctx, "Получение данных об остатках", nil, attrs, false)
 
 	var notFoundElements int
-	for n, stock := range stockMetaList {
+	for _, stock := range stockMetaList {
 		wb2card, err := s.wb2cardrepo.SelectByNmid(ctx, stock.Wb2Card.NMID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении wb2card %s в БД.", "wb")
@@ -124,6 +125,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 				WarehouseID: warehouse.ID,
 				CardID:      card.ID,
 				SellerID:    seller.ID,
+				CreatedAt:   desc.UpdatedAt,
 			})
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
@@ -134,6 +136,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 			stockData.WarehouseID = warehouse.ID
 			stockData.CardID = card.ID
 			stockData.SellerID = seller.ID
+			stockData.UpdatedAt = desc.UpdatedAt
 
 			err = s.stockrepo.UpdateExecOne(ctx, *stockData)
 			if err != nil {
@@ -141,12 +144,30 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 			}
 		}
 
-		attrs["записей обработано"] = n
-		alogger.InfoFromCtx(ctx, "Добавлена информация о остатке", nil, attrs, false)
+		// attrs["записей обработано"] = n
+		// alogger.InfoFromCtx(ctx, "Добавлена информация о остатке", nil, attrs, false)
 	}
 
 	attrs["не найденных элементов"] = notFoundElements
 	alogger.InfoFromCtx(ctx, "Загружена информация о остатке", nil, attrs, false)
+
+	if desc.Limit > 0 {
+		p := entity.PackageDescription{
+			PackageType: entity.PackageTypeCard,
+
+			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
+			Limit:     desc.Limit - 1,
+			Seller:    desc.Seller,
+		}
+		err = s.brokerPublisher.SendPackage(ctx, &p)
+		if err != nil {
+			return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
+		}
+    attrs["дата остатков"] = p.UpdatedAt.Format("02.01.2006")
+    alogger.InfoFromCtx(ctx, "Создана очередь stocs, limit:%1", nil, attrs , false)
+	} else {
+		alogger.InfoFromCtx(ctx, "Все элементы обработаны", nil, nil, false)
+	}
 
 	return nil
 }
