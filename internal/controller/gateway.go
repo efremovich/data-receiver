@@ -86,12 +86,6 @@ func NewGatewayServer(ctx context.Context, cfg conf.Config, packageReceiver usec
 
 	desc.RegisterCardReceiverServer(grpcServer, gateway)
 
-	err = gateway.update(ctx)
-	if err != nil {
-		return nil, err
-	}
-	gateway.autoupdate(ctx, updateIntervalDefault)
-
 	return gateway, nil
 }
 
@@ -101,6 +95,12 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("ошибка при запуске брокера потребителя для создания пакетов: %w", err)
 	}
+
+	err = gw.update(ctx)
+	if err != nil {
+		return err
+	}
+	gw.autoupdate(ctx, updateIntervalDefault)
 
 	g, ctx := errgroup.WithContext(ctx)
 
