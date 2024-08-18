@@ -13,6 +13,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/mediafilerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
@@ -51,7 +52,9 @@ type receiverCoreServiceImpl struct {
 	mediafilerepo mediafilerepo.MediaFileRepo
 	pricesizerepo pricerepo.PriceRepo
 	stockrepo     stockrepo.StockRepo
-	wb2cardrepo   wb2cardrepo.Wb2CardRepo
+	orderrepo     orderrepo.OrderRepo
+
+	wb2cardrepo wb2cardrepo.Wb2CardRepo
 
 	// Блок остатков
 	warehouserepo     warehouserepo.WarehouseRepo
@@ -78,6 +81,7 @@ func NewPackageReceiverService(
 	pricesizerepo pricerepo.PriceRepo,
 	stockrepo stockrepo.StockRepo,
 	wb2cardrepo wb2cardrepo.Wb2CardRepo,
+	orderrepo orderrepo.OrderRepo,
 
 	warehouserepo warehouserepo.WarehouseRepo,
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo,
@@ -102,6 +106,7 @@ func NewPackageReceiverService(
 		pricesizerepo: pricesizerepo,
 		stockrepo:     stockrepo,
 		wb2cardrepo:   wb2cardrepo,
+		orderrepo:     orderrepo,
 
 		warehouserepo:     warehouserepo,
 		warehousetyperepo: warehousetyperepo,

@@ -114,7 +114,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 			}
 		}
 
-		stockData, err := s.stockrepo.SelectByBarcode(ctx, barcode.ID)
+		stockData, err := s.stockrepo.SelectByBarcode(ctx, barcode.ID, desc.UpdatedAt)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении priceSize %s в БД.", "wb")
 		}
@@ -153,7 +153,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 
 	if desc.Limit > 0 {
 		p := entity.PackageDescription{
-			PackageType: entity.PackageTypeCard,
+			PackageType: entity.PackageTypeStock,
 
 			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
 			Limit:     desc.Limit - 1,

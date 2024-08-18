@@ -24,10 +24,6 @@ type StrockResponce struct {
 	Discount        float32 `json:"Discount"`
 }
 
-type StockRequestData struct {
-	DateFrom string `json:"dateFrom"`
-}
-
 func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
 	const methodName = "/api/v1/supplier/stocks"
 

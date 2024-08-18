@@ -15,6 +15,7 @@ type ExtApiFetcher interface {
 	GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error)
 	GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error)
 	GetWarehouses(ctx context.Context) ([]entity.Warehouse, error)
+	GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.OrderMeta, error)
 
 	Ping(ctx context.Context) error
 }

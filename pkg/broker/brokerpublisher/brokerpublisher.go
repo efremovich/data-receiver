@@ -60,6 +60,7 @@ func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageD
 		UpdatedAt: &p.UpdatedAt,
 		Limit:     p.Limit,
 		Seller:    p.Seller,
+    PackageType: string(p.PackageType),
 	}
 
 	// Сериализация пакета.
@@ -73,8 +74,9 @@ func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageD
 }
 
 type tmpPackageSenderMsg struct {
-	Cursor    int // Указатель на последнюю полученную запись из внешнего источника
-	UpdatedAt *time.Time
-	Limit     int
-	Seller    string
+	Cursor      int // Указатель на последнюю полученную запись из внешнего источника
+	UpdatedAt   *time.Time
+	Limit       int
+	Seller      string
+	PackageType string
 }

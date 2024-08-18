@@ -2,6 +2,7 @@ package stockrepo
 
 import (
 	"context"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
@@ -10,7 +11,7 @@ import (
 
 type StockRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Stock, error)
-	SelectByBarcode(ctx context.Context, barcodeID int64) (*entity.Stock, error)
+	SelectByBarcode(ctx context.Context, barcodeID int64, dateFrom time.Time) (*entity.Stock, error)
 	Insert(ctx context.Context, in entity.Stock) (*entity.Stock, error)
 	UpdateExecOne(ctx context.Context, in entity.Stock) error
 
@@ -40,12 +41,12 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Stock, 
 	return result.convertToEntityStock(ctx), nil
 }
 
-func (repo *repoImpl) SelectByBarcode(ctx context.Context, barcodeID int64) (*entity.Stock, error) {
+func (repo *repoImpl) SelectByBarcode(ctx context.Context, barcodeID int64, dateFrom time.Time) (*entity.Stock, error) {
 	var result stockDB
 
-	query := "SELECT * FROM shop.stocks WHERE barcode_id = $1"
+	query := "SELECT * FROM shop.stocks WHERE barcode_id = $1 and created_at = $2"
 
-	err := repo.getReadConnection().Get(&result, query, barcodeID)
+	err := repo.getReadConnection().Get(&result, query, barcodeID, dateFrom.Format("2006-01-02 00:00:00"))
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Stock) (*entity.Stoc
               card_id,
               created_at
             ) 
-            VALUES ($1, $2, $3, $4, $5 RETURNING id`
+            VALUES ($1, $2, $3, $4, $5) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
@@ -87,7 +88,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Stock) (*entity.Stoc
 		dbModel.BarcodeID,
 		dbModel.WarehouseID,
 		dbModel.CardID,
-		dbModel.CreatedAt,
+		dbModel.CreatedAt.Time.Format("2006-01-02 00:00:00"),
 	)
 	if err != nil {
 		return nil, err

@@ -34,7 +34,7 @@ type Queue struct {
 	Workers           int `env:"WORKERS, default=1"`             // Количество потоков получения сообщений из очереди.
 	MaxDeliver        int `env:"MAX_DELIVER, default=1"`         // Максимальное количество попыток получить сообщение.
 	NakTimeoutSeconds int `env:"NAK_TIMEOUT_SECONDS, default=2"` // Время через которое будет повторяться попытка получить сообщение.
-	AckWaitSeconds    int `env:"ACK_WAIT_SECONDS, default=3"`    // Время на обработку полученного сообщения.
+	AckWaitSeconds    int `env:"ACK_WAIT_SECONDS, default=60"`    // Время на обработку полученного сообщения.
 	MaxAckPending     int `env:"MAX_ACK_PENDING, default=10000"` // Максимальное количество сообщений, которые могут быть ожидающими подтверждения.
 }
 

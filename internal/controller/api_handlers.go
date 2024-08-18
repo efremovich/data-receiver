@@ -89,7 +89,7 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 		PackageType: entity.PackageTypeStock,
 		UpdatedAt:   time.Now(),
 		Seller:      "wb",
-		Limit:       10,
+		Limit:       365,
 	}
 
   err := gw.core.ReceiveStocks(ctx, desc)

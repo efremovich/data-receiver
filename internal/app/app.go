@@ -16,6 +16,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/mediafilerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
@@ -137,16 +138,22 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-  // Репозиторий Stock
-  stockRepo, err := stockrepo.NewStockRepo(ctx, conn)
-  if err != nil{
-    return nil, err
-  }
+	// Репозиторий Stock
+	stockRepo, err := stockrepo.NewStockRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 	// Репозиторий Wb2Card
 	wb2carRepo, err := wb2cardrepo.NewWb2CardRepo(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
+	// Репозиторий Order
+	orderRepo, err := orderrepo.NewOrderRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
 	// Основной бизнес-сервис.
 	packageReceiverCoreService := usecases.NewPackageReceiverService(
 		conf,
@@ -162,8 +169,9 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		dimensionRepo,
 		mediafileRepo,
 		priceSizeRepo,
-    stockRepo,
+		stockRepo,
 		wb2carRepo,
+    orderRepo,
 
 		warehouseRepo,
 		warehouseTypeRepo,

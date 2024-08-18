@@ -4,7 +4,7 @@ import "time"
 
 type Order struct {
 	ID           int64
-	ExternalID        string
+	ExternalID   string
 	Price        float32
 	Quantity     int
 	Discount     float32
@@ -18,4 +18,11 @@ type Order struct {
 	WarehouseID int64
 	SellerID    int64
 	CardID      int64
+}
+
+type OrderMeta struct {
+	Order     Order
+	Warehouse Warehouse
+	Barcode   Barcode
+	Card      Card
 }

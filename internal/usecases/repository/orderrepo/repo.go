@@ -2,6 +2,7 @@ package orderrepo
 
 import (
 	"context"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
@@ -10,6 +11,7 @@ import (
 
 type OrderRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Order, error)
+	SelectByCardIDAndDate(ctx context.Context, cardID int64, date time.Time) (*entity.Order, error)
 	Insert(ctx context.Context, in entity.Order) (*entity.Order, error)
 	UpdateExecOne(ctx context.Context, in entity.Order) error
 
@@ -39,6 +41,18 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Order, 
 	return result.convertToEntityOrder(ctx), nil
 }
 
+func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, date time.Time) (*entity.Order, error) {
+	var result orderDB
+
+	query := "SELECT * FROM orders WHERE id = $1"
+
+	err := repo.getReadConnection().Get(&result, query, cardID, date.Format("2006-01-02 00:00:00"))
+	if err != nil {
+		return nil, err
+	}
+	return result.convertToEntityOrder(ctx), nil
+}
+
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Order, error) {
 	dbModel := convertToDBOrder(ctx, in)
 
@@ -56,7 +70,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
               direction,
               created_at
             ) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now()) RETURNING id`
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12 RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
@@ -71,6 +85,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 		dbModel.SellerID,
 		dbModel.CardID,
 		dbModel.Direction,
+		dbModel.CreatedAt.Time.Format("2006-01-02 00:00:00"),
 	)
 	if err != nil {
 		return nil, err
