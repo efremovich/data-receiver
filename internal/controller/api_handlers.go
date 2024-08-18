@@ -59,19 +59,25 @@ func (gw *grpcGatewayServerImpl) autoupdate(ctx context.Context, upd time.Durati
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			desc := entity.PackageDescription{
-				Cursor:      0,
-				Limit:       100,
-				PackageType: entity.PackageTypeCard,
-				Seller:      "wb",
-				Query: map[string]string{
-					"seller": "wb",
-				},
-			}
-			err := gw.core.ReceiveCards(ctx, desc)
+			err := gw.update(ctx)
 			if err != nil {
 				logger.GetLoggerFromContext(ctx).Errorf("Ошибка получение карточек товара %s", err.Error())
 			}
 		}
 	}
+}
+
+func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
+	desc := entity.PackageDescription{
+		Cursor:      0,
+		Limit:       100,
+		PackageType: entity.PackageTypeCard,
+		Seller:      "wb",
+	}
+	err := gw.core.ReceiveCards(ctx, desc)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
