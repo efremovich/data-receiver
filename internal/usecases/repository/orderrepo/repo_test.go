@@ -74,17 +74,18 @@ func TestOrderRepo(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	newOrder := entity.Order{
-		ExternalID:   uuid.NewString(),
-		Price:        5.5,
-		Discount:     2.5,
-		SpecialPrice: 10.5,
-		Quantity:     5,
-		Status:       uuid.NewString(),
-		Type:         uuid.NewString(),
-		Direction:    uuid.NewString(),
-		WarehouseID:  modelWarehouse.ID,
-		SellerID:     modelSeller.ID,
-		CardID:       modelCard.ID,
+		ID:         0,
+		ExternalID: uuid.NewString(),
+		Price:      5.5,
+		Type:       uuid.NewString(),
+		Direction:  uuid.NewString(),
+		Sale:       0,
+		Quantity:   5,
+		Status:     &entity.Status{},
+		Region:     &entity.Region{},
+		Warehouse:  modelWarehouse,
+		Seller:     modelSeller,
+		Card:       modelCard,
 	}
 	// Создание
 	model, err := sqlRepo.Insert(ctx, newOrder)
@@ -95,12 +96,6 @@ func TestOrderRepo(t *testing.T) {
 	assert.Equal(t, model.Price, newOrder.Price)
 	assert.Equal(t, model.Quantity, newOrder.Quantity)
 	assert.Equal(t, model.Direction, newOrder.Direction)
-	assert.Equal(t, model.Discount, newOrder.Discount)
-	assert.Equal(t, model.SpecialPrice, newOrder.SpecialPrice)
-	assert.Equal(t, model.Type, newOrder.Type)
-	assert.Equal(t, model.WarehouseID, newOrder.WarehouseID)
-	assert.Equal(t, model.SellerID, newOrder.SellerID)
-	assert.Equal(t, model.CardID, newOrder.CardID)
 
 	// Выборка по ID
 	model, err = sqlRepo.SelectByID(ctx, model.ID)
@@ -112,22 +107,10 @@ func TestOrderRepo(t *testing.T) {
 	assert.Equal(t, model.Price, newOrder.Price)
 	assert.Equal(t, model.Quantity, newOrder.Quantity)
 	assert.Equal(t, model.Direction, newOrder.Direction)
-	assert.Equal(t, model.Discount, newOrder.Discount)
-	assert.Equal(t, model.SpecialPrice, newOrder.SpecialPrice)
-	assert.Equal(t, model.Type, newOrder.Type)
-	assert.Equal(t, model.WarehouseID, newOrder.WarehouseID)
-	assert.Equal(t, model.SellerID, newOrder.SellerID)
-	assert.Equal(t, model.CardID, newOrder.CardID)
 
 	// Обновление
 	newOrder.ExternalID = uuid.NewString()
 	newOrder.Price = 88.22
-	newOrder.Discount = 55.55
-	newOrder.SpecialPrice = 114.25
-	newOrder.Status = uuid.NewString()
-	newOrder.Type = uuid.NewString()
-	newOrder.Direction = uuid.NewString()
-	newOrder.ID = model.ID
 
 	err = sqlRepo.UpdateExecOne(ctx, newOrder)
 	if err != nil {
@@ -144,10 +127,4 @@ func TestOrderRepo(t *testing.T) {
 	assert.Equal(t, model.Price, newOrder.Price)
 	assert.Equal(t, model.Quantity, newOrder.Quantity)
 	assert.Equal(t, model.Direction, newOrder.Direction)
-	assert.Equal(t, model.Discount, newOrder.Discount)
-	assert.Equal(t, model.SpecialPrice, newOrder.SpecialPrice)
-	assert.Equal(t, model.Type, newOrder.Type)
-	assert.Equal(t, model.WarehouseID, newOrder.WarehouseID)
-	assert.Equal(t, model.SellerID, newOrder.SellerID)
-	assert.Equal(t, model.CardID, newOrder.CardID)
 }

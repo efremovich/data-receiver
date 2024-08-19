@@ -27,11 +27,11 @@ type OrdersResponce struct {
 	IncomeID        int    `json:"incomeID"`
 	IsSupply        bool   `json:"isSupply"`
 	IsRealization   bool   `json:"isRealization"`
-	TotalPrice      int    `json:"totalPrice"`
-	DiscountPercent int    `json:"discountPercent"`
+	TotalPrice      float32    `json:"totalPrice"`
+	DiscountPercent float32    `json:"discountPercent"`
 	Spp             int    `json:"spp"`
-	FinishedPrice   int    `json:"finishedPrice"`
-	PriceWithDisc   int    `json:"priceWithDisc"`
+	FinishedPrice   float32    `json:"finishedPrice"`
+	PriceWithDisc   float32    `json:"priceWithDisc"`
 	IsCancel        bool   `json:"isCancel"`
 	CancelDate      string `json:"cancelDate"`
 	OrderType       string `json:"orderType"`
@@ -80,9 +80,9 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 
 		order := entity.Order{}
 		order.ExternalID = elem.Srid
-		order.Price = float32(elem.TotalPrice)
-		order.Discount = float32(elem.DiscountPercent)
-		order.SpecialPrice = float32(elem.FinishedPrice)
+		order.Price = elem.TotalPrice
+		order.Discount = elem.DiscountPercent
+		order.SpecialPrice = elem.FinishedPrice
 		order.Status = elem.OrderType
 
 		orderMeta := entity.OrderMeta{

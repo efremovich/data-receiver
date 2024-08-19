@@ -32,7 +32,7 @@ func NewOrderRepo(_ context.Context, db *postgresdb.DBConnection) (OrderRepo, er
 func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Order, error) {
 	var result orderDB
 
-	query := "SELECT * FROM orders WHERE id = $1"
+	query := "SELECT * FROM shop.orders WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
@@ -44,7 +44,7 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Order, 
 func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, date time.Time) (*entity.Order, error) {
 	var result orderDB
 
-	query := "SELECT * FROM orders WHERE id = $1"
+	query := "SELECT * FROM shop.orders WHERE id = $1 and created_at = $2"
 
 	err := repo.getReadConnection().Get(&result, query, cardID, date.Format("2006-01-02 00:00:00"))
 	if err != nil {
@@ -56,36 +56,41 @@ func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, d
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Order, error) {
 	dbModel := convertToDBOrder(ctx, in)
 
-	query := `INSERT INTO orders (
+	query := `INSERT INTO shop.orders (
               external_id,
               price,
-              quantity,
-              discount,
-              special_price,
-              status, 
+              status_id,
+              direction,
               type,
-              warehouse_id,
+              sale,
+             
+              quantity,
+              created_at
+              
               seller_id, 
               card_id, 
-              direction,
-              created_at
+              warehouse_id,
+              region_id,
+              price_size_id,
             ) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12 RETURNING id`
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
 		dbModel.ExternalID,
 		dbModel.Price,
-		dbModel.Quantity,
-		dbModel.Discount,
-		dbModel.SpecialPrice,
-		dbModel.Status,
+		dbModel.StatusID,
+		dbModel.Direction,
 		dbModel.Type,
-		dbModel.WarehouseID,
+		dbModel.Sale,
+		dbModel.Quantity,
+		dbModel.CreatedAt,
+
 		dbModel.SellerID,
 		dbModel.CardID,
-		dbModel.Direction,
-		dbModel.CreatedAt.Time.Format("2006-01-02 00:00:00"),
+		dbModel.WarehouseID,
+		dbModel.RegionID,
+		dbModel.PriceSizeID,
 	)
 	if err != nil {
 		return nil, err
@@ -97,32 +102,38 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error {
 	dbModel := convertToDBOrder(ctx, in)
 
-	query := `UPDATE orders SET
-            external_id = $1, 
-            price = $2,
-            quantity = $3,
-            discount = $4, 
-            special_price = $5,
-            status = $6, 
-            type = $7,
-            warehouse_id = $8,
-            seller_id = $9, 
-            card_id = $10,
-            direction = $11,
-            updated_at = now()
-            WHERE id = $12`
+	query := `UPDATE shop.orders SET
+              external_id= $1,
+              price = $2,
+              status_id = $3,
+              direction = $4,
+              type = $5,
+              sale = $6,
+             
+              quantity = $7,
+              created_at = $8,
+              
+              seller_id = $9, 
+              card_id = $10, 
+              warehouse_id = $11,
+              region_id = $12,
+              price_size_id = $13,
+            WHERE id = $14`
 	_, err := repo.getWriteConnection().ExecOne(query,
 		dbModel.ExternalID,
 		dbModel.Price,
-		dbModel.Quantity,
-		dbModel.Discount,
-		dbModel.SpecialPrice,
-		dbModel.Status,
+		dbModel.StatusID,
+		dbModel.Direction,
 		dbModel.Type,
-		dbModel.WarehouseID,
+		dbModel.Sale,
+		dbModel.Quantity,
+		dbModel.CreatedAt,
+
 		dbModel.SellerID,
 		dbModel.CardID,
-		dbModel.Direction,
+		dbModel.WarehouseID,
+		dbModel.RegionID,
+		dbModel.PriceSizeID,
 		dbModel.ID,
 	)
 	if err != nil {

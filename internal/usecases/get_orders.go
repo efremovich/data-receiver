@@ -45,7 +45,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 
 		orderData, err := s.orderrepo.SelectByCardIDAndDate(ctx, wb2card.CardID, desc.UpdatedAt)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении orderData %s в БД.", "wb")
+      return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении orderData %s в БД.", "wb")
 		}
 		if orderData == nil {
 			_, err = s.orderrepo.Insert(ctx, entity.Order{
@@ -55,7 +55,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 				Discount:     order.Order.Discount,
 				SpecialPrice: order.Order.SpecialPrice,
 				Status:       "",
-				Type:         orderData.Type,
+				Type:         "",
 				Direction:    order.Order.Direction,
 				CreatedAt:    desc.UpdatedAt,
 				WarehouseID:  warehouse.ID,
