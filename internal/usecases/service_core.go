@@ -11,12 +11,16 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/countryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/districtrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/mediafilerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/statusrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/stockrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
@@ -32,7 +36,7 @@ type ReceiverCoreService interface {
 	ReceiveCards(ctx context.Context, desc entity.PackageDescription) aerror.AError
 	ReceiveWarehouses(ctx context.Context) aerror.AError
 	ReceiveStocks(ctx context.Context, desc entity.PackageDescription) aerror.AError
-  ReceiveOrders(ctx context.Context, desc entity.PackageDescription) aerror.AError
+	ReceiveOrders(ctx context.Context, desc entity.PackageDescription) aerror.AError
 
 	PingDB(ctx context.Context) error
 	PingNATS(_ context.Context) error
@@ -54,6 +58,10 @@ type receiverCoreServiceImpl struct {
 	pricesizerepo pricerepo.PriceRepo
 	stockrepo     stockrepo.StockRepo
 	orderrepo     orderrepo.OrderRepo
+	statusrepo    statusrepo.StatusRepo
+	countryrepo   countryrepo.CountryRepo
+	regionrepo    regionrepo.RegoinRepo
+	districtrepo  districtrepo.DistrictRepo
 
 	wb2cardrepo wb2cardrepo.Wb2CardRepo
 
@@ -83,6 +91,10 @@ func NewPackageReceiverService(
 	stockrepo stockrepo.StockRepo,
 	wb2cardrepo wb2cardrepo.Wb2CardRepo,
 	orderrepo orderrepo.OrderRepo,
+	statusrepo statusrepo.StatusRepo,
+	countryrepo countryrepo.CountryRepo,
+	regionrepo regionrepo.RegoinRepo,
+	districtrepo districtrepo.DistrictRepo,
 
 	warehouserepo warehouserepo.WarehouseRepo,
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo,
@@ -108,6 +120,10 @@ func NewPackageReceiverService(
 		stockrepo:     stockrepo,
 		wb2cardrepo:   wb2cardrepo,
 		orderrepo:     orderrepo,
+		statusrepo:    statusrepo,
+		countryrepo:   countryrepo,
+		regionrepo:    regionrepo,
+		districtrepo:  districtrepo,
 
 		warehouserepo:     warehouserepo,
 		warehousetyperepo: warehousetyperepo,

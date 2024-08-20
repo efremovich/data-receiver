@@ -63,17 +63,14 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
               direction,
               type,
               sale,
-             
-              quantity,
-              created_at
-              
+              created_at,
               seller_id, 
               card_id, 
               warehouse_id,
               region_id,
-              price_size_id,
+              price_size_id
             ) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
@@ -83,7 +80,6 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 		dbModel.Direction,
 		dbModel.Type,
 		dbModel.Sale,
-		dbModel.Quantity,
 		dbModel.CreatedAt,
 
 		dbModel.SellerID,

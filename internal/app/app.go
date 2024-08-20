@@ -14,12 +14,16 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/countryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/districtrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/mediafilerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/statusrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/stockrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
@@ -154,6 +158,29 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, err
 	}
 
+	// Репозиторий Status
+	statusRepo, err := statusrepo.NewStatusRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Репозиторий Country
+	countryRepo, err := countryrepo.NewCountryRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Репозиторий Region
+	regionRepo, err := regionrepo.NewRegionRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Репозиторий District
+	districtRepo, err := districtrepo.NewDistrictRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 	// Основной бизнес-сервис.
 	packageReceiverCoreService := usecases.NewPackageReceiverService(
 		conf,
@@ -171,7 +198,11 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		priceSizeRepo,
 		stockRepo,
 		wb2carRepo,
-    orderRepo,
+		orderRepo,
+		statusRepo,
+		countryRepo,
+		regionRepo,
+    districtRepo,
 
 		warehouseRepo,
 		warehouseTypeRepo,

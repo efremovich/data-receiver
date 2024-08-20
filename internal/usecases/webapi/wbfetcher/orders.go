@@ -11,36 +11,36 @@ import (
 )
 
 type OrdersResponce struct {
-	Date            string `json:"date"`
-	LastChangeDate  string `json:"lastChangeDate"`
-	WarehouseName   string `json:"warehouseName"`
-	CountryName     string `json:"countryName"`
-	OblastOkrugName string `json:"oblastOkrugName"`
-	RegionName      string `json:"regionName"`
-	SupplierArticle string `json:"supplierArticle"`
-	NmID            int    `json:"nmId"`
-	Barcode         string `json:"barcode"`
-	Category        string `json:"category"`
-	Subject         string `json:"subject"`
-	Brand           string `json:"brand"`
-	TechSize        string `json:"techSize"`
-	IncomeID        int    `json:"incomeID"`
-	IsSupply        bool   `json:"isSupply"`
-	IsRealization   bool   `json:"isRealization"`
-	TotalPrice      float32    `json:"totalPrice"`
-	DiscountPercent float32    `json:"discountPercent"`
-	Spp             int    `json:"spp"`
-	FinishedPrice   float32    `json:"finishedPrice"`
-	PriceWithDisc   float32    `json:"priceWithDisc"`
-	IsCancel        bool   `json:"isCancel"`
-	CancelDate      string `json:"cancelDate"`
-	OrderType       string `json:"orderType"`
-	Sticker         string `json:"sticker"`
-	GNumber         string `json:"gNumber"`
-	Srid            string `json:"srid"`
+	Date            string  `json:"date"`
+	LastChangeDate  string  `json:"lastChangeDate"`
+	WarehouseName   string  `json:"warehouseName"`
+	CountryName     string  `json:"countryName"`
+	OblastOkrugName string  `json:"oblastOkrugName"`
+	RegionName      string  `json:"regionName"`
+	SupplierArticle string  `json:"supplierArticle"`
+	NmID            int     `json:"nmId"`
+	Barcode         string  `json:"barcode"`
+	Category        string  `json:"category"`
+	Subject         string  `json:"subject"`
+	Brand           string  `json:"brand"`
+	TechSize        string  `json:"techSize"`
+	IncomeID        int     `json:"incomeID"`
+	IsSupply        bool    `json:"isSupply"`
+	IsRealization   bool    `json:"isRealization"`
+	TotalPrice      float32 `json:"totalPrice"`
+	DiscountPercent float32 `json:"discountPercent"`
+	Spp             int     `json:"spp"`
+	FinishedPrice   float32 `json:"finishedPrice"`
+	PriceWithDisc   float32 `json:"priceWithDisc"`
+	IsCancel        bool    `json:"isCancel"`
+	CancelDate      string  `json:"cancelDate"`
+	OrderType       string  `json:"orderType"`
+	Sticker         string  `json:"sticker"`
+	GNumber         string  `json:"gNumber"`
+	Srid            string  `json:"srid"`
 }
 
-func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.OrderMeta, error) {
+func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.Order, error) {
 	const methodName = "/api/v1/supplier/orders"
 
 	urlValue := url.Values{}
@@ -65,7 +65,7 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 	if err := json.NewDecoder(resp.Body).Decode(&orderResponce); err != nil {
 		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
 	}
-	var ordersMeta []entity.OrderMeta
+	var orders []entity.Order
 
 	for _, elem := range orderResponce {
 		warehouse := entity.Warehouse{}
@@ -78,20 +78,39 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 		card.ExternalID = int64(elem.NmID)
 		card.VendorCode = elem.SupplierArticle
 
+		status := entity.Status{
+			Name: elem.OrderType,
+		}
+
+
+		region := entity.Region{
+			RegionName:   elem.RegionName,
+			District: entity.District{
+				Name: elem.RegionName,
+			},
+			Country:  entity.Country{
+        Name: elem.CountryName,
+      },
+		}
+
+		seller := entity.Seller{
+			Title: "wb",
+		}
+
 		order := entity.Order{}
 		order.ExternalID = elem.Srid
 		order.Price = elem.TotalPrice
-		order.Discount = elem.DiscountPercent
-		order.SpecialPrice = elem.FinishedPrice
-		order.Status = elem.OrderType
+		order.Type = elem.OrderType
+		order.Sale = elem.DiscountPercent
 
-		orderMeta := entity.OrderMeta{
-			Warehouse: warehouse,
-			Barcode:   barcode,
-			Card:      card,
-			Order:     order,
-		}
-		ordersMeta = append(ordersMeta, orderMeta)
+		order.Status = &status
+		order.Region = &region
+		order.Warehouse = &warehouse
+		order.Seller = &seller
+		order.Card = &card
+		order.Barcode = &barcode
+
+		orders = append(orders, order)
 	}
-	return ordersMeta, nil
+	return orders, nil
 }

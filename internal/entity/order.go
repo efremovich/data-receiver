@@ -20,11 +20,6 @@ type Order struct {
 	Seller    *Seller
 	Card      *Card
 	PriceSize *PriceSize
+	Barcode   *Barcode
 }
 
-type OrderMeta struct {
-	Order     Order
-	Warehouse Warehouse
-	Barcode   Barcode
-	Card      Card
-}

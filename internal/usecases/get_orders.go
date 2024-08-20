@@ -33,6 +33,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 			notFoundElements++
 			continue
 		}
+
 		seller, err := s.sellerRepo.SelectByTitle(ctx, desc.Seller)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении seller %s в БД.", "wb")
@@ -43,32 +44,94 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении warehouserepo %s в БД.", "wb")
 		}
 
+		// Barcode
+		barcode, err := s.barcodeRepo.SelectByBarcode(ctx, order.Barcode.Barcode)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении barcode %s в БД.", "wb")
+		}
+
+		// PriceSize
+		priceSize, err := s.pricesizerepo.SelectByID(ctx, barcode.PriceSizeID)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении barcode %s в БД.", "wb")
+		}
+
+		// Status
+		status, err := s.statusrepo.SelectByName(ctx, order.Status.Name)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении status %s в БД.", "wb")
+		}
+		if status == nil {
+			status, err = s.statusrepo.Insert(ctx, *order.Status)
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
+			}
+		}
+
+		// Region
+		country, err := s.countryrepo.SelectByName(ctx, order.Region.Country.Name)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении country %s в БД.", "wb")
+		}
+		if country == nil {
+			country, err = s.countryrepo.Insert(ctx, order.Region.Country)
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении country в БД.")
+			}
+		}
+
+		district, err := s.districtrepo.SelectByName(ctx, order.Region.District.Name)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении district %s в БД.", "wb")
+		}
+		if district == nil {
+			district, err = s.districtrepo.Insert(ctx, order.Region.District)
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении district в БД.")
+			}
+		}
+
+		region, err := s.regionrepo.SelectByName(ctx, order.Region.RegionName, country.ID, district.ID)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении region %s в БД.", "wb")
+		}
+		if region == nil {
+			region, err = s.regionrepo.Insert(ctx, &entity.Region{
+				RegionName: order.Region.RegionName,
+				District:   *district,
+				Country:    *country,
+			})
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении district в БД.")
+			}
+		}
+
 		orderData, err := s.orderrepo.SelectByCardIDAndDate(ctx, wb2card.CardID, desc.UpdatedAt)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-      return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении orderData %s в БД.", "wb")
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении orderData %s в БД.", "wb")
 		}
 		if orderData == nil {
 			_, err = s.orderrepo.Insert(ctx, entity.Order{
-				ExternalID:   order.Order.ExternalID,
-				Price:        order.Order.Price,
-				Quantity:     1,
-				Discount:     order.Order.Discount,
-				SpecialPrice: order.Order.SpecialPrice,
-				Status:       "",
-				Type:         "",
-				Direction:    order.Order.Direction,
-				CreatedAt:    desc.UpdatedAt,
-				WarehouseID:  warehouse.ID,
-				SellerID:     seller.ID,
-				CardID:       wb2card.CardID,
+				ExternalID: order.ExternalID,
+				Price:      order.Price,
+				Type:       order.Type,
+				Direction:  order.Direction,
+				Sale:       order.Sale,
+				Quantity:   1,
+
+				Status:    status,
+				Region:    region,
+				Warehouse: warehouse,
+				Seller:    seller,
+				PriceSize: priceSize,
+				Card: &entity.Card{
+					ID: wb2card.CardID,
+				},
 			})
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
 			}
 		} else {
-			orderData.Price = order.Order.Price
-			orderData.Discount = order.Order.Discount
-			orderData.SpecialPrice = order.Order.SpecialPrice
 			err = s.orderrepo.UpdateExecOne(ctx, *orderData)
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")

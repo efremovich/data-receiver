@@ -1,25 +1,25 @@
 version: "3.8"
 services:
   # application
-  data-receiver:
-    container_name: data-receiver
-    image: efremovich/data-receiver
-    restart: unless-stopped
-    build:
-      context: ./
-      dockerfile: ./Dockerfile
-      network: host
-    environment:
-      GO_ENVIRONMENT: local
-      GATEWAY_HTTP_PORT: 8080
-      GATEWAY_GRPC_PORT: 8090
-    ports:
-      - "8001:8080"
-      - "9001:8090"
-    depends_on:
-      - postgres_db
-      - db_creator
-      - nats
+  # data-receiver:
+  #   container_name: data-receiver
+  #   image: efremovich/data-receiver
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./
+  #     dockerfile: ./Dockerfile
+  #     network: host
+  #   environment:
+  #     GO_ENVIRONMENT: local
+  #     GATEWAY_HTTP_PORT: 8080
+  #     GATEWAY_GRPC_PORT: 8090
+  #   ports:
+  #     - "8001:8080"
+  #     - "9001:8090"
+  #   depends_on:
+  #     - postgres_db
+  #     - db_creator
+  #     - nats
 
   # infra
   postgres_db:
