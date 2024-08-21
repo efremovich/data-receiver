@@ -22,6 +22,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 	attrs["seller"] = desc.Seller
 
 	var notFoundElements int
+
 	for _, order := range ordersMetaList {
 		wb2card, err := s.wb2cardrepo.SelectByNmid(ctx, order.Card.ExternalID)
 
@@ -48,6 +49,11 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 		barcode, err := s.barcodeRepo.SelectByBarcode(ctx, order.Barcode.Barcode)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении barcode %s в БД.", "wb")
+		}
+
+		if barcode == nil {
+			notFoundElements++
+			continue
 		}
 
 		// PriceSize
@@ -137,7 +143,6 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
 			}
 		}
-
 	}
 
 	return nil

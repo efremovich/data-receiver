@@ -202,7 +202,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		statusRepo,
 		countryRepo,
 		regionRepo,
-    districtRepo,
+		districtRepo,
 
 		warehouseRepo,
 		warehouseTypeRepo,
