@@ -33,7 +33,7 @@ func (gw *grpcGatewayServerImpl) makeBrokerSubscribers(ctx context.Context) erro
 func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc entity.PackageDescription, _ int, _ bool) anats.MessageResultEnum {
 	start := time.Now()
 
-	alogger.DebugFromCtx(ctx, fmt.Sprintf("начало обработки сообщения %d", desc.Cursor), nil, nil, false)
+	// alogger.DebugFromCtx(ctx, fmt.Sprintf("начало обработки сообщения %d", desc.Cursor), nil, nil, false)
 
 	switch desc.PackageType {
 	case entity.PackageTypeCard:
@@ -61,9 +61,19 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 
 	case entity.PackageTypeSale:
 	case entity.PackageTypeOrder:
+		aerr := gw.core.ReceiveOrders(ctx, desc)
+		if aerr != nil {
+			alogger.ErrorFromCtx(ctx, fmt.Sprintf("ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage()), aerr, nil, false)
+
+			if aerr.IsCritical() {
+				return anats.MessageResultEnumFatalError
+			}
+
+			return anats.MessageResultEnumTempError
+		}
 	}
 
-	alogger.InfoFromCtx(ctx, fmt.Sprintf("окончание обработки создания пакета %d. время - %.3fs", desc.Cursor, time.Since(start).Seconds()), nil, nil, false)
+	alogger.InfoFromCtx(ctx, fmt.Sprintf("окончание обработки создания пакета время - %.3fs", time.Since(start).Seconds()), nil, nil, false)
 
 	return anats.MessageResultEnumSuccess
 }

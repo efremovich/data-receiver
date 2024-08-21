@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	aerror "github.com/efremovich/data-receiver/pkg/aerror"
+	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
 func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity.PackageDescription) aerror.AError {
@@ -23,7 +26,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 
 	var notFoundElements int
 
-	for _, order := range ordersMetaList {
+	for i, order := range ordersMetaList {
 		wb2card, err := s.wb2cardrepo.SelectByNmid(ctx, order.Card.ExternalID)
 
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -39,10 +42,15 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении seller %s в БД.", "wb")
 		}
-
+		// Warehouse
 		warehouse, err := s.warehouserepo.SelectBySellerIDAndTitle(ctx, seller.ID, order.Warehouse.Title)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении warehouserepo %s в БД.", "wb")
+		}
+
+		if warehouse == nil {
+			notFoundElements++
+			continue
 		}
 
 		// Barcode
@@ -60,6 +68,11 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 		priceSize, err := s.pricesizerepo.SelectByID(ctx, barcode.PriceSizeID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении barcode %s в БД.", "wb")
+		}
+
+		if priceSize == nil {
+			notFoundElements++
+			continue
 		}
 
 		// Status
@@ -97,7 +110,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 			}
 		}
 
-		region, err := s.regionrepo.SelectByName(ctx, order.Region.RegionName, country.ID, district.ID)
+		region, err := s.regionrepo.SelectByName(ctx, order.Region.RegionName, district.ID, country.ID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении region %s в БД.", "wb")
 		}
@@ -108,6 +121,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 				Country:    *country,
 			})
 			if err != nil {
+				fmt.Println(i)
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении district в БД.")
 			}
 		}
@@ -133,16 +147,38 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 				Card: &entity.Card{
 					ID: wb2card.CardID,
 				},
+				CreatedAt: desc.UpdatedAt,
 			})
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
 			}
 		} else {
+			orderData.UpdatedAt = time.Now()
 			err = s.orderrepo.UpdateExecOne(ctx, *orderData)
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
 			}
 		}
+	}
+
+	attrs["не найденных элементов"] = notFoundElements
+	alogger.InfoFromCtx(ctx, "Загружена информация о остатке", nil, attrs, false)
+
+	if desc.Limit > 0 {
+		p := entity.PackageDescription{
+			PackageType: entity.PackageTypeOrder,
+
+			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
+			Limit:     desc.Limit - 1,
+			Seller:    desc.Seller,
+		}
+		err = s.brokerPublisher.SendPackage(ctx, &p)
+		if err != nil {
+			return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
+		}
+
+		attrs["дата остатков"] = p.UpdatedAt.Format("02.01.2006")
+		alogger.InfoFromCtx(ctx, "Создана очередь stocs, limit:%1", nil, attrs, false)
 	}
 
 	return nil

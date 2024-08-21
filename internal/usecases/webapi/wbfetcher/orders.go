@@ -47,24 +47,29 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02"))
 	urlValue.Set("flag", "0")
 
-	reqUrl := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqUrl, nil)
+	reqURL := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
+		return nil, fmt.Errorf("%s: ошибка создания запроса: %s", methodName, err.Error())
 	}
+
 	req.Header.Set("Authorization", wb.tokenStat)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
 	resp, err := wb.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
+		return nil, fmt.Errorf("%s: ошибка отправки запроса: %s", methodName, err.Error())
 	}
+
+	defer resp.Body.Close()
 
 	var orderResponce []OrdersResponce
 	if err := json.NewDecoder(resp.Body).Decode(&orderResponce); err != nil {
-		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
+		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %s", methodName, err.Error())
 	}
+
 	var orders []entity.Order
 
 	for _, elem := range orderResponce {
@@ -82,15 +87,14 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 			Name: elem.OrderType,
 		}
 
-
 		region := entity.Region{
-			RegionName:   elem.RegionName,
+			RegionName: elem.RegionName,
 			District: entity.District{
 				Name: elem.RegionName,
 			},
-			Country:  entity.Country{
-        Name: elem.CountryName,
-      },
+			Country: entity.Country{
+				Name: elem.CountryName,
+			},
 		}
 
 		seller := entity.Seller{
@@ -112,5 +116,6 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 
 		orders = append(orders, order)
 	}
+
 	return orders, nil
 }

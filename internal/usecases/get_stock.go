@@ -25,6 +25,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 	alogger.InfoFromCtx(ctx, "Получение данных об остатках", nil, attrs, false)
 
 	var notFoundElements int
+
 	for _, stock := range stockMetaList {
 		wb2card, err := s.wb2cardrepo.SelectByNmid(ctx, stock.Wb2Card.NMID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -136,7 +137,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 			stockData.WarehouseID = warehouse.ID
 			stockData.CardID = card.ID
 			stockData.SellerID = seller.ID
-			stockData.UpdatedAt = desc.UpdatedAt
+			stockData.UpdatedAt = time.Now()
 
 			err = s.stockrepo.UpdateExecOne(ctx, *stockData)
 			if err != nil {
@@ -163,8 +164,8 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		if err != nil {
 			return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
 		}
-    attrs["дата остатков"] = p.UpdatedAt.Format("02.01.2006")
-    alogger.InfoFromCtx(ctx, "Создана очередь stocs, limit:%1", nil, attrs , false)
+		attrs["дата остатков"] = p.UpdatedAt.Format("02.01.2006")
+		alogger.InfoFromCtx(ctx, "Создана очередь stocs, limit:%1", nil, attrs, false)
 	} else {
 		alogger.InfoFromCtx(ctx, "Все элементы обработаны", nil, nil, false)
 	}

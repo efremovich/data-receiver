@@ -30,22 +30,27 @@ func NewRegionRepo(_ context.Context, db *postgresdb.DBConnection) (RegoinRepo, 
 
 func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Region, error) {
 	var result regionDB
+
 	query := "SELECT * FROM shop.regions WHERE id = $1"
+
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
 		return nil, err
 	}
+
 	return result.convertToEntityRegion(ctx), nil
 }
 
 func (repo *repoImpl) SelectByName(ctx context.Context, regionName string, districtID, countryID int64) (*entity.Region, error) {
 	var result regionDB
+
 	query := "SELECT * FROM shop.regions WHERE country_id = $1 and region_name = $2 and district_id = $3"
 
 	err := repo.getReadConnection().Get(&result, query, countryID, regionName, districtID)
 	if err != nil {
 		return nil, err
 	}
+
 	return result.convertToEntityRegion(ctx), nil
 }
 
@@ -53,22 +58,26 @@ func (repo *repoImpl) Insert(ctx context.Context, region *entity.Region) (*entit
 	dbModel := convertToDBRegion(ctx, region)
 	query := "INSERT INTO shop.regions (country_id, region_name, district_id) VALUES ($1, $2, $3) RETURNING id"
 	charIDWrap := repository.IDWrapper{}
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.CountryID, dbModel.RegionName, dbModel.DistrictID)
 
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.CountryID, dbModel.RegionName, dbModel.DistrictID)
 	if err != nil {
 		return nil, err
 	}
+
 	region.ID = charIDWrap.ID.Int64
+
 	return region, nil
 }
 
 func (repo *repoImpl) UpdateExecOne(ctx context.Context, region *entity.Region) error {
 	dbModel := convertToDBRegion(ctx, region)
 	query := "UPDATE shop.regions SET country_id = $1, region_name = $2, district_id = $3 WHERE id = $4"
+
 	_, err := repo.getWriteConnection().Exec(query, dbModel.CountryID, dbModel.RegionName, dbModel.DistrictID, region.ID)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -88,6 +97,7 @@ func (repo *repoImpl) getReadConnection() postgresdb.QueryExecutor {
 	if repo.tx != nil {
 		return *repo.tx
 	}
+
 	return repo.db.GetReadConnection()
 }
 
@@ -95,5 +105,6 @@ func (repo *repoImpl) getWriteConnection() postgresdb.QueryExecutor {
 	if repo.tx != nil {
 		return *repo.tx
 	}
+
 	return repo.db.GetWriteConnection()
 }

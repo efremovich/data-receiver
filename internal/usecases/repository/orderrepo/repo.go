@@ -38,6 +38,7 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Order, 
 	if err != nil {
 		return nil, err
 	}
+
 	return result.convertToEntityOrder(ctx), nil
 }
 
@@ -50,6 +51,7 @@ func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, d
 	if err != nil {
 		return nil, err
 	}
+
 	return result.convertToEntityOrder(ctx), nil
 }
 
@@ -91,7 +93,9 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 	if err != nil {
 		return nil, err
 	}
+
 	in.ID = charIDWrap.ID.Int64
+
 	return &in, nil
 }
 
