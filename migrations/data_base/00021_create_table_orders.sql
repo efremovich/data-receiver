@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE shop.orders (
     id serial NOT NULL,
-    external_id integer NOT NULL,
+    external_id text NOT NULL,
     price numeric(10,2) NOT NULL,
     warehouse_id integer NOT NULL,
     status_id integer,

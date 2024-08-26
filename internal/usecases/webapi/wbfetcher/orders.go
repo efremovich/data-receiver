@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 )
@@ -106,6 +107,9 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 		order.Price = elem.TotalPrice
 		order.Type = elem.OrderType
 		order.Sale = elem.DiscountPercent
+
+		// Попробуем получить дату заказа
+		order.CreatedAt, _ = time.Parse("2006-01-02T15:04:05", elem.Date)
 
 		order.Status = &status
 		order.Region = &region

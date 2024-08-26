@@ -26,7 +26,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 
 	var notFoundElements int
 
-	for i, order := range ordersMetaList {
+	for _, order := range ordersMetaList {
 		wb2card, err := s.wb2cardrepo.SelectByNmid(ctx, order.Card.ExternalID)
 
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -121,7 +121,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 				Country:    *country,
 			})
 			if err != nil {
-				fmt.Println(i)
+				fmt.Printf("Давай разберемся почему ошибка: Имя региона: %s district: %d country %d", order.Region.RegionName, district.ID, country.ID)
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении district в БД.")
 			}
 		}
@@ -147,7 +147,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 				Card: &entity.Card{
 					ID: wb2card.CardID,
 				},
-				CreatedAt: desc.UpdatedAt,
+				CreatedAt: order.CreatedAt,
 			})
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
