@@ -22,7 +22,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 	attrs["количество данных"] = len(stockMetaList)
 	attrs["seller"] = desc.Seller
 
-	alogger.InfoFromCtx(ctx, "Получение данных об остатках", nil, attrs, false)
+	alogger.InfoFromCtx(ctx, "Получение данных об остатках %s", nil)
 
 	var notFoundElements int
 

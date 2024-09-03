@@ -21,6 +21,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/salerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/statusrepo"
@@ -57,6 +58,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при создании брокера издателя: %w", err)
 	}
+
 	if err := brokerPublisher.Ping(); err != nil {
 		return nil, fmt.Errorf("ошибка при подключении к брокеру издателю: %w ", err)
 	}
@@ -73,7 +75,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, err
 	}
 
-	apiFetcher := make(map[string]wbfetcher.ExtApiFetcher)
+	apiFetcher := make(map[string]wbfetcher.ExtAPIFetcher)
 	// TODO Завернем клиентов всех маркетплейсов в мапу
 	apiFetcher["wb"] = wbfetcher.New(ctx, conf.Seller.WB)
 
@@ -181,6 +183,12 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Репозиторий Sale
+	saleRepo, err := salerepo.NewSaleRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 	// Основной бизнес-сервис.
 	packageReceiverCoreService := usecases.NewPackageReceiverService(
 		conf,
@@ -203,6 +211,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		countryRepo,
 		regionRepo,
 		districtRepo,
+		saleRepo,
 
 		warehouseRepo,
 		warehouseTypeRepo,

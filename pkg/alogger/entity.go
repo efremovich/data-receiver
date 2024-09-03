@@ -1,6 +1,7 @@
 package alogger
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -34,6 +35,8 @@ func (l Level) MarshalJSON() ([]byte, error) {
 	return json.Marshal(l.String())
 }
 
+type CtxKey string
+
 const (
 	LevelDebug Level = -4
 	LevelInfo  Level = 0
@@ -66,13 +69,13 @@ type IALogger interface {
 	// Flush Вывод событий
 	Flush() error
 	// Debugf Создание события уровня Debug
-	Debugf(format string, a ...interface{}) *Event
+	Debugf(format string, a ...interface{})
 	// Infof Создание события уровня Info
-	Infof(format string, a ...interface{}) *Event
+	Infof(format string, a ...interface{})
 	// Warnf Создание события уровня Warn
-	Warnf(format string, a ...interface{}) *Event
-	// Errorf Создание события уровня Error
-	Errorf(format string, a ...interface{}) *Event
+	Warnf(format string, a ...interface{})
+	// Errorf Создание события уровня Erro
+	Errorf(format string, a ...interface{})
 	// SetAttr Установка атрибута
 	SetAttr(key string, value interface{}) *ALogger
 	// SetAttr Установка атрибутов
@@ -85,12 +88,6 @@ type IEvent interface {
 	SetAttr(key string, value interface{}) *Event
 	// GetAttr Чтение атрибута
 	GetAttr(key string) (interface{}, bool)
-	// SetMetaInfo Установка мета информации
-	SetMetaInfo(key MetaInfoKey, value interface{}) *Event
-	// GetMetaInfo Чтение мета информации
-	GetMetaInfo(key MetaInfoKey) (interface{}, bool)
-	// Stack Добавление стектрейса
-	Stack() *Event
 	// Wrap Добавление исходной ошибки
 	Wrap(err error) *Event
 	// Unwrap Получение исходной ошибки
@@ -157,10 +154,11 @@ func (e *customError) MarshalJSON() ([]byte, error) {
 	}
 }
 
-// TODO возможно потребуется кастомное время для Kibana
-// type CustomTime time.Time
+func getTraceId(ctx context.Context) string {
+	traceId, ok := ctx.Value(TraceIdKey).(string)
+	if !ok || traceId == "" {
+		return unknownData
+	}
 
-// func (ct CustomTime) MarshalJSON() ([]byte, error) {
-//     formatted := time.Time(ct).Format(timeFormatForKibana)
-//     return []byte(`"` + formatted + `"`), nil
-// }
+	return traceId
+}

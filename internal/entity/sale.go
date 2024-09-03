@@ -1,20 +1,28 @@
 package entity
 
-type Sale struct {
-	ID       int64
-	ExternalID    string // Уникальный номер продажи
+import "time"
 
-  Country  string // Страна
-	Area     string // Область / край
-	District string // Регион
-	Sity     string // Город
+type Sale struct {
+	ID         int64
+	ExternalID string // Уникальный номер продажи
 
 	Price      float32 // Цена без скидки
 	DiscountP  float32 // Скидка продавца
 	DiscountS  float32 // Скидка на маркетпрейсе
 	FinalPrice float32 // Конечная цена
 	Type       string  // Тип продажи
+	ForPay     float32 // Сумма к перечислению
 
-	Barcode     string // Штрихкод
-	WarehouseID int64  // ID склада
+	Quantity  int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	Status    *Status
+	Region    *Region
+	Warehouse *Warehouse
+	Seller    *Seller
+	Card      *Card
+	PriceSize *PriceSize
+	Barcode   *Barcode
+	Order     *Order
 }

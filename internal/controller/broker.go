@@ -39,7 +39,7 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 	case entity.PackageTypeCard:
 		aerr := gw.core.ReceiveCards(ctx, desc)
 		if aerr != nil {
-			alogger.ErrorFromCtx(ctx, fmt.Sprintf("ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage()), aerr, nil, false)
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage())
 
 			if aerr.IsCritical() {
 				return anats.MessageResultEnumFatalError
@@ -50,7 +50,7 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 	case entity.PackageTypeStock:
 		aerr := gw.core.ReceiveStocks(ctx, desc)
 		if aerr != nil {
-			alogger.ErrorFromCtx(ctx, fmt.Sprintf("ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage()), aerr, nil, false)
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage())
 
 			if aerr.IsCritical() {
 				return anats.MessageResultEnumFatalError
@@ -60,10 +60,20 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 		}
 
 	case entity.PackageTypeSale:
+		aerr := gw.core.ReceiveSales(ctx, desc)
+		if aerr != nil {
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage())
+
+			if aerr.IsCritical() {
+				return anats.MessageResultEnumFatalError
+			}
+
+			return anats.MessageResultEnumTempError
+		}
 	case entity.PackageTypeOrder:
 		aerr := gw.core.ReceiveOrders(ctx, desc)
 		if aerr != nil {
-			alogger.ErrorFromCtx(ctx, fmt.Sprintf("ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage()), aerr, nil, false)
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage())
 
 			if aerr.IsCritical() {
 				return anats.MessageResultEnumFatalError
@@ -73,7 +83,7 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 		}
 	}
 
-	alogger.InfoFromCtx(ctx, fmt.Sprintf("окончание обработки создания пакета время - %.3fs", time.Since(start).Seconds()), nil, nil, false)
+	alogger.InfoFromCtx(ctx, "окончание обработки создания пакета время - %.3fs", time.Since(start).Seconds())
 
 	return anats.MessageResultEnumSuccess
 }

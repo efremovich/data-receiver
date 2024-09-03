@@ -7,15 +7,6 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func getTraceId(ctx context.Context) string {
-	traceId, ok := ctx.Value(TraceIdKey).(string)
-	if !ok || traceId == "" {
-		return unknownData
-	}
-
-	return traceId
-}
-
 // getTraceIdWithMetadataFromGRPCContext - Получить trace_id из контекста gRPC запроса, а так же набор метаданных,
 // которые содержатся в этом запросе
 func getTraceIdWithMetadataFromGRPCContext(ctx context.Context) (string, metadata.MD) {

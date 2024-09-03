@@ -18,6 +18,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/salerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/statusrepo"
@@ -37,6 +38,7 @@ type ReceiverCoreService interface {
 	ReceiveWarehouses(ctx context.Context) aerror.AError
 	ReceiveStocks(ctx context.Context, desc entity.PackageDescription) aerror.AError
 	ReceiveOrders(ctx context.Context, desc entity.PackageDescription) aerror.AError
+	ReceiveSales(ctx context.Context, desc entity.PackageDescription) aerror.AError
 
 	PingDB(ctx context.Context) error
 	PingNATS(_ context.Context) error
@@ -62,6 +64,7 @@ type receiverCoreServiceImpl struct {
 	countryrepo   countryrepo.CountryRepo
 	regionrepo    regionrepo.RegoinRepo
 	districtrepo  districtrepo.DistrictRepo
+	salerepo      salerepo.SaleRepo
 
 	wb2cardrepo wb2cardrepo.Wb2CardRepo
 
@@ -70,7 +73,7 @@ type receiverCoreServiceImpl struct {
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo
 
 	brokerPublisher  brokerpublisher.BrokerPublisher
-	apiFetcher       map[string]wbfetcher.ExtApiFetcher
+	apiFetcher       map[string]wbfetcher.ExtAPIFetcher
 	metricsCollector metrics.Collector
 }
 
@@ -95,12 +98,12 @@ func NewPackageReceiverService(
 	countryrepo countryrepo.CountryRepo,
 	regionrepo regionrepo.RegoinRepo,
 	districtrepo districtrepo.DistrictRepo,
-
+	salerepo salerepo.SaleRepo,
 	warehouserepo warehouserepo.WarehouseRepo,
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo,
 
 	brokerPublisher brokerpublisher.BrokerPublisher,
-	apiFetcher map[string]wbfetcher.ExtApiFetcher,
+	apiFetcher map[string]wbfetcher.ExtAPIFetcher,
 	metricsCollector metrics.Collector,
 ) ReceiverCoreService {
 	service := receiverCoreServiceImpl{
@@ -124,6 +127,7 @@ func NewPackageReceiverService(
 		countryrepo:   countryrepo,
 		regionrepo:    regionrepo,
 		districtrepo:  districtrepo,
+		salerepo:      salerepo,
 
 		warehouserepo:     warehouserepo,
 		warehousetyperepo: warehousetyperepo,

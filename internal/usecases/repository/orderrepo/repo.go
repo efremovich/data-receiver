@@ -11,6 +11,7 @@ import (
 
 type OrderRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Order, error)
+	SelectByExternalID(ctx context.Context, externalID string) (*entity.Order, error)
 	SelectByCardIDAndDate(ctx context.Context, cardID int64, date time.Time) (*entity.Order, error)
 	Insert(ctx context.Context, in entity.Order) (*entity.Order, error)
 	UpdateExecOne(ctx context.Context, in entity.Order) error
@@ -35,6 +36,19 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Order, 
 	query := "SELECT * FROM shop.orders WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.convertToEntityOrder(ctx), nil
+}
+
+func (repo *repoImpl) SelectByExternalID(ctx context.Context, externalID string) (*entity.Order, error) {
+	var result orderDB
+
+	query := "SELECT * FROM shop.orders WHERE external_id = $1"
+
+	err := repo.getReadConnection().Get(&result, query, externalID)
 	if err != nil {
 		return nil, err
 	}

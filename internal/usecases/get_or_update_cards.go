@@ -12,10 +12,12 @@ import (
 
 func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.PackageDescription) aerror.AError {
 	client := s.apiFetcher[desc.Seller]
+
 	cards, err := client.GetCards(ctx, desc)
 	if err != nil {
 		return aerror.New(ctx, entity.GetDataFromExSources, err, "ошибка получение данные из внешнего источника %s в БД: %s ", "", err.Error())
 	}
+
 	for _, card := range cards {
 		// Seller
 		seller, err := s.sellerRepo.SelectByTitle(ctx, "wb")
@@ -38,8 +40,8 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectPkgErrorID, err, "Ошибка при получении Brand %s в БД.", card.Title)
 		}
-		if brand == nil {
 
+		if brand == nil {
 			brand, err = s.brandRepo.Insert(ctx, entity.Brand{
 				ExternalID: card.Brand.ExternalID,
 				Title:      card.Brand.Title,
@@ -48,19 +50,21 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
 			}
-
 		}
 
 		card.Brand = *brand
+
 		wb2card, err := s.wb2cardrepo.SelectByNmid(ctx, card.ExternalID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении Wb2Card %s в БД.", card.Title)
 		}
+
 		if wb2card == nil {
 			newCard, err := s.cardRepo.Insert(ctx, card)
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
 			}
+
 			card.ID = newCard.ID
 			_, err = s.wb2cardrepo.Insert(ctx, entity.Wb2Card{
 				NMID:   card.ExternalID,
@@ -68,12 +72,14 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 				NMUUID: "",
 				CardID: card.ID,
 			})
+
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
 			}
 		} else {
 			card.ID = wb2card.CardID
 			err = s.cardRepo.UpdateExecOne(ctx, card)
+
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении карточки товара %s в БД.", card.Title)
 			}
@@ -85,6 +91,7 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 			if err != nil && !errors.Is(err, sql.ErrNoRows) {
 				return aerror.New(ctx, entity.SelectPkgErrorID, err, "Ошибка при получении Charactristic %s в БД.", card.Title)
 			}
+
 			if char == nil {
 				char, err = s.charRepo.Insert(ctx, entity.Characteristic{
 					Title: elem.Title,
@@ -93,6 +100,7 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 					return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении Charactristic %s в БД.", card.Title)
 				}
 			}
+
 			cardChar, err := s.cardCharRepo.SelectByCardIDAndCharID(ctx, card.ID, char.ID)
 			if err != nil && !errors.Is(err, sql.ErrNoRows) {
 				return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении CardCharactristic %s в БД.", card.Title)
@@ -116,6 +124,7 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 			if err != nil && !errors.Is(err, sql.ErrNoRows) {
 				return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении Size %s в БД.", card.Title)
 			}
+
 			if size == nil {
 				_, err = s.sizerepo.Insert(ctx, entity.Size{
 					ExternalID: elem.ExternalID,
@@ -132,6 +141,7 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении dimension %d в БД.", card.ID)
 		}
+
 		if dimension == nil {
 			_, err = s.dimensionrepo.Insert(ctx, entity.Dimension{
 				Width:   card.Dimension.Width,
@@ -150,6 +160,7 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 			if err != nil && !errors.Is(err, sql.ErrNoRows) {
 				return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении dimension %d в БД.", card.ID)
 			}
+
 			if mf == nil {
 				_, err = s.mediafilerepo.Insert(ctx, entity.MediaFile{
 					Link:   elem.Link,
@@ -171,6 +182,7 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 			Limit:       desc.Limit,
 			Seller:      desc.Seller,
 		}
+
 		err = s.brokerPublisher.SendPackage(ctx, &p)
 		if err != nil {
 			return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
@@ -178,5 +190,6 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 	} else {
 		fmt.Println("its all")
 	}
+
 	return nil
 }

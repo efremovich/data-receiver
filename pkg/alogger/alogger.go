@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 )
 
 func SetDefaultConfig(cfg *Config) {
@@ -24,6 +25,7 @@ type ALogger struct {
 	events       []*Event               // Список событий
 	traceId      string                 // Trace_id полученный из контекста
 	hasError     bool                   // Признак наличия ошибок
+	createdAt    time.Time
 }
 
 func NewALogger(ctx context.Context, cfg *Config) *ALogger {
@@ -36,8 +38,9 @@ func NewALogger(ctx context.Context, cfg *Config) *ALogger {
 	}
 
 	return &ALogger{
-		cfg:     cfg,
-		traceId: getTraceId(ctx),
+		createdAt: time.Now(),
+		cfg:       cfg,
+		traceId:   getTraceId(ctx),
 	}
 }
 
@@ -48,58 +51,48 @@ func (l *ALogger) appendEvent(ev *Event) {
 	l.events = append(l.events, ev)
 }
 
-func (l *ALogger) Debugf(format string, a ...interface{}) *Event {
-	msg := fmt.Sprintf(format, a...)
-	ev := createEvent(msg, LevelDebug, l.traceId)
-
-	for key, value := range l.generalAttrs {
-		ev.SetAttr(key, value)
-	}
-
-	l.appendEvent(ev)
-
-	return ev
+func (l *ALogger) Debugf(format string, a ...interface{}) {
+	l.eventLog(LevelDebug, format, a...)
 }
 
-func (l *ALogger) Infof(format string, a ...interface{}) *Event {
-	msg := fmt.Sprintf(format, a...)
-	ev := createEvent(msg, LevelInfo, l.traceId)
-
-	for key, value := range l.generalAttrs {
-		ev.SetAttr(key, value)
-	}
-
-	l.appendEvent(ev)
-
-	return ev
+func (l *ALogger) Infof(format string, a ...interface{}) {
+	l.eventLog(LevelInfo, format, a...)
 }
 
-func (l *ALogger) Warnf(format string, a ...interface{}) *Event {
-	msg := fmt.Sprintf(format, a...)
-	ev := createEvent(msg, LevelWarn, l.traceId)
-
-	for key, value := range l.generalAttrs {
-		ev.SetAttr(key, value)
-	}
-
-	l.appendEvent(ev)
-
-	return ev
+func (l *ALogger) Warnf(format string, a ...interface{}) {
+	l.eventLog(LevelWarn, format, a...)
 }
 
-func (l *ALogger) Errorf(format string, a ...interface{}) *Event {
+func (l *ALogger) Errorf(format string, a ...interface{}) {
+	l.eventLog(LevelError, format, a...)
+}
+
+func (l *ALogger) eventLog(level Level, format string, a ...interface{}) {
 	msg := fmt.Sprintf(format, a...)
 
-	ev := createEvent(msg, LevelError, l.traceId)
+	ev := createEvent(msg, level, l.traceId)
 	l.hasError = true
 
 	for key, value := range l.generalAttrs {
 		ev.SetAttr(key, value)
 	}
 
-	l.appendEvent(ev)
+	ev.SetAttr("logger_life_time", time.Since(l.createdAt).String())
 
-	return ev
+	if ev.Level < l.cfg.Level {
+		return
+	}
+
+	// Если включен режим логирования только при ошибках, добавим к массиву, иначе логируем сразу.
+	if l.cfg.OnlyError {
+		l.appendEvent(ev)
+
+		return
+	}
+
+	if err := ev.Flush(l.cfg.Output, l.cfg.TextFormat); err != nil {
+		fmt.Printf("[ALogger] Ошибка логирования события: %s\n", err.Error())
+	}
 }
 
 func (l *ALogger) Flush() error {
@@ -148,73 +141,33 @@ func (l *ALogger) SetAttrs(attrs map[string]interface{}) *ALogger {
 }
 
 // DebugFromCtx Логирование события уровня Debug
-func DebugFromCtx(ctx context.Context, msg string, err error, attrs map[string]interface{}, stack bool) {
+func DebugFromCtx(ctx context.Context, format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+
 	ev := createEvent(msg, LevelDebug, getTraceId(ctx))
 	defer ev.Flush(defaultConfig.Output, defaultConfig.TextFormat)
-
-	if err != nil {
-		ev.Wrap(err)
-	}
-
-	for key, value := range attrs {
-		ev.SetAttr(key, value)
-	}
-
-	if stack {
-		ev.Stack()
-	}
 }
 
 // InfoFromCtx Логирование события уровня Info
-func InfoFromCtx(ctx context.Context, msg string, err error, attrs map[string]interface{}, stack bool) {
+func InfoFromCtx(ctx context.Context, format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+
 	ev := createEvent(msg, LevelInfo, getTraceId(ctx))
 	defer ev.Flush(defaultConfig.Output, defaultConfig.TextFormat)
-
-	if err != nil {
-		ev.Wrap(err)
-	}
-
-	for key, value := range attrs {
-		ev.SetAttr(key, value)
-	}
-
-	if stack {
-		ev.Stack()
-	}
 }
 
 // WarnFromCtx Логирование события уровня Warn
-func WarnFromCtx(ctx context.Context, msg string, err error, attrs map[string]interface{}, stack bool) {
+func WarnFromCtx(ctx context.Context, format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+
 	ev := createEvent(msg, LevelWarn, getTraceId(ctx))
 	defer ev.Flush(defaultConfig.Output, defaultConfig.TextFormat)
-
-	if err != nil {
-		ev.Wrap(err)
-	}
-
-	for key, value := range attrs {
-		ev.SetAttr(key, value)
-	}
-
-	if stack {
-		ev.Stack()
-	}
 }
 
 // ErrorFromCtx Логирование события уровня Error
-func ErrorFromCtx(ctx context.Context, msg string, err error, attrs map[string]interface{}, stack bool) {
-	ev := createEvent(msg, LevelError, getTraceId(ctx))
+func ErrorFromCtx(ctx context.Context, format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+
+	ev := createEvent(msg, LevelWarn, getTraceId(ctx))
 	defer ev.Flush(defaultConfig.Output, defaultConfig.TextFormat)
-
-	if err != nil {
-		ev.Wrap(err)
-	}
-
-	for key, value := range attrs {
-		ev.SetAttr(key, value)
-	}
-
-	if stack {
-		ev.Stack()
-	}
 }

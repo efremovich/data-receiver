@@ -105,17 +105,29 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// 	return err
 	// }
 
-	desc := entity.PackageDescription{
-		PackageType: entity.PackageTypeOrder,
-		UpdatedAt:   time.Now(),
-		Seller:      "wb",
-		Limit:       365,
-	}
+	// desc = entity.PackageDescription{
+	// 	PackageType: entity.PackageTypeOrder,
+	// 	UpdatedAt:   time.Now(),
+	// 	Seller:      "wb",
+	// 	Limit:       10,
+	// }
 
-	err := gw.core.ReceiveOrders(ctx, desc)
-	if err != nil {
-		return err
-	}
+	// err = gw.core.ReceiveOrders(ctx, desc)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// desc := entity.PackageDescription{
+	// 	PackageType: entity.PackageTypeSale,
+	// 	UpdatedAt:   time.Now(),
+	// 	Seller:      "wb",
+	// 	Limit:       365,
+	// }
+
+	// err := gw.core.ReceiveSales(ctx, desc)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
