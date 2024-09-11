@@ -50,8 +50,8 @@ func (wb *wbAPIclientImp) GetWarehouses(ctx context.Context) ([]entity.Warehouse
 			TypeID:     int64(elem.CargoType),
 		}
 
-    warehouses = append(warehouses, warehouse)
+		warehouses = append(warehouses, warehouse)
 	}
 
-  return warehouses, nil
+	return warehouses, nil
 }

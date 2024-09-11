@@ -1,4 +1,4 @@
-package wbfetcher
+package odincfetcer
 
 import (
 	"context"
@@ -9,29 +9,27 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 )
 
-const SellerType = "wb"
+const SellerType = "odinc"
 
 func New(_ context.Context, cfg config.Seller) webapi.ExtAPIFetcher {
 	timeout := time.Second * time.Duration(cfg.ProcessTimeoutSeconds)
-
 	c := &http.Client{
 		Timeout: timeout,
 	}
-	client := &wbAPIclientImp{
-		client:    c,
-		token:     cfg.Token,
-		addr:      cfg.URL,
-		addrStat:  cfg.URLStat,
-		tokenStat: cfg.TokenStat,
+
+	client := &odincAPIclientImp{
+		client:   c,
+		addr:     cfg.URL,
+		login:    cfg.Login,
+		password: cfg.Password,
 	}
 
 	return client
 }
 
-type wbAPIclientImp struct {
-	client    *http.Client
-	addr      string
-	addrStat  string
-	token     string
-	tokenStat string
+type odincAPIclientImp struct {
+	client   *http.Client
+	addr     string
+	login    string
+	password string
 }

@@ -19,11 +19,12 @@ type Stock struct {
 }
 
 type StockMeta struct {
-	Stock     Stock
-	PriceSize PriceSize
-	Barcode   Barcode
-	Warehouse Warehouse
-	Wb2Card   Wb2Card
-	Ozon2Card Ozon2Card
-	Size      Size
+	Stock           Stock
+	PriceSize       PriceSize
+	Barcode         Barcode
+	Warehouse       Warehouse
+	Wb2Card         Wb2Card
+	Ozon2Card       Ozon2Card
+	Size            Size
+	SupplierArticle string
 }

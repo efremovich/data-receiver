@@ -38,6 +38,7 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Cat
 	if err != nil {
 		return nil, err
 	}
+
 	return result.convertToEntityCategory(ctx), nil
 }
 
@@ -55,6 +56,7 @@ func (repo *charRepoImpl) SelectBySellerID(ctx context.Context, sellerID int64) 
 	for _, v := range result {
 		resEntity = append(resEntity, v.convertToEntityCategory(ctx))
 	}
+
 	return resEntity, nil
 }
 
@@ -63,7 +65,7 @@ func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*ent
 
 	query := "SELECT * FROM shop.categories WHERE title = $1"
 
-	err := repo.getReadConnection().Select(&result, query, title)
+	err := repo.getReadConnection().Get(&result, query, title)
 	if err != nil {
 		return nil, err
 	}
@@ -75,11 +77,14 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Category) (*enti
 	query := `INSERT INTO shop.categories (title, seller_id, card_id, external_id, parent_id)
             VALUES ($1, $2, $3, $4, $5) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
+
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Title, in.SellerID, in.CardID, in.ExternalID, in.ParentID)
 	if err != nil {
 		return nil, err
 	}
+
 	in.ID = charIDWrap.ID.Int64
+
 	return &in, nil
 }
 
@@ -87,7 +92,8 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Category)
 	dbModel := convertToDBCategory(ctx, in)
 
 	query := `UPDATE shop.categories SET title = $1, seller_id = $2, card_id = $3, external_id = $4, parent_id = $5 WHERE id = $6`
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.SellerID, dbModel.CardID, dbModel.ExternalID, dbModel.ParentID, dbModel.ID)
+
+  _, err := repo.getWriteConnection().ExecOne(query, dbModel.Title, dbModel.SellerID, dbModel.CardID, dbModel.ExternalID, dbModel.ParentID, dbModel.ID)
 	if err != nil {
 		return err
 	}
@@ -95,7 +101,7 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Category)
 	return nil
 }
 
-func (repo *charRepoImpl) Ping(ctx context.Context) error {
+func (repo *charRepoImpl) Ping(_ context.Context) error {
 	return repo.getWriteConnection().Ping()
 }
 

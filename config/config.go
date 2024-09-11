@@ -34,11 +34,11 @@ type Queue struct {
 	Workers           int `env:"WORKERS, default=1"`             // Количество потоков получения сообщений из очереди.
 	MaxDeliver        int `env:"MAX_DELIVER, default=1"`         // Максимальное количество попыток получить сообщение.
 	NakTimeoutSeconds int `env:"NAK_TIMEOUT_SECONDS, default=2"` // Время через которое будет повторяться попытка получить сообщение.
-	AckWaitSeconds    int `env:"ACK_WAIT_SECONDS, default=60"`    // Время на обработку полученного сообщения.
+	AckWaitSeconds    int `env:"ACK_WAIT_SECONDS, default=60"`   // Время на обработку полученного сообщения.
 	MaxAckPending     int `env:"MAX_ACK_PENDING, default=10000"` // Максимальное количество сообщений, которые могут быть ожидающими подтверждения.
 }
 
-// Конфигурация для создания api клиентов для получения данных
+// Конфигурация для создания api клиентов для получения данных.
 type Sellers struct {
 	WB    Seller `env:", prefix=WB_"`
 	OZON  Seller `env:", prefix=OZON_"`
@@ -46,8 +46,10 @@ type Sellers struct {
 }
 type Seller struct {
 	URL                   string `env:"URL"`
-  URLStat               string `env:"URL_STAT"`
+	URLStat               string `env:"URL_STAT"`
 	Token                 string `env:"TOKEN"`
 	TokenStat             string `env:"TOKEN_STAT"`
+	Login                 string `env:"LOGIN"`
+	Password              string `env:"PASSWORD"`
 	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=15"`
 }

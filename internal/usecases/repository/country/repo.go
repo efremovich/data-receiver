@@ -30,21 +30,27 @@ func NewCountryRepo(_ context.Context, db *postgresdb.DBConnection) (CountryRepo
 
 func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Country, error) {
 	var result countryDB
+
 	query := "SELECT * FROM shop.countries WHERE id = $1"
+
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil {
 		return nil, err
 	}
+
 	return result.convertToEntityCountry(ctx), nil
 }
 
 func (repo *repoImpl) SelectByName(ctx context.Context, name string) (*entity.Country, error) {
 	var result countryDB
+
 	query := "SELECT * FROM shop.countries WHERE name = $1"
+
 	err := repo.getReadConnection().Get(&result, query, name)
 	if err != nil {
 		return nil, err
 	}
+
 	return result.convertToEntityCountry(ctx), nil
 }
 
@@ -53,11 +59,14 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Country) (*entity.Co
               VALUES ($1) RETURNING id`
 	countryIDWrap := repository.IDWrapper{}
 	dbModel := convertToDBCountry(ctx, &in)
+
 	err := repo.getWriteConnection().QueryAndScan(&countryIDWrap, query, dbModel.Name)
 	if err != nil {
 		return nil, err
 	}
+
 	in.ID = countryIDWrap.ID.Int64
+
 	return &in, nil
 }
 
@@ -73,7 +82,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Country) erro
 	return nil
 }
 
-func (repo *repoImpl) Ping(ctx context.Context) error {
+func (repo *repoImpl) Ping(_ context.Context) error {
 	return repo.getWriteConnection().Ping()
 }
 
@@ -89,6 +98,7 @@ func (repo *repoImpl) getReadConnection() postgresdb.QueryExecutor {
 	if repo.tx != nil {
 		return *repo.tx
 	}
+
 	return repo.db.GetReadConnection()
 }
 
@@ -96,5 +106,6 @@ func (repo *repoImpl) getWriteConnection() postgresdb.QueryExecutor {
 	if repo.tx != nil {
 		return *repo.tx
 	}
+
 	return repo.db.GetWriteConnection()
 }

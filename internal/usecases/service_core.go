@@ -26,7 +26,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
-	"github.com/efremovich/data-receiver/internal/usecases/webapi/wbfetcher"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/broker/brokerpublisher"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 
@@ -73,7 +73,7 @@ type receiverCoreServiceImpl struct {
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo
 
 	brokerPublisher  brokerpublisher.BrokerPublisher
-	apiFetcher       map[string]wbfetcher.ExtAPIFetcher
+	apiFetcher       map[string]webapi.ExtAPIFetcher
 	metricsCollector metrics.Collector
 }
 
@@ -103,7 +103,7 @@ func NewPackageReceiverService(
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo,
 
 	brokerPublisher brokerpublisher.BrokerPublisher,
-	apiFetcher map[string]wbfetcher.ExtAPIFetcher,
+	apiFetcher map[string]webapi.ExtAPIFetcher,
 	metricsCollector metrics.Collector,
 ) ReceiverCoreService {
 	service := receiverCoreServiceImpl{

@@ -11,6 +11,7 @@ import (
 )
 
 type StrockResponce struct {
+	SupplierArticle string  `json:"supplierArticle"`
 	WarehouseName   string  `json:"warehouseName"`
 	NmID            int     `json:"nmId"`
 	Barcode         string  `json:"barcode"`
@@ -84,6 +85,8 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 		stockMeta.Size = entity.Size{
 			TechSize: elem.TechSize,
 		}
+		stockMeta.SupplierArticle = elem.SupplierArticle
+
 		stockMetaList = append(stockMetaList, stockMeta)
 	}
 

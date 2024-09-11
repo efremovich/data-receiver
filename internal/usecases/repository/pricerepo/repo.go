@@ -39,6 +39,7 @@ func (repo *charRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Pri
 	if err != nil {
 		return nil, err
 	}
+
 	return result.convertToEntityPrice(ctx), nil
 }
 
@@ -56,6 +57,7 @@ func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*
 	for _, v := range result {
 		resEntity = append(resEntity, v.convertToEntityPrice(ctx))
 	}
+
 	return resEntity, nil
 }
 
@@ -86,6 +88,7 @@ func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, priceID int64) ([
 	for _, v := range result {
 		resEntity = append(resEntity, v.convertToEntityPrice(ctx))
 	}
+
 	return resEntity, nil
 }
 
@@ -98,7 +101,9 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.PriceSize) (*ent
 	if err != nil {
 		return nil, err
 	}
+
 	in.ID = charIDWrap.ID.Int64
+
 	return &in, nil
 }
 
@@ -108,6 +113,7 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.PriceSize
 	query := `UPDATE shop.price_sizes SET 
             price = $1, discount = $2, special_price = $3, size_id = $4, card_id = $5, updated_at = now()
             WHERE id = $6`
+
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Price, dbModel.Discount, dbModel.SpecialPrice, dbModel.SizeID, dbModel.CardID, dbModel.ID)
 	if err != nil {
 		return err
@@ -116,7 +122,7 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.PriceSize
 	return nil
 }
 
-func (repo *charRepoImpl) Ping(ctx context.Context) error {
+func (repo *charRepoImpl) Ping(_ context.Context) error {
 	return repo.getWriteConnection().Ping()
 }
 

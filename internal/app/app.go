@@ -29,6 +29,8 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi/odincfetcer"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi/wbfetcher"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/broker/brokerconsumer"
@@ -75,9 +77,10 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, err
 	}
 
-	apiFetcher := make(map[string]wbfetcher.ExtAPIFetcher)
+	apiFetcher := make(map[string]webapi.ExtAPIFetcher)
 	// TODO Завернем клиентов всех маркетплейсов в мапу
 	apiFetcher["wb"] = wbfetcher.New(ctx, conf.Seller.WB)
+	apiFetcher["odinc"] = odincfetcer.New(ctx, conf.Seller.OdinC)
 
 	// Репозиторий Cards.
 	cardRepo, err := cardrepo.NewCardRepo(ctx, conn)

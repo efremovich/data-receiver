@@ -32,16 +32,67 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении wb2card %s в БД.", "wb")
 		}
-		// TODO В случае отсутствия в Wb2Card - добавлять в него
-		if wb2card == nil {
-			notFoundElements++
-			// alogger.InfoFromCtx(ctx, "Не найден элемент ID: %+v", stock)
-			continue
-		}
 
 		seller, err := s.sellerRepo.SelectByTitle(ctx, "wb")
 		if err != nil {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении Seller %s в БД.", "wb")
+		}
+
+		if wb2card == nil {
+			odincClient := s.apiFetcher["odinc"]
+			query := make(map[string]string)
+			query["barcode"] = stock.Barcode.Barcode
+			query["article"] = stock.SupplierArticle
+
+			pkg := entity.PackageDescription{
+				Query: query,
+			}
+
+			cardlist, err := odincClient.GetCards(ctx, pkg)
+			if err != nil {
+				return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении Seller %s в БД.", "wb")
+			}
+
+			if len(cardlist) == 0 {
+				notFoundElements++
+				continue
+			}
+
+			for _, card := range cardlist {
+				card.ExternalID = stock.Wb2Card.NMID
+				// Brands
+				brand, err := s.getBrand(ctx, card.Brand, seller)
+				if err != nil {
+					return err
+				}
+
+				card.Brand = *brand
+
+				err = s.setWb2Card(ctx, &card)
+				if err != nil {
+					notFoundElements++
+
+					alogger.InfoFromCtx(ctx, "Не найден элемент ID: %+v", stock)
+
+					continue
+				}
+
+				wb2card = &entity.Wb2Card{
+					NMID:   card.ExternalID,
+					KTID:   0,
+					NMUUID: "",
+					CardID: card.ID,
+				}
+				_, aerr := s.wb2cardrepo.Insert(ctx, *wb2card)
+
+				if aerr != nil {
+					notFoundElements++
+
+					alogger.InfoFromCtx(ctx, "Не найден элемент ID: %+v", stock)
+
+					continue
+				}
+			}
 		}
 
 		card, err := s.cardRepo.SelectByID(ctx, wb2card.CardID)
