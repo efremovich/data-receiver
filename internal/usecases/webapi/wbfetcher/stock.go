@@ -28,13 +28,15 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 	const methodName = "/api/v1/supplier/stocks"
 
 	urlValue := url.Values{}
-  urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02"))
+	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02"))
 
-	reqUrl := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqUrl, nil)
+	reqURL := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}
+
 	req.Header.Set("Authorization", wb.tokenStat)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
@@ -43,11 +45,13 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
 	}
+	defer resp.Body.Close()
 
 	var stockResponce []StrockResponce
 	if err := json.NewDecoder(resp.Body).Decode(&stockResponce); err != nil {
 		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
 	}
+
 	var stockMetaList []entity.StockMeta
 
 	for _, elem := range stockResponce {
@@ -82,5 +86,6 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 		}
 		stockMetaList = append(stockMetaList, stockMeta)
 	}
+
 	return stockMetaList, nil
 }

@@ -108,14 +108,17 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}
+
 	req.Header.Set("Authorization", wb.token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
 	resp, err := wb.client.Do(req)
+
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
 	}
+	defer resp.Body.Close()
 
 	var wbResponse WbResponse
 	if err := json.NewDecoder(resp.Body).Decode(&wbResponse); err != nil {
@@ -125,12 +128,12 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 	var cardsList []entity.Card
 
 	for _, v := range wbResponse.Cards {
-
 		brand := entity.Brand{
 			Title: v.Brand,
 		}
 
 		characteristics := []*entity.CardCharacteristic{}
+
 		for _, c := range v.Characteristics {
 			char := entity.CardCharacteristic{
 				Title: c.Name,
@@ -153,6 +156,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 				Title:      sz.WbSize,
 				ExternalID: int64(sz.ChrtID),
 			})
+
 			for _, b := range sz.Skus {
 				barcodes = append(barcodes, &entity.Barcode{
 					ExternalID: int64(sz.ChrtID),
@@ -169,6 +173,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 				TypeID: 1,
 			})
 		}
+
 		if v.Video != "" {
 			mediaFile = append(mediaFile, &entity.MediaFile{
 				Link:   v.Video,
@@ -203,7 +208,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 	return cardsList, nil
 }
 
-func (wb *wbAPIclientImp) Ping(ctx context.Context) error {
+func (wb *wbAPIclientImp) Ping(_ context.Context) error {
 	return nil
 }
 
@@ -220,7 +225,9 @@ func convertInterfaceToStringSlice(input interface{}) []string {
 		for _, vv := range v {
 			output = append(output, convertInterfaceToStringSlice(vv)...)
 		}
+
 		return output
 	}
+
 	return nil
 }

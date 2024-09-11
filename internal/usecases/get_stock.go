@@ -13,6 +13,7 @@ import (
 
 func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity.PackageDescription) aerror.AError {
 	client := s.apiFetcher[desc.Seller]
+
 	stockMetaList, err := client.GetStocks(ctx, desc)
 	if err != nil {
 		return aerror.New(ctx, entity.GetDataFromExSources, err, "ошибка получение данные из внешнего источника %s в БД: %s ", "", err.Error())
@@ -22,7 +23,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 	attrs["количество данных"] = len(stockMetaList)
 	attrs["seller"] = desc.Seller
 
-	alogger.InfoFromCtx(ctx, "Получение данных об остатках %s", nil)
+	alogger.InfoFromCtx(ctx, "Получение данных об остатках")
 
 	var notFoundElements int
 
@@ -34,6 +35,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		// TODO В случае отсутствия в Wb2Card - добавлять в него
 		if wb2card == nil {
 			notFoundElements++
+			// alogger.InfoFromCtx(ctx, "Не найден элемент ID: %+v", stock)
 			continue
 		}
 
@@ -82,6 +84,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении priceSize в БД.")
 			}
 		}
+
 		barcode, err := s.barcodeRepo.SelectByBarcode(ctx, stock.Barcode.Barcode)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении barcode %s в БД.", "wb")
@@ -144,13 +147,10 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
 			}
 		}
-
-		// attrs["записей обработано"] = n
-		// alogger.InfoFromCtx(ctx, "Добавлена информация о остатке", nil, attrs, false)
 	}
 
 	attrs["не найденных элементов"] = notFoundElements
-	alogger.InfoFromCtx(ctx, "Загружена информация о остатке", nil, attrs, false)
+	alogger.InfoFromCtx(ctx, "Загружена информация о остатке %s", attrs)
 
 	if desc.Limit > 0 {
 		p := entity.PackageDescription{
@@ -160,14 +160,16 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 			Limit:     desc.Limit - 1,
 			Seller:    desc.Seller,
 		}
+
 		err = s.brokerPublisher.SendPackage(ctx, &p)
 		if err != nil {
 			return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
 		}
+
 		attrs["дата остатков"] = p.UpdatedAt.Format("02.01.2006")
-		alogger.InfoFromCtx(ctx, "Создана очередь stocs, limit:%1", nil, attrs, false)
+		alogger.InfoFromCtx(ctx, "Создана очередь stocs, limit:%s", attrs)
 	} else {
-		alogger.InfoFromCtx(ctx, "Все элементы обработаны", nil, nil, false)
+		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
 	}
 
 	return nil
