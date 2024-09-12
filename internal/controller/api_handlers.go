@@ -71,6 +71,13 @@ func (gw *grpcGatewayServerImpl) autoupdate(ctx context.Context, upd time.Durati
 }
 
 func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
+	var (
+		err  error
+		desc entity.PackageDescription
+	)
+
+	date := time.Date(2024, 8, 12, 0, 0, 0, 0, time.UTC)
+	daysToGet := 100
 	// desc := entity.PackageDescription{
 	// 	Cursor:      0,
 	// 	Limit:       100,
@@ -88,41 +95,41 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// 	return err
 	// }
 
-	// desc := entity.PackageDescription{
-	// 	PackageType: entity.PackageTypeStock,
-	// 	UpdatedAt:   time.Now(),
+	desc = entity.PackageDescription{
+		PackageType: entity.PackageTypeStock,
+		UpdatedAt:   date,
+		Seller:      "wb",
+		Limit:       daysToGet,
+	}
+
+	err = gw.core.ReceiveStocks(ctx, desc)
+	if err != nil {
+		return err
+	}
+
+	// desc = entity.PackageDescription{
+	// 	PackageType: entity.PackageTypeOrder,
+	// 	UpdatedAt:   date,
 	// 	Seller:      "wb",
-	// 	Limit:       60,
+	// 	Limit:       daysToGet,
 	// }
 
-	// err := gw.core.ReceiveStocks(ctx, desc)
+	// err = gw.core.ReceiveOrders(ctx, desc)
 	// if err != nil {
 	// 	return err
 	// }
 
-	desc := entity.PackageDescription{
-		PackageType: entity.PackageTypeOrder,
-		UpdatedAt:   time.Now(),
-		Seller:      "wb",
-		Limit:       60,
-	}
+	// desc = entity.PackageDescription{
+	// 	PackageType: entity.PackageTypeSale,
+	// 	UpdatedAt:   date,
+	// 	Seller:      "wb",
+	// 	Limit:       daysToGet,
+	// }
 
-	err := gw.core.ReceiveOrders(ctx, desc)
-	if err != nil {
-		return err
-	}
-
-	desc = entity.PackageDescription{
-		PackageType: entity.PackageTypeSale,
-		UpdatedAt:   time.Now(),
-		Seller:      "wb",
-		Limit:       60,
-	}
-
-	err = gw.core.ReceiveSales(ctx, desc)
-	if err != nil {
-		return err
-	}
+	// err = gw.core.ReceiveSales(ctx, desc)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

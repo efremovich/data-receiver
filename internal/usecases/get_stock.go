@@ -19,10 +19,6 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		return aerror.New(ctx, entity.GetDataFromExSources, err, "ошибка получение данные из внешнего источника %s в БД: %s ", "", err.Error())
 	}
 
-	attrs := make(map[string]interface{})
-	attrs["количество данных"] = len(stockMetaList)
-	attrs["seller"] = desc.Seller
-
 	alogger.InfoFromCtx(ctx, "Получение данных об остатках")
 
 	var notFoundElements int
@@ -55,6 +51,9 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 
 			if len(cardlist) == 0 {
 				notFoundElements++
+
+				alogger.InfoFromCtx(ctx, "Не найдена карточка товара в 1с: %s, штрихкод %s", stock.SupplierArticle, stock.Barcode.Barcode)
+
 				continue
 			}
 
@@ -72,7 +71,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 				if err != nil {
 					notFoundElements++
 
-					alogger.InfoFromCtx(ctx, "Не найден элемент ID: %+v", stock)
+					alogger.InfoFromCtx(ctx, "Не найдена ссылка на карточку товара: %s", stock.SupplierArticle)
 
 					continue
 				}
@@ -88,7 +87,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 				if aerr != nil {
 					notFoundElements++
 
-					alogger.InfoFromCtx(ctx, "Не найден элемент ID: %+v", stock)
+					alogger.ErrorFromCtx(ctx, "Не создана связь между товаром и товаром на маркетплейсе: %s", stock.SupplierArticle)
 
 					continue
 				}
@@ -200,8 +199,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		}
 	}
 
-	attrs["не найденных элементов"] = notFoundElements
-	alogger.InfoFromCtx(ctx, "Загружена информация о остатке %s", attrs)
+	alogger.InfoFromCtx(ctx, "Загружена информация о остатке всего: %d из них не найдено %d", len(stockMetaList), notFoundElements)
 
 	if desc.Limit > 0 {
 		p := entity.PackageDescription{
@@ -217,8 +215,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 			return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
 		}
 
-		attrs["дата остатков"] = p.UpdatedAt.Format("02.01.2006")
-		alogger.InfoFromCtx(ctx, "Создана очередь stocs, limit:%s", attrs)
+		alogger.InfoFromCtx(ctx, "Создана очередь на получение остатков на дату: %s", p.UpdatedAt.Format("02.01.2006"))
 	} else {
 		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
 	}

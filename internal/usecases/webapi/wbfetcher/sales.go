@@ -61,8 +61,12 @@ func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 	req.Header.Set("accept", "application/json")
 
 	resp, err := wb.client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка отправки запроса: %s", methodName, err.Error())
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%s: сервер ответил: %d", methodName, resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
@@ -115,8 +119,10 @@ func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 		sale.Price = elem.TotalPrice
 		sale.Type = elem.OrderType
 		sale.DiscountP = elem.DiscountPercent
+		sale.ForPay = elem.ForPay
+		sale.FinalPrice = elem.FinishedPrice
 		// TODO Уточнить какую скидку ставить
-		sale.DiscountP = 0
+		// sale.DiscountP = 0
 
 		// Попробуем получить дату заказа
 		sale.CreatedAt, _ = time.Parse("2006-01-02T15:04:05", elem.Date)

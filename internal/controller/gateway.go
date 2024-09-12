@@ -112,13 +112,15 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("ошибка при запуске GRPC сервера: %w", err)
 		}
-		alogger.InfoFromCtx(ctx, "запуск GRPC сервера на "+adr, nil, nil, false)
-		defer alogger.InfoFromCtx(ctx, "GRPC сервер остановлен", nil, nil, false)
+
+		alogger.InfoFromCtx(ctx, "запуск GRPC сервера на %s", adr)
+		defer alogger.InfoFromCtx(ctx, "GRPC сервер остановлен")
 
 		err = gw.grpcServer.Serve(grpcListener)
 		if err != nil {
 			return fmt.Errorf("ошибка при запуске GRPC сервера: %w", err)
 		}
+
 		return nil
 	})
 
@@ -126,13 +128,14 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 	g.Go(func() error {
 		adr := gw.cfg.Gateway.HTTP.Host + ":" + gw.cfg.Gateway.HTTP.Port
 
-		alogger.InfoFromCtx(ctx, "запуск HTTP сервера на "+adr, nil, nil, false)
-		defer alogger.InfoFromCtx(ctx, "HTTP сервер остановлен", nil, nil, false)
+		alogger.InfoFromCtx(ctx, "запуск HTTP сервера на %s", adr)
+		defer alogger.InfoFromCtx(ctx, "HTTP сервер остановлен")
 
 		err := gw.httpServer.Listen(adr)
 		if err != nil {
 			return fmt.Errorf("ошибка при запуске http сервера: %w", err)
 		}
+
 		return nil
 	})
 
