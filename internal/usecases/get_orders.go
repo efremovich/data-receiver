@@ -106,6 +106,45 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 			continue
 		}
 
+		size, err := s.sizerepo.SelectByTechSize(ctx, order.Size.TechSize)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении size %s в БД.", "wb")
+		}
+
+		if size == nil {
+			size, err = s.sizerepo.Insert(ctx, entity.Size{
+				TechSize: order.Size.TechSize,
+				Title:    order.Size.TechSize,
+			})
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении size в БД.")
+			}
+		}
+
+		priceSize, err := s.pricesizerepo.SelectByCardIDAndSizeID(ctx, wb2card.CardID, size.ID)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении цены %s в БД.", desc.Seller)
+		}
+
+		if priceSize == nil {
+			priceSize, err = s.pricesizerepo.Insert(ctx, entity.PriceSize{
+				Price:        order.PriceSize.Price,
+				Discount:     order.PriceSize.Discount,
+				SpecialPrice: order.PriceSize.SpecialPrice,
+				CardID:       wb2card.CardID,
+				SizeID:       size.ID,
+				UpdatedAt:    order.CreatedAt,
+			})
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении priceSize в БД.")
+			}
+		} else {
+			err = s.pricesizerepo.UpdateExecOne(ctx, *priceSize)
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении priceSize в БД.")
+			}
+		}
+
 		// Barcode
 		barcode, err := s.barcodeRepo.SelectByBarcode(ctx, order.Barcode.Barcode)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -113,25 +152,15 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 		}
 
 		if barcode == nil {
-			notFoundElements++
-
-			alogger.InfoFromCtx(ctx, "Не найден штрихкод: %s, артикул %s", order.Barcode.Barcode, order.Card.VendorCode)
-
-			continue
-		}
-
-		// PriceSize
-		priceSize, err := s.pricesizerepo.SelectByID(ctx, barcode.PriceSizeID)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении цены %s в БД.", desc.Seller)
-		}
-
-		if priceSize == nil {
-			notFoundElements++
-
-			alogger.InfoFromCtx(ctx, "Не найдена цена: %s", order.Barcode.Barcode)
-
-			continue
+			_, err := s.barcodeRepo.Insert(ctx, entity.Barcode{
+				Barcode:     order.Barcode.Barcode,
+				ExternalID:  0,
+				PriceSizeID: priceSize.ID,
+				SellerID:    seller.ID,
+			})
+			if err != nil {
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении barcode %s в БД.", order.Barcode.Barcode)
+			}
 		}
 
 		// Status
@@ -202,12 +231,11 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 				Direction:  order.Direction,
 				Sale:       order.Sale,
 				Quantity:   1,
-
-				Status:    status,
-				Region:    region,
-				Warehouse: warehouse,
-				Seller:    seller,
-				PriceSize: priceSize,
+				Status:     status,
+				Region:     region,
+				Warehouse:  warehouse,
+				Seller:     seller,
+				PriceSize:  priceSize,
 				Card: &entity.Card{
 					ID: wb2card.CardID,
 				},
@@ -226,7 +254,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 		}
 	}
 
-	alogger.InfoFromCtx(ctx, "Загружена информация о остатке всего: %d из них не найдено %d", len(ordersMetaList), notFoundElements)
+	alogger.InfoFromCtx(ctx, "Загружена информация о заказах всего: %d из них не найдено %d", len(ordersMetaList), notFoundElements)
 
 	if desc.Limit > 0 {
 		p := entity.PackageDescription{
@@ -235,6 +263,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
 			Limit:     desc.Limit - 1,
 			Seller:    desc.Seller,
+			Delay:     desc.Delay,
 		}
 
 		err = s.brokerPublisher.SendPackage(ctx, &p)

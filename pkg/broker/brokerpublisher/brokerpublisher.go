@@ -56,11 +56,12 @@ func (b brokerPublisherImpl) Ping() error {
 func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageDescription) error {
 	// Преобразование пакета приложения в сообщение.
 	msg := tmpPackageSenderMsg{
-		Cursor:    p.Cursor,
-		UpdatedAt: &p.UpdatedAt,
-		Limit:     p.Limit,
-		Seller:    p.Seller,
-    PackageType: string(p.PackageType),
+		Cursor:      p.Cursor,
+		UpdatedAt:   &p.UpdatedAt,
+		Limit:       p.Limit,
+		Seller:      p.Seller,
+		PackageType: string(p.PackageType),
+		Delay:       p.Delay,
 	}
 
 	// Сериализация пакета.
@@ -74,9 +75,10 @@ func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageD
 }
 
 type tmpPackageSenderMsg struct {
-	Cursor      int // Указатель на последнюю полученную запись из внешнего источника
-	UpdatedAt   *time.Time
-	Limit       int
-	Seller      string
-	PackageType string
+	Cursor      int        `json:"cursor"` // Указатель на последнюю полученную запись из внешнего источника
+	UpdatedAt   *time.Time `json:"updated_at"`
+	Limit       int        `json:"limit"`
+	Seller      string     `json:"seller"`
+	PackageType string     `json:"package_type"`
+	Delay       int        `json:"delay"`
 }

@@ -8,12 +8,13 @@ import (
 
 // Описание пакета по которому создается пакет.
 type PackageDescription struct {
-	Cursor      int               // Курсор пакета.
-	Limit       int               // Количество записей в запросе
-	UpdatedAt   time.Time         // Дата обновления.
-	PackageType PackageType       // Тип пакета.
-	Seller      string            // Код продавца (wb, ozon, yandex, 1с)
-	Query       map[string]string // Параметры запроса
+	Cursor      int               `json:"cursor"`       // Курсор пакета.
+	Limit       int               `json:"limit"`        // Количество записей в запросе
+	UpdatedAt   time.Time         `json:"updated_at"`   // Дата обновления.
+	PackageType PackageType       `json:"package_type"` // Тип пакета.
+	Seller      string            `json:"seller"`       // Код продавца (wb, ozon, yandex, 1с)
+	Query       map[string]string `json:"query"`        // Параметры запроса
+	Delay       int               `json:"delay"`        // Задержка перед следующей загрузкой
 }
 
 // Тип пакета.

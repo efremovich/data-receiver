@@ -51,6 +51,7 @@ func (b *brokerConsumerImpl) SubcriveToGetCards(ctx context.Context, h handlerFo
 			if err != nil {
 				msg := fmt.Sprintf("ошибка десериализации сообщения из брокера %s: %s", SubjectForGetCards, err.Error())
 				alogger.ErrorFromCtx(ctx, msg, err, nil, false)
+
 				return anats.MessageResultEnumFatalError
 			}
 
@@ -63,13 +64,15 @@ func (b *brokerConsumerImpl) PublishMessageToGetCard(ctx context.Context, seller
 		Seller: seller,
 		Cursor: cursor,
 	}
+
 	msgBytes, err := json.Marshal(&task)
 	if err != nil {
 		return err
 	}
+
 	return b.nats.PublishMessageDupe(ctx, SubjectForGetCards, msgBytes, "card")
 }
 
-func (nw *brokerConsumerImpl) Ping() error {
-	return nw.nats.Ping()
+func (b *brokerConsumerImpl) Ping() error {
+	return b.nats.Ping()
 }

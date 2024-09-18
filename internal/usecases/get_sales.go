@@ -206,14 +206,14 @@ func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.
 				PriceSize: priceSize,
 			})
 			if err != nil {
-				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении sale в БД.")
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении sale в БД. %s", err.Error())
 			}
 		} else {
 			saleData.UpdatedAt = time.Now()
 
 			err = s.salerepo.UpdateExecOne(ctx, saleData)
 			if err != nil {
-				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при обновлении sale в БД.")
+				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при обновлении sale в БД. %s", err.Error())
 			}
 		}
 	}
@@ -227,6 +227,7 @@ func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.
 			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
 			Limit:     desc.Limit - 1,
 			Seller:    desc.Seller,
+			Delay:     desc.Delay,
 		}
 
 		err = s.brokerPublisher.SendPackage(ctx, &p)

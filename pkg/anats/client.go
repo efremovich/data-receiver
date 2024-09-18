@@ -154,7 +154,7 @@ func (nw *natsClientImpl) Subscribe(ctx context.Context, consumerName string, su
 			msgWrap := MessageImpl{
 				data:     msg.Data(),
 				maxRetry: opt.MaxDeliver,
-				Id:       msgID,
+				ID:       msgID,
 			}
 
 			metadata, err := msg.Metadata()
@@ -162,16 +162,19 @@ func (nw *natsClientImpl) Subscribe(ctx context.Context, consumerName string, su
 				msgWrap.retryCounter = int(metadata.NumDelivered)
 				msgWrap.created = metadata.Timestamp
 			}
+
 			fmt.Printf("внутри либы натса: начинается обработка сообщения ID %s, time: %s. попытка %d\n", msgID, time.Now().UTC().Format(time.RFC3339Nano), msgWrap.retryCounter)
 
-			traceId := msg.Headers().Get(string(traceIdHeaderName))
-			if traceId == "" {
-				traceId = strings.ReplaceAll(uuid.NewString(), "-", "")
+			traceID := msg.Headers().Get(string(traceIdHeaderName))
+			if traceID == "" {
+				traceID = strings.ReplaceAll(uuid.NewString(), "-", "")
 			}
-			newContext := context.WithValue(ctx, traceIdHeaderName, traceId)
+
+			newContext := context.WithValue(ctx, traceIdHeaderName, traceID)
 
 			res := handler(newContext, msgWrap)
 			fmt.Printf("внутри либы натса: завершается обработка сообщения ID %s, res: %d, time: %s\n", msgID, res, time.Now().UTC().Format(time.RFC3339Nano))
+
 			switch res {
 			case MessageResultEnumSuccess:
 				err = msg.DoubleAck(ctx)

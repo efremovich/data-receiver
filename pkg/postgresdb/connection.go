@@ -37,7 +37,7 @@ func New(ctx context.Context, masterConnString string, slaveConnString string) (
 	}
 	res := &DBConnection{writeConn: &postgresConnectionImpl{writeConn}}
 
-	alogger.InfoFromCtx(ctx, "инициировано подключение к master DB " + masterConnString, nil, nil, false)
+	alogger.InfoFromCtx(ctx, "инициировано подключение к master DB %s", masterConnString)
 
 	if slaveConnString != "" {
 		readConn, err := newConnect(ctx, slaveConnString)
@@ -45,7 +45,7 @@ func New(ctx context.Context, masterConnString string, slaveConnString string) (
 			return nil, err
 		}
 
-		alogger.InfoFromCtx(ctx, "инициировано подключение к slave DB " + slaveConnString, nil, nil, false)
+		alogger.InfoFromCtx(ctx, "инициировано подключение к slave DB %s", slaveConnString)
 		res.readConn = &postgresConnectionImpl{readConn}
 	}
 
@@ -100,7 +100,7 @@ func (r *postgresConnectionImpl) ExecOne(query string, args ...interface{}) (sql
 
 	affected, err := res.RowsAffected()
 	if err != nil {
-		alogger.WarnFromCtx(context.Background(), "драйвер не поддерживает RowsAffected(): " + err.Error(), nil, nil, false)
+		alogger.WarnFromCtx(context.Background(), "драйвер не поддерживает RowsAffected(): "+err.Error(), nil, nil, false)
 		return res, nil
 	}
 

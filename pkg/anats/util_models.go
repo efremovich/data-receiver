@@ -6,8 +6,10 @@ import (
 
 type headerName string
 
-const traceIdHeaderName headerName = "trace_id"
-const headerIdName headerName = "Nats-Msg-Id"
+const (
+	traceIdHeaderName headerName = "trace_id"
+	headerIdName      headerName = "Nats-Msg-Id"
+)
 
 type MessageResultEnum int8
 
@@ -31,7 +33,7 @@ type NatsClientConfig struct {
 	Urls               []string
 	StreamName         string
 	Subjects           []string
-	CreateUpdateStream bool          // если false - не будет обновлять стрим, а просто попробует его получить.
+	CreateUpdateStream bool // если false - не будет обновлять стрим, а просто попробует его получить.
 }
 
 type ConsumerInfo struct {

@@ -132,7 +132,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in *entity.Sale) error 
               for_pay = $6,
               
               quantity = $7,
-              updated_at = now(),
+              updated_at = now()
               
               WHERE id = $8`
 

@@ -15,7 +15,7 @@ type Message interface {
 var _ Message = MessageImpl{}
 
 type MessageImpl struct {
-	Id           string
+	ID           string
 	data         []byte
 	created      time.Time
 	retryCounter int
@@ -23,7 +23,7 @@ type MessageImpl struct {
 }
 
 func (m MessageImpl) GetID() string {
-	return m.Id
+	return m.ID
 }
 
 func (m MessageImpl) GetData() []byte {

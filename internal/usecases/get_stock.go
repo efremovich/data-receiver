@@ -19,7 +19,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		return aerror.New(ctx, entity.GetDataFromExSources, err, "ошибка получение данные из внешнего источника %s в БД: %s ", "", err.Error())
 	}
 
-	alogger.InfoFromCtx(ctx, "Получение данных об остатках")
+	alogger.InfoFromCtx(ctx, "Получение данных об остатках за %s", desc.UpdatedAt.Format("02.01.2006"))
 
 	var notFoundElements int
 
@@ -29,7 +29,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении wb2card %s в БД.", "wb")
 		}
 
-		seller, err := s.sellerRepo.SelectByTitle(ctx, "wb")
+		seller, err := s.sellerRepo.SelectByTitle(ctx, desc.Seller)
 		if err != nil {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении Seller %s в БД.", "wb")
 		}
@@ -96,13 +96,14 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 
 		card, err := s.cardRepo.SelectByID(ctx, wb2card.CardID)
 		if err != nil {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении card %s в БД.", "wb")
+			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении cardID: %d в БД.", wb2card.CardID)
 		}
 
 		size, err := s.sizerepo.SelectByTechSize(ctx, stock.Size.TechSize)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении size %s в БД.", "wb")
 		}
+
 		if size == nil {
 			size, err = s.sizerepo.Insert(ctx, entity.Size{
 				TechSize: stock.Size.TechSize,
@@ -117,6 +118,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении priceSize %s в БД.", "wb")
 		}
+
 		if priceSize == nil {
 			priceSize, err = s.pricesizerepo.Insert(ctx, entity.PriceSize{
 				Price:        stock.PriceSize.Price,
@@ -124,6 +126,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 				SpecialPrice: stock.PriceSize.SpecialPrice,
 				CardID:       card.ID,
 				SizeID:       size.ID,
+				UpdatedAt:    stock.Stock.CreatedAt,
 			})
 			if err != nil {
 				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении priceSize в БД.")
@@ -139,6 +142,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении barcode %s в БД.", "wb")
 		}
+
 		if barcode == nil {
 			barcode, err = s.barcodeRepo.Insert(ctx, entity.Barcode{
 				Barcode:     stock.Barcode.Barcode,
@@ -155,6 +159,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении warehouse %s в БД.", "wb")
 		}
+
 		if warehouse == nil {
 			warehouse, err = s.warehouserepo.Insert(ctx, entity.Warehouse{
 				Title:      stock.Warehouse.Title,
@@ -172,6 +177,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении priceSize %s в БД.", "wb")
 		}
+
 		if stockData == nil {
 			_, err = s.stockrepo.Insert(ctx, entity.Stock{
 				Quantity:    stock.Stock.Quantity,

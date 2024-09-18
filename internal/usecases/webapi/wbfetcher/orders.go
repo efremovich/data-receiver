@@ -46,7 +46,7 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 
 	urlValue := url.Values{}
 	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02"))
-	urlValue.Set("flag", "0")
+	urlValue.Set("flag", "1")
 
 	reqURL := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
 
@@ -106,6 +106,17 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 			Title: "wb",
 		}
 
+		priceSize := entity.PriceSize{
+			Price:        elem.FinishedPrice,
+			Discount:     elem.DiscountPercent,
+			SpecialPrice: elem.TotalPrice,
+		}
+
+		size := entity.Size{
+			TechSize: elem.TechSize,
+			Title:    elem.TechSize,
+		}
+
 		order := entity.Order{}
 		order.ExternalID = elem.Srid
 		order.Price = elem.TotalPrice
@@ -114,6 +125,8 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 		// Попробуем получить дату заказа
 		order.CreatedAt, _ = time.Parse("2006-01-02T15:04:05", elem.Date)
 
+		order.Size = &size
+		order.PriceSize = &priceSize
 		order.Status = &status
 		order.Region = &region
 		order.Warehouse = &warehouse

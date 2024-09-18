@@ -11,7 +11,7 @@ ALTER TABLE shop.regions OWNER TO erp_db_usr;
 ALTER TABLE ONLY shop.regions
     ADD CONSTRAINT regions_pk PRIMARY KEY (id);
 ALTER TABLE ONLY shop.regions
-    ADD CONSTRAINT regions_unique UNIQUE (region_name);
+    ADD CONSTRAINT regions_unique UNIQUE (region_name,country_id);
 ALTER TABLE ONLY shop.regions
     ADD CONSTRAINT regions_countries_fk FOREIGN KEY (country_id) REFERENCES shop.countries(id);
 ALTER TABLE ONLY shop.regions

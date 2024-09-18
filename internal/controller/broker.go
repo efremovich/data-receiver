@@ -30,7 +30,7 @@ func (gw *grpcGatewayServerImpl) makeBrokerSubscribers(ctx context.Context) erro
 }
 
 // Обработчик события создания пакета и отправки в сервис package-sender.
-func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc entity.PackageDescription, _ int, _ bool) anats.MessageResultEnum {
+func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc entity.PackageDescription, retry int, _ bool) anats.MessageResultEnum {
 	start := time.Now()
 
 	// alogger.DebugFromCtx(ctx, fmt.Sprintf("начало обработки сообщения %d", desc.Cursor), nil, nil, false)
@@ -81,6 +81,12 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 
 			return anats.MessageResultEnumTempError
 		}
+	}
+
+	if desc.Delay != 0 {
+		elapsed := time.Since(start).Seconds()
+		remainingDelay := float64(desc.Delay) - elapsed
+		time.Sleep(time.Duration(remainingDelay * float64(time.Second)))
 	}
 
 	alogger.InfoFromCtx(ctx, "окончание обработки создания пакета время - %.3fs", time.Since(start).Seconds())

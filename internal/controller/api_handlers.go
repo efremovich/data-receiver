@@ -76,16 +76,18 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 		desc entity.PackageDescription
 	)
 
-	date := time.Date(2024, 8, 12, 0, 0, 0, 0, time.UTC)
-	daysToGet := 100
-	// desc := entity.PackageDescription{
+	// date := time.Date(2024, 7, 31, 0, 0, 0, 0, time.UTC)
+	date := time.Now()
+	daysToGet := 365
+	delay := 61
+	// desc = entity.PackageDescription{
 	// 	Cursor:      0,
 	// 	Limit:       100,
 	// 	PackageType: entity.PackageTypeCard,
 	// 	Seller:      "wb",
 	// }
 
-	// err := gw.core.ReceiveCards(ctx, desc)
+	// err = gw.core.ReceiveCards(ctx, desc)
 	// if err != nil {
 	// 	return err
 	// }
@@ -95,23 +97,24 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// 	return err
 	// }
 
-	desc = entity.PackageDescription{
-		PackageType: entity.PackageTypeStock,
-		UpdatedAt:   date,
-		Seller:      "wb",
-		Limit:       daysToGet,
-	}
+	// desc = entity.PackageDescription{
+	// 	PackageType: entity.PackageTypeStock,
+	// 	UpdatedAt:   date,
+	// 	Seller:      "wb",
+	// 	Limit:       7,
+	// }
 
-	err = gw.core.ReceiveStocks(ctx, desc)
-	if err != nil {
-		return err
-	}
+	// err = gw.core.ReceiveStocks(ctx, desc)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// desc = entity.PackageDescription{
 	// 	PackageType: entity.PackageTypeOrder,
 	// 	UpdatedAt:   date,
 	// 	Seller:      "wb",
 	// 	Limit:       daysToGet,
+	// 	Delay:       61,
 	// }
 
 	// err = gw.core.ReceiveOrders(ctx, desc)
@@ -119,17 +122,18 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// 	return err
 	// }
 
-	// desc = entity.PackageDescription{
-	// 	PackageType: entity.PackageTypeSale,
-	// 	UpdatedAt:   date,
-	// 	Seller:      "wb",
-	// 	Limit:       daysToGet,
-	// }
+	desc = entity.PackageDescription{
+		PackageType: entity.PackageTypeSale,
+		UpdatedAt:   date,
+		Seller:      "wb",
+		Limit:       daysToGet,
+		Delay:       delay,
+	}
 
-	// err = gw.core.ReceiveSales(ctx, desc)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveSales(ctx, desc)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

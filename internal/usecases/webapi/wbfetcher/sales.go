@@ -47,7 +47,7 @@ func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 
 	urlValue := url.Values{}
 	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02"))
-	urlValue.Set("flag", "0")
+	urlValue.Set("flag", "1")
 
 	reqURL := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
 

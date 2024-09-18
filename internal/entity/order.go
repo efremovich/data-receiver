@@ -22,4 +22,5 @@ type Order struct {
 	Card      *Card
 	PriceSize *PriceSize
 	Barcode   *Barcode
+	Size      *Size
 }

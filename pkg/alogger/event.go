@@ -116,7 +116,7 @@ func (ev *Event) Flush(w io.Writer, textFormat bool) error {
 
 func (ev *Event) jsonFormat() ([]byte, error) {
 	// Форматирование события в JSON
-	eventJson, err := json.Marshal(ev)
+	eventJson, err := json.MarshalIndent(ev, "", " ")
 	if err != nil {
 		return nil, fmt.Errorf("[ALogger] Ошибка формирования события в JSON: %w", err)
 	}
