@@ -12,12 +12,12 @@ import (
 	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
-func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity.PackageDescription) aerror.AError {
+func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity.PackageDescription) error {
 	client := s.apiFetcher[desc.Seller]
 
 	ordersMetaList, err := client.GetOrders(ctx, desc)
 	if err != nil {
-		return aerror.New(ctx, entity.GetDataFromExSources, err, "ошибка получение данные из внешнего источника %s в БД: %s ", "", err.Error())
+		return fmt.Errorf("ошибка при получение данных из внешнего источника %s: %w", desc.Seller, err)
 	}
 
 	var notFoundElements int
@@ -74,7 +74,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 					continue
 				}
 
-				wb2card = &entity.Wb2Card{
+				wb2card = &entity.Seller2Card{
 					NMID:   card.ExternalID,
 					KTID:   0,
 					NMUUID: "",

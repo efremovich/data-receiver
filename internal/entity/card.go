@@ -4,15 +4,15 @@ import "time"
 
 type Card struct {
 	ID              int64                 // id в бд
-	ExternalID      int64                 // id в магазине
-	VendorID        string                // Код номенклатура
+	ExternalID      int64                 // внешний идентификатор продавца
+	VendorID        string                // Код номенклатуры
 	VendorCode      string                // Артикул
 	Title           string                // Наименование
 	Description     string                // Описание номенклатуры
 	CreatedAt       time.Time             // Дата создания
 	UpdatedAt       time.Time             // Дана обновления
 	Brand           Brand                 // Бренд
-	Dimension      Dimension            // Размеры упаковки
+	Dimension       Dimension             // Размеры упаковки
 	Characteristics []*CardCharacteristic // Характеристики номенклатуры
 	Categories      []*Category           // Категории номенклатуры
 	Sizes           []*Size               // Размеры
@@ -36,7 +36,7 @@ type CardCharacteristic struct {
 type Brand struct {
 	ID         int64
 	ExternalID int64  // id в магазине
-	Title      string // Наименование  бренда
+	Title      string // Наименование бренда
 
 	SellerID int64 // Продавец
 }

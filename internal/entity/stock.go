@@ -23,8 +23,7 @@ type StockMeta struct {
 	PriceSize       PriceSize
 	Barcode         Barcode
 	Warehouse       Warehouse
-	Wb2Card         Wb2Card
-	Ozon2Card       Ozon2Card
+	Seller2Card     Seller2Card
 	Size            Size
 	SupplierArticle string
 }

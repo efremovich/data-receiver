@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -37,22 +38,22 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 
 	switch desc.PackageType {
 	case entity.PackageTypeCard:
-		aerr := gw.core.ReceiveCards(ctx, desc)
-		if aerr != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage())
+		err := gw.core.ReceiveCards(ctx, desc)
+		if err != nil {
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, err.Error())
 
-			if aerr.IsCritical() {
+			if errors.Is(err, entity.ErrPermanent) {
 				return anats.MessageResultEnumFatalError
 			}
 
 			return anats.MessageResultEnumTempError
 		}
 	case entity.PackageTypeStock:
-		aerr := gw.core.ReceiveStocks(ctx, desc)
-		if aerr != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage())
+		err := gw.core.ReceiveStocks(ctx, desc)
+		if err != nil {
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, err.Error())
 
-			if aerr.IsCritical() {
+			if errors.Is(err, entity.ErrPermanent) {
 				return anats.MessageResultEnumFatalError
 			}
 
@@ -60,22 +61,22 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 		}
 
 	case entity.PackageTypeSale:
-		aerr := gw.core.ReceiveSales(ctx, desc)
-		if aerr != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage())
+		err := gw.core.ReceiveSales(ctx, desc)
+		if err != nil {
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, err.Error())
 
-			if aerr.IsCritical() {
+			if errors.Is(err, entity.ErrPermanent) {
 				return anats.MessageResultEnumFatalError
 			}
 
 			return anats.MessageResultEnumTempError
 		}
 	case entity.PackageTypeOrder:
-		aerr := gw.core.ReceiveOrders(ctx, desc)
-		if aerr != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, aerr.DeveloperMessage())
+		err := gw.core.ReceiveOrders(ctx, desc)
+		if err != nil {
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, err.Error())
 
-			if aerr.IsCritical() {
+			if errors.Is(err, entity.ErrPermanent) {
 				return anats.MessageResultEnumFatalError
 			}
 

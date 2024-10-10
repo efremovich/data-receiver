@@ -12,7 +12,7 @@ import (
 	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
-func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.PackageDescription) aerror.AError {
+func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.PackageDescription) error {
 	client := s.apiFetcher[desc.Seller]
 
 	salesMetaList, err := client.GetSales(ctx, desc)
@@ -75,11 +75,11 @@ func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.
 					continue
 				}
 
-				wb2card = &entity.Wb2Card{
-					NMID:   card.ExternalID,
-					KTID:   0,
-					NMUUID: "",
-					CardID: card.ID,
+				wb2card = &entity.Seller2Card{
+					ExternalID: card.ExternalID,
+					KTID:       0,
+					NMUUID:     "",
+					CardID:     card.ID,
 				}
 				_, aerr := s.wb2cardrepo.Insert(ctx, *wb2card)
 

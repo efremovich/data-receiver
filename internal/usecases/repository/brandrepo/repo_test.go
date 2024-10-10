@@ -26,18 +26,21 @@ func TestBrandRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	newSeller := entity.Seller{
 		Title:      uuid.NewString(),
 		IsEnabled:  true,
 		ExternalID: uuid.NewString(),
 	}
+
 	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	sqlRepo, err := brandrepo.NewBrandRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 
 	newBrand := entity.Brand{

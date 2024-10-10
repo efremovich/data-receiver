@@ -10,7 +10,7 @@ func (gw *grpcGatewayServerImpl) CardReceiveV1Handler(req *fiber.Ctx) error {
 	desc := entity.PackageDescription{
 		Cursor: 0,
 		Limit:  100,
-    Seller: req.Query("seller", "wb"),
+		Seller: req.Query("seller", "wb"),
 	}
 
 	err := gw.core.ReceiveCards(req.Context(), desc)
@@ -21,7 +21,12 @@ func (gw *grpcGatewayServerImpl) CardReceiveV1Handler(req *fiber.Ctx) error {
 }
 
 func (gw *grpcGatewayServerImpl) WarehouseReceiveV1Handler(req *fiber.Ctx) error {
-	err := gw.core.ReceiveWarehouses(req.Context())
+	desc := entity.PackageDescription{
+		Cursor: 0,
+		Limit:  100,
+		Seller: req.Query("seller", "wb"),
+	}
+	err := gw.core.ReceiveWarehouses(req.Context(), desc)
 	if err != nil {
 		return err
 	}

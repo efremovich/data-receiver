@@ -70,8 +70,8 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 			SpecialPrice: 0,
 		}
 
-		stockMeta.Wb2Card = entity.Wb2Card{
-			NMID: int64(elem.NmID),
+		stockMeta.Seller2Card = entity.Seller2Card{
+			ExternalID: int64(elem.NmID),
 		}
 
 		stockMeta.Barcode = entity.Barcode{

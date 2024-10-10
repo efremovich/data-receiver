@@ -92,7 +92,7 @@ type Setting struct {
 
 func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
 	const methodName = "/content/v2/get/cards/list?locale=ru"
-	// TODO вынести настройки и передавать их в теле сообщения nats
+
 	requestSettings := Settings{
 		Sort:   Sort{Ascending: true},
 		Filter: Filter{WithPhoto: -1},

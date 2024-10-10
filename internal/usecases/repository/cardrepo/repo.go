@@ -2,11 +2,16 @@ package cardrepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type CardRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Card, error)
@@ -37,8 +42,10 @@ func (repo *cardRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Car
 	query := "SELECT * FROM shop.cards WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по id %d в таблице cards: %w", id, err)
 	}
 
 	card := result.ConvertToEntityCard(ctx)
@@ -52,9 +59,12 @@ func (repo *cardRepoImpl) SelectByVendorID(ctx context.Context, vendorID string)
 	query := "SELECT * FROM shop.cards WHERE vendor_id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, vendorID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по vendor_id %s в таблице cards: %w", vendorID, err)
 	}
+
 	return result.ConvertToEntityCard(ctx), nil
 }
 
@@ -64,8 +74,10 @@ func (repo *cardRepoImpl) SelectByVendorCode(ctx context.Context, vendorCode str
 	query := "SELECT * FROM shop.cards WHERE vendor_code = $1"
 
 	err := repo.getReadConnection().Get(&result, query, vendorCode)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по vendor_code %s в таблице cards: %w", vendorCode, err)
 	}
 
 	return result.ConvertToEntityCard(ctx), nil
@@ -77,8 +89,10 @@ func (repo *cardRepoImpl) SelectByTitle(ctx context.Context, title string) (*ent
 	query := "SELECT * FROM shop.cards WHERE title = $1"
 
 	err := repo.getReadConnection().Get(&result, query, title)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по title %s в таблице cards: %w", title, err)
 	}
 
 	return result.ConvertToEntityCard(ctx), nil
@@ -91,8 +105,9 @@ func (repo *cardRepoImpl) Insert(_ context.Context, in entity.Card) (*entity.Car
 
 	err := repo.getWriteConnection().QueryAndScan(&cardIDWrap, query, in.VendorID, in.VendorCode, in.Title, in.Description, in.Brand.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка при вставке данных в таблицу cards: %w", err)
 	}
+
 	in.ID = cardIDWrap.ID.Int64
 
 	return &in, nil
@@ -102,10 +117,12 @@ func (repo *cardRepoImpl) UpdateExecOne(ctx context.Context, in entity.Card) err
 	dbModel := convertToDBCard(ctx, in)
 
 	query := `UPDATE shop.cards SET vendor_id = $1, vendor_code = $2, title = $3, description = $4, updated_at = NOW() WHERE id = $5`
+
 	_, err := repo.getWriteConnection().ExecOne(query, in.VendorID, in.VendorCode, in.Title, in.Description, dbModel.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка при обновлении данных в таблицу cards: %w", err)
 	}
+
 	return nil
 }
 
