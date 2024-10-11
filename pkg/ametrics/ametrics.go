@@ -2,10 +2,11 @@ package ametrics
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus/collectors"
 	"net/http"
 	"regexp"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus/collectors"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -61,6 +62,7 @@ func (m *middleware) newHH(handler func(http.ResponseWriter, *http.Request)) *hh
 		handler: handler,
 	}
 }
+
 func (h *hh) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.handler(w, r)
 }
@@ -134,6 +136,7 @@ func (m *middleware) WrapHandlerNetHttp(handlerName string, handler func(http.Re
 
 	return base.ServeHTTP
 }
+
 func (m *middleware) validateNameDuplicate(name string) bool {
 	m.metricList.Lock()
 	_, ok := m.validateNames[name]
@@ -165,6 +168,7 @@ func (m *middleware) AddNewCounterMetric(name string, desc string) (MetricCount,
 
 	return counter, nil
 }
+
 func (m *middleware) AddNewCounterMetricWithLabel(name string, desc string, labelsNames []string) (CounterVec, error) {
 	name = m.validateName(name)
 	if !m.validateNameDuplicate(name) {
