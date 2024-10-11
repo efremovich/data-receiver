@@ -36,6 +36,7 @@ func (repo *charRepoImpl) SelectByBarcode(ctx context.Context, barcode string) (
 	if err != nil {
 		return nil, err
 	}
+
 	return result.convertToEntityBarcode(ctx), nil
 }
 
@@ -48,7 +49,9 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Barcode) (*entit
 	if err != nil {
 		return nil, err
 	}
+
 	in.ID = charIDWrap.ID.Int64
+
 	return &in, nil
 }
 
@@ -56,6 +59,7 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Barcode) 
 	dbModel := convertToDBBarcode(ctx, in)
 
 	query := `UPDATE shop.barcodes SET price_size_id = $1, seller_id = $2 WHERE barcode = $3`
+
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.PriceSizeID, dbModel.SellerID, dbModel.Barcode)
 	if err != nil {
 		return err

@@ -11,7 +11,7 @@ import (
 type RegoinRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Region, error)
 	SelectByName(ctx context.Context, regionName string, countryID, districtID int64) (*entity.Region, error)
-	Insert(ctx context.Context, region *entity.Region) (*entity.Region, error)
+	Insert(ctx context.Context, region entity.Region) (*entity.Region, error)
 	UpdateExecOne(ctx context.Context, region *entity.Region) error
 
 	Ping(ctx context.Context) error
@@ -54,8 +54,8 @@ func (repo *repoImpl) SelectByName(ctx context.Context, regionName string, distr
 	return result.convertToEntityRegion(ctx), nil
 }
 
-func (repo *repoImpl) Insert(ctx context.Context, region *entity.Region) (*entity.Region, error) {
-	dbModel := convertToDBRegion(ctx, region)
+func (repo *repoImpl) Insert(ctx context.Context, region entity.Region) (*entity.Region, error) {
+	dbModel := convertToDBRegion(ctx, &region)
 	query := "INSERT INTO shop.regions (country_id, region_name, district_id) VALUES ($1, $2, $3) RETURNING id"
 	charIDWrap := repository.IDWrapper{}
 
@@ -66,7 +66,7 @@ func (repo *repoImpl) Insert(ctx context.Context, region *entity.Region) (*entit
 
 	region.ID = charIDWrap.ID.Int64
 
-	return region, nil
+	return &region, nil
 }
 
 func (repo *repoImpl) UpdateExecOne(ctx context.Context, region *entity.Region) error {

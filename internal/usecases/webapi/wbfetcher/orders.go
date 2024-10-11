@@ -121,6 +121,7 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 		order.ExternalID = elem.Srid
 		order.Price = elem.TotalPrice
 		order.Type = elem.OrderType
+		order.Quantity = 1 // На ВБ 1 товар одна строка с данными
 
 		// Попробуем получить дату заказа
 		order.CreatedAt, _ = time.Parse("2006-01-02T15:04:05", elem.Date)

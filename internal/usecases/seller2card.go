@@ -8,14 +8,10 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 )
 
-func (s *receiverCoreServiceImpl) setSeller2Card(ctx context.Context, cardID, externalID, sellerID int64) (*entity.Seller2Card, error) {
-	seller2Card, err := s.seller2cardrepo.SelectByExternalID(ctx, externalID)
+func (s *receiverCoreServiceImpl) setSeller2Card(ctx context.Context, in entity.Seller2Card) (*entity.Seller2Card, error) {
+	seller2Card, err := s.seller2cardrepo.SelectByExternalID(ctx, in.ExternalID)
 	if errors.Is(err, ErrObjectNotFound) {
-		seller2Card, err = s.seller2cardrepo.Insert(ctx, entity.Seller2Card{
-			ExternalID: externalID,
-			CardID:     cardID,
-			SellerID:   sellerID,
-		})
+		seller2Card, err = s.seller2cardrepo.Insert(ctx, in)
 	}
 
 	if err != nil {

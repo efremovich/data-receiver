@@ -2,13 +2,11 @@ package usecases
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
-	aerror "github.com/efremovich/data-receiver/pkg/aerror"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
@@ -24,21 +22,19 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 
 	var notFoundElements int
 
-	for _, stock := range stockMetaList {
+	for _, meta := range stockMetaList {
 		seller, err := s.getSeller(ctx, desc.Seller)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return err
+		if err != nil {
+			return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль stocks: %w", desc.Seller, err))
 		}
 
-		select2card, err := s.getSeller2Card(ctx, stock.Seller2Card.ExternalID, seller.ID)
-		if err != nil {
-			return err
-		}
-		// Получаем ошибку что такой записи нет, поицем карточку товара в 1с
+		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
+		_, err = s.getSeller2Card(ctx, meta.Seller2Card.ExternalID, seller.ID)
+		// Получаем ошибку что такой записи нет, поищем карточку товара в 1с
 		if errors.Is(err, ErrObjectNotFound) {
 			query := make(map[string]string)
-			query["barcode"] = stock.Barcode.Barcode
-			query["article"] = stock.SupplierArticle
+			query["barcode"] = meta.Barcode.Barcode
+			query["article"] = meta.SupplierArticle
 
 			desc := entity.PackageDescription{
 				Seller: "1c",
@@ -49,69 +45,66 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 				return err
 			}
 		}
+		if err != nil {
+			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", desc.Seller, err))
+		}
 
-		card, err := s.getCardByExternalID(ctx, select2card.ExternalID, seller.ID)
+		card, err := s.getCardByVendorCode(ctx, meta.SupplierArticle)
 		if errors.Is(err, ErrObjectNotFound) {
-			// Нам не удалось получить запись в 1с, значит данные по этому товару исчезли, пропускаем загрузку остатков
+			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
 			// TODO Писать эти данные в jaeger
 			notFoundElements++
 			continue
 		} else if err != nil {
 			return err
 		}
-		stock.PriceSize.CardID = card.ID
-
-		size, err := s.getSizeByTitle(ctx, stock.Size.TechSize)
-		if err != nil {
-			return err
-		}
-		stock.PriceSize.SizeID = size.ID
-
-		_, err = s.setPriceSize(ctx, stock.PriceSize)
+		// Проверим и создадим связь продавца и товара
+		meta.Seller2Card.CardID = card.ID
+		meta.Seller2Card.SellerID = seller.ID
+		_, err = s.setSeller2Card(ctx, meta.Seller2Card)
 		if err != nil {
 			return err
 		}
 
-		barcode, err := s.setBarcode(ctx, stock.Barcode)
+		// Size
+		size, err := s.getSizeByTitle(ctx, meta.Size.TechSize)
 		if err != nil {
 			return err
 		}
 
-		stock.Warehouse.SellerID = seller.ID
-		warehouse, err := s.setWarehouse(ctx, &stock.Warehouse)
+		// Добавление данных
+		// PriceSize
+		meta.PriceSize.CardID = card.ID
+		meta.PriceSize.SizeID = size.ID
+		priceSize, err := s.setPriceSize(ctx, meta.PriceSize)
 		if err != nil {
 			return err
 		}
 
-		stockData, err := s.stockrepo.SelectByBarcode(ctx, barcode.ID, desc.UpdatedAt)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении priceSize %s в БД.", "wb")
+		// Barcode
+		meta.Barcode.SellerID = seller.ID
+		meta.Barcode.PriceSizeID = priceSize.ID
+		barcode, err := s.setBarcode(ctx, meta.Barcode)
+		if err != nil {
+			return err
 		}
 
-		if stockData == nil {
-			_, err = s.stockrepo.Insert(ctx, entity.Stock{
-				Quantity:    stock.Stock.Quantity,
-				BarcodeID:   barcode.ID,
-				WarehouseID: warehouse.ID,
-				CardID:      card.ID,
-				SellerID:    seller.ID,
-				CreatedAt:   desc.UpdatedAt,
-			})
-			if err != nil {
-				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
-			}
-		} else {
-			stockData.Quantity = stock.Stock.Quantity
-			stockData.BarcodeID = barcode.ID
-			stockData.WarehouseID = warehouse.ID
-			stockData.CardID = card.ID
-			stockData.SellerID = seller.ID
-			stockData.UpdatedAt = time.Now()
+		// Warehouse
+		meta.Warehouse.SellerID = seller.ID
+		warehouse, err := s.setWarehouse(ctx, &meta.Warehouse)
+		if err != nil {
+			return wrapErr(fmt.Errorf("ошибка получения данных по складам хранения модуль stock:%w", err))
+		}
+		stock := meta.Stock
+		stock.BarcodeID = barcode.ID
+		stock.WarehouseID = warehouse.ID
+		stock.SellerID = seller.ID
+		stock.CardID = card.ID
+		stock.UpdatedAt = time.Now()
 
-			err = s.stockrepo.UpdateExecOne(ctx, *stockData)
-			if err != nil {
-				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении stock в БД.")
-			}
+		_, err = s.setStock(ctx, stock)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -137,4 +130,17 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 	}
 
 	return nil
+}
+
+func (s *receiverCoreServiceImpl) setStock(ctx context.Context, in entity.Stock) (*entity.Stock, error) {
+	stock, err := s.stockrepo.SelectByBarcode(ctx, in.BarcodeID, in.CreatedAt)
+
+	if errors.Is(err, ErrObjectNotFound) {
+		stock, err = s.stockrepo.Insert(ctx, in)
+	}
+
+	if err != nil {
+		return nil, wrapErr(fmt.Errorf("ошибка получения и обновления остатка: %w", err))
+	}
+	return stock, nil
 }

@@ -102,6 +102,15 @@ func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 				Name: elem.CountryName,
 			},
 		}
+		size := entity.Size{
+			TechSize: elem.TechSize,
+		}
+
+		priceSize := entity.PriceSize{
+			Price:        elem.TotalPrice,
+			Discount:     elem.DiscountPercent,
+			SpecialPrice: elem.FinishedPrice,
+		}
 
 		seller := entity.Seller{
 			Title: "wb",
@@ -133,6 +142,8 @@ func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 		sale.Seller = &seller
 		sale.Card = &card
 		sale.Barcode = &barcode
+		sale.Size = &size
+		sale.PriceSize = &priceSize
 
 		sales = append(sales, sale)
 	}

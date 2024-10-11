@@ -2,12 +2,17 @@ package stockrepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type StockRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Stock, error)
@@ -35,9 +40,12 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Stock, 
 	query := "SELECT * FROM shop.stocks WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по id %d в таблице stocks: %w", id, err)
 	}
+
 	return result.convertToEntityStock(ctx), nil
 }
 
@@ -47,9 +55,12 @@ func (repo *repoImpl) SelectByBarcode(ctx context.Context, barcodeID int64, date
 	query := "SELECT * FROM shop.stocks WHERE barcode_id = $1 and created_at = $2"
 
 	err := repo.getReadConnection().Get(&result, query, barcodeID, dateFrom.Format("2006-01-02 00:00:00"))
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по id %d и дате %s в таблице stocks: %w", barcodeID, dateFrom.Format("02.01.2006"), err)
 	}
+
 	return result.convertToEntityStock(ctx), nil
 }
 
@@ -59,14 +70,17 @@ func (repo *repoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*
 	query := "SELECT * FROM shop.stocks WHERE seller_id = $1"
 
 	err := repo.getReadConnection().Select(&result, query, sellerID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по продавцу %d в таблице stocks: %w", sellerID, err)
 	}
 
 	var resEntity []*entity.Stock
 	for _, v := range result {
 		resEntity = append(resEntity, v.convertToEntityStock(ctx))
 	}
+
 	return resEntity, nil
 }
 
@@ -91,9 +105,11 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Stock) (*entity.Stoc
 		dbModel.CreatedAt.Time.Format("2006-01-02 00:00:00"),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка при вставке данных в таблицу stocks: %w", err)
 	}
+
 	in.ID = charIDWrap.ID.Int64
+
 	return &in, nil
 }
 
@@ -113,14 +129,15 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Stock) error 
 		dbModel.WarehouseID,
 		dbModel.CardID,
 		dbModel.ID)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка при обновлении данных в таблицу stocks: %w", err)
 	}
 
 	return nil
 }
 
-func (repo *repoImpl) Ping(ctx context.Context) error {
+func (repo *repoImpl) Ping(_ context.Context) error {
 	return repo.getWriteConnection().Ping()
 }
 

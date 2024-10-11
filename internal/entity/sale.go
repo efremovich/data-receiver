@@ -25,4 +25,5 @@ type Sale struct {
 	PriceSize *PriceSize
 	Barcode   *Barcode
 	Order     *Order
+	Size      *Size
 }

@@ -60,7 +60,7 @@ func TestDistrictRepo(t *testing.T) {
 		Country:    entity.Country{ID: modelCountry.ID},
 	}
 
-	modelRegion, err := regionRepo.Insert(ctx, &newRegion)
+	modelRegion, err := regionRepo.Insert(ctx, newRegion)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -39,7 +39,12 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 		}
 
 		// seller2Card
-		_, err = s.setSeller2Card(ctx, card.ID, card.ExternalID, seller.ID)
+		seller2card := entity.Seller2Card{
+			ExternalID: card.ExternalID,
+			CardID:     card.ID,
+			SellerID:   seller.ID,
+		}
+		_, err = s.setSeller2Card(ctx, seller2card)
 		if err != nil {
 			return err
 		}
@@ -51,11 +56,12 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 		}
 
 		// Sizes
-		_, err = s.setSizes(ctx, card)
-		if err != nil {
-			return err
+		for _, size := range card.Sizes {
+			_, err = s.setSize(ctx, size)
+			if err != nil {
+				return err
+			}
 		}
-
 		// Dimensions
 		_, err = s.setDimension(ctx, card)
 		if err != nil {

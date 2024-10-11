@@ -2,13 +2,11 @@ package usecases
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
-	aerror "github.com/efremovich/data-receiver/pkg/aerror"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
@@ -17,204 +15,125 @@ func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.
 
 	salesMetaList, err := client.GetSales(ctx, desc)
 	if err != nil {
-		return aerror.New(ctx, entity.GetDataFromExSources, err, "ошибка получение данные из внешнего источника %s в БД: %s ", "", err.Error())
+		return fmt.Errorf("ошибка получение данных о продажах из внешнего источника %s, %w", desc.Seller, err)
 	}
+
+	alogger.InfoFromCtx(ctx, "Получение данных об продажах за %s", desc.UpdatedAt.Format("02.01.2006"))
 
 	var notFoundElements int
 
-	for _, sale := range salesMetaList {
-		seller, err := s.sellerRepo.SelectByTitle(ctx, desc.Seller)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении seller %s в БД.", desc.Seller)
+	for _, meta := range salesMetaList {
+		seller, err := s.getSeller(ctx, desc.Seller)
+		if err != nil {
+			return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль sales:%w", desc.Seller, err))
 		}
-
-		wb2card, err := s.wb2cardrepo.SelectByNmid(ctx, sale.Card.ExternalID)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении wb2card %s в БД.", desc.Seller)
-		}
-
-		if wb2card == nil {
-			odincClient := s.apiFetcher["odinc"]
+		meta.Seller = seller
+		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
+		_, err = s.getSeller2Card(ctx, meta.Card.ExternalID, seller.ID)
+		// Получаем ошибку что такой записи нет, поищем карточку товара в 1с
+		if errors.Is(err, ErrObjectNotFound) {
 			query := make(map[string]string)
-			query["barcode"] = sale.Barcode.Barcode
-			query["article"] = sale.Card.VendorCode
+			query["barcode"] = meta.Barcode.Barcode
+			query["article"] = meta.Card.VendorID
 
-			pkg := entity.PackageDescription{
-				Query: query,
+			in := entity.PackageDescription{
+				PackageType: desc.PackageType,
+				Seller:      "1c",
+				Query:       query,
 			}
-
-			cardlist, err := odincClient.GetCards(ctx, pkg)
+			err := s.ReceiveCards(ctx, in)
 			if err != nil {
-				return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении Seller %s в БД.", desc.Seller)
+				return err
 			}
+		}
+		if err != nil {
+			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром %s модуль stocks:%w", desc.Seller, err))
+		}
 
-			if len(cardlist) == 0 {
-				notFoundElements++
+		card, err := s.getCardByVendorCode(ctx, meta.Card.VendorCode)
+		if errors.Is(err, ErrObjectNotFound) {
+			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
+			// TODO Писать эти данные в jaeger
+			notFoundElements++
+			continue
+		} else if err != nil {
+			return err
+		}
+		// Проверим и создадим связь продавца и товара
+		seller2card := entity.Seller2Card{
+			CardID:   card.ID,
+			SellerID: seller.ID,
+		}
+		_, err = s.setSeller2Card(ctx, seller2card)
+		if err != nil {
+			return err
+		}
 
-				alogger.InfoFromCtx(ctx, "Не найден элемент ID: %+v", sale.Card.VendorCode)
+		// Size
+		size, err := s.getSizeByTitle(ctx, meta.Size.TechSize)
+		if err != nil {
+			return err
+		}
 
-				continue
-			}
+		// Добавление данных
+		// PriceSize
+		meta.PriceSize.CardID = card.ID
+		meta.PriceSize.SizeID = size.ID
+		priceSize, err := s.setPriceSize(ctx, *meta.PriceSize)
+		if err != nil {
+			return err
+		}
+		meta.PriceSize = priceSize
 
-			for _, card := range cardlist {
-				card.ExternalID = sale.Card.ExternalID
-				// Brands
-				brand, err := s.getBrand(ctx, card.Brand, seller)
-				if err != nil {
-					return err
-				}
-
-				card.Brand = *brand
-
-				err = s.setWb2Card(ctx, &card)
-				if err != nil {
-					notFoundElements++
-
-					alogger.ErrorFromCtx(ctx, "Ошибка записи элемента в базу %s", err.Error())
-
-					continue
-				}
-
-				wb2card = &entity.Seller2Card{
-					ExternalID: card.ExternalID,
-					KTID:       0,
-					NMUUID:     "",
-					CardID:     card.ID,
-				}
-				_, aerr := s.wb2cardrepo.Insert(ctx, *wb2card)
-
-				if aerr != nil {
-					notFoundElements++
-
-					alogger.ErrorFromCtx(ctx, "Ошибка записи элемента в базу %s", aerr.Error())
-
-					continue
-				}
-			}
+		// Barcode
+		meta.Barcode.SellerID = seller.ID
+		meta.Barcode.PriceSizeID = priceSize.ID
+		_, err = s.setBarcode(ctx, *meta.Barcode)
+		if err != nil {
+			return err
 		}
 
 		// Warehouse
-		warehouse, err := s.warehouserepo.SelectBySellerIDAndTitle(ctx, seller.ID, sale.Warehouse.Title)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении warehouserepo %s в БД.", sale.Warehouse.Title)
+		meta.Warehouse.SellerID = seller.ID
+		warehouse, err := s.setWarehouse(ctx, meta.Warehouse)
+		if err != nil {
+			return wrapErr(fmt.Errorf("ошибка получения данных по складам хранения модуль stock:%w", err))
 		}
-
-		if warehouse == nil {
-			notFoundElements++
-			continue
-		}
-
-		// Barcode
-		barcode, err := s.barcodeRepo.SelectByBarcode(ctx, sale.Barcode.Barcode)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении barcode %s в БД.", sale.Barcode.Barcode)
-		}
-
-		if barcode == nil {
-			notFoundElements++
-			continue
-		}
-
-		// PriceSize
-		priceSize, err := s.pricesizerepo.SelectByID(ctx, barcode.PriceSizeID)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении barcode %d в БД.", barcode.PriceSizeID)
-		}
-
-		if priceSize == nil {
-			notFoundElements++
-			continue
-		}
+		meta.Warehouse = warehouse
 
 		// Region
-		country, err := s.countryrepo.SelectByName(ctx, sale.Region.Country.Name)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении country %s в БД.", sale.Region.Country.Name)
+		country, err := s.setCountry(ctx, meta.Region.Country)
+		if err != nil {
+			return err
 		}
-
-		if country == nil {
-			country, err = s.countryrepo.Insert(ctx, sale.Region.Country)
-			if err != nil {
-				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении country в БД.")
-			}
+		meta.Region.Country.ID = country.ID
+		district, err := s.setDistrict(ctx, meta.Region.District)
+		if err != nil {
+			return err
 		}
-
-		district, err := s.districtrepo.SelectByName(ctx, sale.Region.District.Name)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении district %s в БД.", sale.Region.District.Name)
+		meta.Region.District.ID = district.ID
+		region, err := s.setRegion(ctx, *meta.Region)
+		if err != nil {
+			return err
 		}
+		meta.Region = region
 
-		if district == nil {
-			district, err = s.districtrepo.Insert(ctx, sale.Region.District)
-			if err != nil {
-				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении district в БД.")
-			}
-		}
-
-		region, err := s.regionrepo.SelectByName(ctx, sale.Region.RegionName, district.ID, country.ID)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении region %s в БД.", sale.Region.RegionName)
-		}
-
-		if region == nil {
-			_, err := s.regionrepo.Insert(ctx, &entity.Region{
-				RegionName: sale.Region.RegionName,
-				District:   *district,
-				Country:    *country,
-			})
-			if err != nil {
-				fmt.Printf("Давай разберемся почему ошибка: Имя региона: %s district: %d country %d", sale.Region.RegionName, district.ID, country.ID)
-				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении district в БД.")
-			}
-		}
-
-		orderData, err := s.orderrepo.SelectByExternalID(ctx, sale.Order.ExternalID)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении orderData %s в БД.", sale.Order.ExternalID)
-		}
-
-		if orderData == nil {
+		// Order
+		order, err := s.getOrder(ctx, meta.Order.ID)
+		if errors.Is(err, ErrObjectNotFound) {
+			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
+			// TODO Писать эти данные в jaeger
 			notFoundElements++
 			continue
+		} else if err != nil {
+			return err
 		}
+		meta.Order = order
 
-		saleData, err := s.salerepo.SelectByCardIDAndDate(ctx, wb2card.CardID, desc.UpdatedAt)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return aerror.New(ctx, entity.SelectDataErrorID, err, "Ошибка при получении saleData %d в БД.", wb2card.CardID)
-		}
+		_, err = s.setSale(ctx, &meta)
 
-		if saleData == nil {
-			_, err = s.salerepo.Insert(ctx, entity.Sale{
-				ExternalID: sale.ExternalID,
-
-				Price:      sale.Price,
-				DiscountP:  sale.DiscountP,
-				FinalPrice: sale.FinalPrice,
-				Type:       sale.Type,
-				ForPay:     sale.ForPay,
-
-				Quantity:  sale.Quantity,
-				CreatedAt: sale.CreatedAt,
-
-				Order:  orderData,
-				Seller: seller,
-				Card: &entity.Card{
-					ID: wb2card.CardID,
-				},
-				Warehouse: warehouse,
-				Region:    region,
-				PriceSize: priceSize,
-			})
-			if err != nil {
-				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при сохранении sale в БД. %s", err.Error())
-			}
-		} else {
-			saleData.UpdatedAt = time.Now()
-
-			err = s.salerepo.UpdateExecOne(ctx, saleData)
-			if err != nil {
-				return aerror.New(ctx, entity.SaveStorageErrorID, err, "Ошибка при обновлении sale в БД. %s", err.Error())
-			}
+		if err != nil {
+			return err
 		}
 	}
 
@@ -232,11 +151,32 @@ func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.
 
 		err = s.brokerPublisher.SendPackage(ctx, &p)
 		if err != nil {
-			return aerror.New(ctx, entity.BrokerSendErrorID, err, "Ошибка постановки задачи в очередь")
+			return fmt.Errorf("Ошибка постановки задачи в очередь: %w", err)
 		}
 
 		alogger.InfoFromCtx(ctx, "Создана очередь для получения продаж на %s", p.UpdatedAt.Format("02.01.2006"))
+	} else {
+		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
 	}
 
 	return nil
+}
+
+func (s *receiverCoreServiceImpl) getSale(ctx context.Context, orderID int64) (*entity.Sale, error) {
+	sale, err := s.salerepo.SelectByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+	return sale, nil
+}
+
+func (s *receiverCoreServiceImpl) setSale(ctx context.Context, in *entity.Sale) (*entity.Sale, error) {
+	sale, err := s.salerepo.SelectByCardIDAndDate(ctx, in.Card.ID, in.CreatedAt)
+	if errors.Is(err, ErrObjectNotFound) {
+		sale, err = s.salerepo.Insert(ctx, *in)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return sale, nil
 }
