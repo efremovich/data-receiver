@@ -11,21 +11,27 @@ import (
 
 const SellerType = "wb"
 
-func New(_ context.Context, cfg config.Seller) webapi.ExtAPIFetcher {
+func New(_ context.Context, cfg config.SellerWB) []webapi.ExtAPIFetcher {
 	timeout := time.Second * time.Duration(cfg.ProcessTimeoutSeconds)
 
 	c := &http.Client{
 		Timeout: timeout,
 	}
-	client := &wbAPIclientImp{
-		client:    c,
-		token:     cfg.Token,
-		addr:      cfg.URL,
-		addrStat:  cfg.URLStat,
-		tokenStat: cfg.TokenStat,
+
+	clients := []webapi.ExtAPIFetcher{}
+
+	for i := 0; i < len(cfg.Token); i++ {
+		client := &wbAPIclientImp{
+			client:    c,
+			token:     cfg.Token[i],
+			addr:      cfg.URL,
+			addrStat:  cfg.URLStat,
+			tokenStat: cfg.TokenStat[i],
+		}
+		clients = append(clients, client)
 	}
 
-	return client
+	return clients
 }
 
 type wbAPIclientImp struct {

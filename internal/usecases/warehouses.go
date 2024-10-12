@@ -6,10 +6,23 @@ import (
 	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 )
 
 func (s *receiverCoreServiceImpl) ReceiveWarehouses(ctx context.Context, desc entity.PackageDescription) error {
-	client := s.apiFetcher[desc.Seller]
+	clients := s.apiFetcher[desc.Seller]
+
+	for _, client := range clients {
+		err := s.receiveAndSaveWarehouse(ctx, client, desc)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *receiverCoreServiceImpl) receiveAndSaveWarehouse(ctx context.Context, client webapi.ExtAPIFetcher, desc entity.PackageDescription) error {
 	warehouses, err := client.GetWarehouses(ctx)
 	if err != nil {
 		return wrapErr(fmt.Errorf("ошбка при получении данных из источника %s : %w", desc.Seller, err))
@@ -20,7 +33,6 @@ func (s *receiverCoreServiceImpl) ReceiveWarehouses(ctx context.Context, desc en
 		if err != nil {
 			return err
 		}
-
 	}
 	return nil
 }
@@ -43,7 +55,6 @@ func (s *receiverCoreServiceImpl) setWarehouse(ctx context.Context, in *entity.W
 		if err != nil {
 			return nil, wrapErr(fmt.Errorf("Ошибка при получении данных: %w", err))
 		}
-
 	}
 
 	return warehouse, nil

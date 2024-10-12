@@ -86,20 +86,20 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	)
 
 	// date := time.Date(2024, 7, 31, 0, 0, 0, 0, time.UTC)
-	date := time.Now()
-	daysToGet := 365
-	delay := 61
-	// desc = entity.PackageDescription{
-	// 	Cursor:      0,
-	// 	Limit:       100,
-	// 	PackageType: entity.PackageTypeCard,
-	// 	Seller:      "wb",
-	// }
+	// date := time.Now()
+	// daysToGet := 3
+	// delay := 61
+	desc = entity.PackageDescription{
+		Cursor:      0,
+		Limit:       100,
+		PackageType: entity.PackageTypeCard,
+		Seller:      "wb",
+	}
 
-	// err = gw.core.ReceiveCards(ctx, desc)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveCards(ctx, desc)
+	if err != nil {
+		return err
+	}
 
 	// err = gw.core.ReceiveWarehouses(ctx)
 	// if err != nil {
@@ -131,18 +131,18 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// 	return err
 	// }
 
-	desc = entity.PackageDescription{
-		PackageType: entity.PackageTypeSale,
-		UpdatedAt:   date,
-		Seller:      "wb",
-		Limit:       daysToGet,
-		Delay:       delay,
-	}
+	// desc = entity.PackageDescription{
+	// 	PackageType: entity.PackageTypeSale,
+	// 	UpdatedAt:   date,
+	// 	Seller:      "wb",
+	// 	Limit:       daysToGet,
+	// 	Delay:       delay,
+	// }
 
-	err = gw.core.ReceiveSales(ctx, desc)
-	if err != nil {
-		return err
-	}
+	// err = gw.core.ReceiveSales(ctx, desc)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

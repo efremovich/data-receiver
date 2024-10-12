@@ -77,7 +77,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, err
 	}
 
-	apiFetcher := make(map[string]webapi.ExtAPIFetcher)
+	apiFetcher := make(map[string][]webapi.ExtAPIFetcher)
 	// TODO Завернем клиентов всех маркетплейсов в мапу
 	apiFetcher["wb"] = wbfetcher.New(ctx, conf.Seller.WB)
 	apiFetcher["odinc"] = odincfetcer.New(ctx, conf.Seller.OdinC)

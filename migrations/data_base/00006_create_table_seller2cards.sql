@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE shop.seller2cards (
     id serial NOT NULL,
-    nmID integer NOT NULL,
+    external_id integer NOT NULL,
     "int" integer NOT NULL,
     nmUUID text NOT NULL,
     created_at timestamp without time zone DEFAULT now(),
@@ -22,10 +22,11 @@ ALTER TABLE shop.seller2cards
 
 CREATE INDEX seller2cards_card_id_idx ON shop.seller2cards USING btree (card_id);
 CREATE INDEX seller2cards_seller_id_idx ON shop.seller2cards USING btree (seller_id);
+CREATE INDEX seller2cards_external_id_idx ON shop.seller2cards USING btree (external_id);
 
 COMMENT ON TABLE shop.seller2cards IS 'Товары WB';
 COMMENT ON COLUMN shop.seller2cards.id IS 'Уникальный идентификатор';
-COMMENT ON COLUMN shop.seller2cards.nmID IS 'Артикул WB';
+COMMENT ON COLUMN shop.seller2cards.external_id IS 'Внешний код карточки';
 COMMENT ON COLUMN shop.seller2cards."int" IS 'Идентификатор КТ';
 COMMENT ON COLUMN shop.seller2cards.nmUUID IS 'Внуттренний технический идентификатор товара';
 COMMENT ON COLUMN shop.seller2cards.created_at IS 'Дата создания';

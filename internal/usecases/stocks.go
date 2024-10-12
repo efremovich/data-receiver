@@ -7,11 +7,24 @@ import (
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
 func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity.PackageDescription) error {
-	client := s.apiFetcher[desc.Seller]
+	clients := s.apiFetcher[desc.Seller]
+
+	for _, client := range clients {
+		err := s.receiveAndSaveStocks(ctx, client, desc)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, client webapi.ExtAPIFetcher, desc entity.PackageDescription) error {
 
 	stockMetaList, err := client.GetStocks(ctx, desc)
 	if err != nil {

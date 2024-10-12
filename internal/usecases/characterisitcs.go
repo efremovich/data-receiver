@@ -10,6 +10,7 @@ import (
 
 func (s *receiverCoreServiceImpl) setCharacterisitc(ctx context.Context, card *entity.Card) ([]*entity.CardCharacteristic, error) {
 	cardCharacteristics := []*entity.CardCharacteristic{}
+
 	for _, elem := range card.Characteristics {
 		char, err := s.charRepo.SelectByTitle(ctx, elem.Title)
 		if errors.Is(err, ErrObjectNotFound) {
@@ -34,6 +35,7 @@ func (s *receiverCoreServiceImpl) setCharacterisitc(ctx context.Context, card *e
 		if err != nil {
 			return nil, wrapErr(fmt.Errorf("Ошибка при получении данных: %w", err))
 		}
+
 		cardCharacteristics = append(cardCharacteristics, cardCharacteristic)
 	}
 

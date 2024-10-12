@@ -2,11 +2,16 @@ package cardcharrepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type CardCharRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.CardCharacteristic, error)
@@ -44,14 +49,18 @@ func (repo *cardcharRepoImpl) SelectByID(ctx context.Context, id int64) (*entity
               cc.id = $1`
 
 	err := repo.getReadConnection().Get(&result, query, id)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по ID %d в таблице characteristics: %w", id, err)
 	}
+
 	return result.ConvertToEntityCardCharacteristic(ctx), nil
 }
 
 func (repo *cardcharRepoImpl) SelectByCardIDAndCharID(ctx context.Context, cardID, charID int64) (*entity.CardCharacteristic, error) {
 	var result cardCharacteristicDB
+
 	query := `select
               cc.id,
               cc.value as value,
@@ -64,10 +73,14 @@ func (repo *cardcharRepoImpl) SelectByCardIDAndCharID(ctx context.Context, cardI
             where
               cc.card_id = $1
               and cc.characteristic_id = $2`
+
 	err := repo.getReadConnection().Get(&result, query, cardID, charID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по cardID %d charID %d в таблице characteristics: %w", cardID, charID, err)
 	}
+
 	return result.ConvertToEntityCardCharacteristic(ctx), nil
 }
 
@@ -79,9 +92,11 @@ func (repo *cardcharRepoImpl) Insert(ctx context.Context, in entity.CardCharacte
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.CardID, dbModel.Value, dbModel.CharacteristicID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка при вставке данных в таблицу characteristics: %w", err)
 	}
+
 	in.ID = charIDWrap.ID.Int64
+
 	return &in, nil
 }
 
@@ -90,8 +105,9 @@ func (repo *cardcharRepoImpl) UpdateExecOne(ctx context.Context, in entity.CardC
 
 	query := `UPDATE shop.characteristics SET card_id = $1, value = $2, characteristic_id = $3 WHERE id = $4`
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.CardID, dbModel.Value, dbModel.CharacteristicID, dbModel.ID)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка при обновлении данных в таблицу characteristics: %w", err)
 	}
 
 	return nil

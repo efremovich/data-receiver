@@ -17,12 +17,12 @@ services:
       - 8001:8080
       - 9001:8090
     depends_on:
-      - postgres_db
-      - db_creator
+      - postgres
+      - creator-db
       - nats
 
   # infra
-  postgres_db:
+  postgres:
     image: postgres:15.4
     environment:
       - POSTGRES_USER=postgres
@@ -38,21 +38,21 @@ services:
     ports:
       - 4222:4222
       
-  db_creator:
+  creator-db:
     image: postgres:15.4
     restart: 'on-failure' # контейнер может не отработать с первого раза, если postgres медленно стартует
-    entrypoint: ["psql", "postgres://postgres:postgres@postgres_db:5432", 
+    entrypoint: ["psql", "postgres://postgres:postgres@postgres:5432", 
       "-c", "CREATE DATABASE \"erp_db\" WITH ENCODING = \"UTF8\""]
     depends_on:
-      - postgres_db
+      - postgres
 
-  migrator:
+  migrator-db:
     build:
       context: .
       dockerfile: ./migrations/Dockerfile
     restart: on-failure
     environment:
-      DB_HOST: postgres_db
+      DB_HOST: postgres
 
   jaeger:
     image: jaegertracing/all-in-one:1.48

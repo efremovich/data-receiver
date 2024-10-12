@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 type Config struct {
 	ServiceName        string   `env:"SERVICE_NAME, default=receiver"`
 	PGWriterConn       string   `env:"POSTGRES_WRITER_CONN"`
@@ -40,16 +42,37 @@ type Queue struct {
 
 // Конфигурация для создания api клиентов для получения данных.
 type Sellers struct {
-	WB    Seller `env:", prefix=WB_"`
-	OZON  Seller `env:", prefix=OZON_"`
-	OdinC Seller `env:", prefix=1C_"`
+	WB    SellerWB    `env:", prefix=WB_"`
+	OZON  SellerOZON  `env:", prefix=OZON_"`
+	OdinC SellerOdinC `env:", prefix=1C_"`
 }
-type Seller struct {
-	URL                   string `env:"URL"`
-	URLStat               string `env:"URL_STAT"`
-	Token                 string `env:"TOKEN"`
-	TokenStat             string `env:"TOKEN_STAT"`
-	Login                 string `env:"LOGIN"`
-	Password              string `env:"PASSWORD"`
-	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=15"`
+
+type SellerWB struct {
+	URL                   string   `env:"URL"`
+	URLStat               string   `env:"URL_STAT"`
+	Token                 []string `env:"TOKEN"`
+	TokenStat             []string `env:"TOKEN_STAT"`
+	ProcessTimeoutSeconds int      `env:"TIMEOUT, default=15"`
+	Schedule              Schedule `env:", prefix=SCHEDULE_"`
+}
+
+type SellerOZON struct {
+	URL                   string   `env:"URL"`
+	APIKey                []string `env:"APIKEY"`
+	ClientID              []string `env:"CLIENTID"`
+	ProcessTimeoutSeconds int      `env:"TIMEOUT, default=15"`
+	Schedule              Schedule `env:", prefix=SCHEDULE_"`
+}
+
+type SellerOdinC struct {
+	URL                   string   `env:"URL"`
+	Login                 string   `env:"LOGIN"`
+	Password              string   `env:"PASSWORD"`
+	ProcessTimeoutSeconds int      `env:"TIMEOUT, default=15"`
+	Schedule              Schedule `env:", prefix=SCHEDULE_"`
+}
+
+type Schedule struct {
+	StartTime string        `env:"STARTTIME"` // Время начала первого запуска
+	Interval  time.Duration `env:"INTERVAL"`  // Интервал в секундах между запусками
 }

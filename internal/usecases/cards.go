@@ -5,19 +5,30 @@ import (
 	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
 func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.PackageDescription) error {
-	client := s.apiFetcher[desc.Seller]
+	clients := s.apiFetcher[desc.Seller]
 
+	for _, client := range clients {
+		err := s.receiveAndSaveCard(ctx, client, desc)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client webapi.ExtAPIFetcher, desc entity.PackageDescription) error {
 	cards, err := client.GetCards(ctx, desc)
 	if err != nil {
-		return fmt.Errorf("ошибка получение данные из внешнего источника %s, %s", desc.Seller, err)
+		return fmt.Errorf("ошибка получение данные из внешнего источника %s, %w", desc.Seller, err)
 	}
 
 	for _, in := range cards {
-
 		// Seller
 		seller, err := s.getSeller(ctx, desc.Seller)
 		if err != nil {
@@ -38,12 +49,13 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 			return err
 		}
 
-		// seller2Card
+		// Seller2Card
 		seller2card := entity.Seller2Card{
 			ExternalID: card.ExternalID,
 			CardID:     card.ID,
 			SellerID:   seller.ID,
 		}
+
 		_, err = s.setSeller2Card(ctx, seller2card)
 		if err != nil {
 			return err
@@ -62,6 +74,7 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 				return err
 			}
 		}
+
 		// Dimensions
 		_, err = s.setDimension(ctx, card)
 		if err != nil {
@@ -94,10 +107,9 @@ func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.
 
 		err = s.brokerPublisher.SendPackage(ctx, &p)
 		if err != nil {
-			return fmt.Errorf("Ошибка постановки задачи в очередь %s: %w", desc.Seller, err)
+			return fmt.Errorf("ошибка постановки задачи в очередь %s: %w", desc.Seller, err)
 		}
 	}
-
 	return nil
 }
 

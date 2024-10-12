@@ -7,12 +7,24 @@ import (
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
 func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity.PackageDescription) error {
-	client := s.apiFetcher[desc.Seller]
+	clients := s.apiFetcher[desc.Seller]
 
+	for _, client := range clients {
+		err := s.receiveAndSaveCard(ctx, client, desc)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, client webapi.ExtAPIFetcher, desc entity.PackageDescription) error {
 	ordersMetaList, err := client.GetOrders(ctx, desc)
 	if err != nil {
 		return fmt.Errorf("ошибка при получение данных из внешнего источника %s: %w", desc.Seller, err)

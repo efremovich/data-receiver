@@ -2,14 +2,19 @@ package seller2cardrepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
 
+var ErrObjectNotFound = entity.ErrObjectNotFound
+
 type Seller2CardRepo interface {
-	SelectByExternalID(ctx context.Context, nmid int64) (*entity.Seller2Card, error)
+	SelectByExternalID(ctx context.Context, externalID int64) (*entity.Seller2Card, error)
 	SelectByCardID(ctx context.Context, cardID int64) (*entity.Seller2Card, error)
 	SelectByNMUUID(ctx context.Context, nmUUID string) (*entity.Seller2Card, error)
 	SelectByKTID(ctx context.Context, ktID int) (*entity.Seller2Card, error)
@@ -30,14 +35,16 @@ func NewWb2CardRepo(_ context.Context, db *postgresdb.DBConnection) (Seller2Card
 	return &seller2cardRepoImpl{db: db}, nil
 }
 
-func (repo *seller2cardRepoImpl) SelectByExternalID(ctx context.Context, nmid int64) (*entity.Seller2Card, error) {
+func (repo *seller2cardRepoImpl) SelectByExternalID(ctx context.Context, externalID int64) (*entity.Seller2Card, error) {
 	var result seller2cardDB
 
-	query := "SELECT id, nmid, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE nmid = $1"
+	query := "SELECT id, external_id, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE external_id = $1"
 
-	err := repo.getReadConnection().Get(&result, query, nmid)
-	if err != nil {
-		return nil, err
+	err := repo.getReadConnection().Get(&result, query, externalID)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по внешнему ID %d в таблице seller2cards: %w", externalID, err)
 	}
 
 	return result.ConvertToEntityWb2Card(ctx), nil
@@ -46,11 +53,13 @@ func (repo *seller2cardRepoImpl) SelectByExternalID(ctx context.Context, nmid in
 func (repo *seller2cardRepoImpl) SelectByKTID(ctx context.Context, ktID int) (*entity.Seller2Card, error) {
 	var result seller2cardDB
 
-	query := "SELECT id, nmid, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE int = $1"
+	query := "SELECT id, external_id, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE int = $1"
 
 	err := repo.getReadConnection().Get(&result, query, ktID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по KTID %d в таблице seller2cards: %w", ktID, err)
 	}
 
 	return result.ConvertToEntityWb2Card(ctx), nil
@@ -59,11 +68,13 @@ func (repo *seller2cardRepoImpl) SelectByKTID(ctx context.Context, ktID int) (*e
 func (repo *seller2cardRepoImpl) SelectByCardID(ctx context.Context, cardID int64) (*entity.Seller2Card, error) {
 	var result seller2cardDB
 
-	query := "SELECT id, nmid, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE card_id = $1"
+	query := "SELECT id, external_id, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE card_id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, cardID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по id карточки %d в таблице seller2cards: %w", cardID, err)
 	}
 
 	return result.ConvertToEntityWb2Card(ctx), nil
@@ -72,26 +83,33 @@ func (repo *seller2cardRepoImpl) SelectByCardID(ctx context.Context, cardID int6
 func (repo *seller2cardRepoImpl) SelectByNMUUID(ctx context.Context, nmUUID string) (*entity.Seller2Card, error) {
 	var result seller2cardDB
 
-	query := "SELECT id, nmid, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE nmuuid = $1"
+	query := "SELECT id, external_id, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE nmuuid = $1"
 
 	err := repo.getReadConnection().Get(&result, query, nmUUID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по NMUUID %s в таблице seller2cards: %w", nmUUID, err)
 	}
 
 	return result.ConvertToEntityWb2Card(ctx), nil
 }
 
 func (repo *seller2cardRepoImpl) Insert(ctx context.Context, in entity.Seller2Card) (*entity.Seller2Card, error) {
-	query := `INSERT INTO shop.seller2cards (nmid, int, nmuuid, created_at, updated_at, card_id) 
-            VALUES ($1, $2, $3, now(), now(), $4) RETURNING id`
+	query := `INSERT INTO shop.seller2cards (external_id, int, nmuuid, created_at, updated_at, card_id, seller_id) 
+            VALUES ($1, $2, $3, now(), now(), $4, $5) RETURNING id`
 
 	wb2cardIDWrap := repository.IDWrapper{}
 	dbModel := convertToDBWb2Card(ctx, in)
 
-	err := repo.getWriteConnection().QueryAndScan(&wb2cardIDWrap, query, dbModel.NMID, dbModel.KTID, dbModel.NMUUID, dbModel.CardID)
+	err := repo.getWriteConnection().QueryAndScan(&wb2cardIDWrap, query,
+		dbModel.ExternalID,
+		dbModel.KTID,
+		dbModel.NMUUID,
+		dbModel.CardID,
+		dbModel.SellerID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка при вставке данных в таблицу seller2cards: %w", err)
 	}
 
 	in.ID = wb2cardIDWrap.ID.Int64
@@ -101,11 +119,11 @@ func (repo *seller2cardRepoImpl) Insert(ctx context.Context, in entity.Seller2Ca
 
 func (repo *seller2cardRepoImpl) UpdateExecOne(ctx context.Context, in entity.Seller2Card) error {
 	dbModel := convertToDBWb2Card(ctx, in)
-	query := `UPDATE shop.seller2cards SET nmid = $1, int = $2, nmuuid = $3, updated_at = now(), card_id = $4 WHERE id = $5`
+	query := `UPDATE shop.seller2cards SET external_id = $1, int = $2, nmuuid = $3, updated_at = now(), card_id = $4 WHERE id = $5`
 
-	_, err := repo.getWriteConnection().Exec(query, dbModel.NMID, dbModel.KTID, dbModel.NMUUID, dbModel.CardID, dbModel.ID)
+	_, err := repo.getWriteConnection().Exec(query, dbModel.ExternalID, dbModel.KTID, dbModel.NMUUID, dbModel.CardID, dbModel.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка при обновлении данных в таблицу seller2cards: %w", err)
 	}
 
 	return nil

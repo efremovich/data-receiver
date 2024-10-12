@@ -66,7 +66,7 @@ type Cards struct {
 }
 
 type Cursor struct {
-	NmID      int        `json:"nmID,omitempty"`
+	NmID      int        `json:"external_id,omitempty"`
 	Total     int        `json:"total,omitempty"`
 	Limit     int        `json:"limit,omitempty"`
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
