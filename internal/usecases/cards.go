@@ -29,6 +29,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 	}
 
 	for _, in := range cards {
+		s.metricsCollector.IncTPCounter()
 		// Seller
 		seller, err := s.getSeller(ctx, desc.Seller)
 		if err != nil {
