@@ -40,7 +40,7 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 	case entity.PackageTypeCard:
 		err := gw.core.ReceiveCards(ctx, desc)
 		if err != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, err.Error())
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %s: %s", desc.Cursor, err.Error())
 
 			if errors.Is(err, entity.ErrPermanent) {
 				return anats.MessageResultEnumFatalError
@@ -51,7 +51,7 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 	case entity.PackageTypeStock:
 		err := gw.core.ReceiveStocks(ctx, desc)
 		if err != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, err.Error())
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %s: %s", desc.Cursor, err.Error())
 
 			if errors.Is(err, entity.ErrPermanent) {
 				return anats.MessageResultEnumFatalError
@@ -63,7 +63,7 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 	case entity.PackageTypeSale:
 		err := gw.core.ReceiveSales(ctx, desc)
 		if err != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, err.Error())
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %s: %s", desc.Cursor, err.Error())
 
 			if errors.Is(err, entity.ErrPermanent) {
 				return anats.MessageResultEnumFatalError
@@ -74,7 +74,7 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 	case entity.PackageTypeOrder:
 		err := gw.core.ReceiveOrders(ctx, desc)
 		if err != nil {
-			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %d: %s", desc.Cursor, err.Error())
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %s: %s", desc.Cursor, err.Error())
 
 			if errors.Is(err, entity.ErrPermanent) {
 				return anats.MessageResultEnumFatalError

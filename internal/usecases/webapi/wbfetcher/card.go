@@ -93,10 +93,15 @@ type Setting struct {
 func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
 	const methodName = "/content/v2/get/cards/list?locale=ru"
 
+	lastID, err := strconv.Atoi(desc.Cursor)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка конвертации lastID: %w", err)
+	}
+
 	requestSettings := Settings{
 		Sort:   Sort{Ascending: true},
 		Filter: Filter{WithPhoto: -1},
-		Cursor: Cursor{Limit: desc.Limit, NmID: desc.Cursor, UpdatedAt: &desc.UpdatedAt},
+		Cursor: Cursor{Limit: desc.Limit, NmID: lastID, UpdatedAt: &desc.UpdatedAt},
 	}
 
 	requestData, err := json.Marshal(Setting{Setting: requestSettings})

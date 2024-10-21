@@ -12,6 +12,7 @@ func (s *receiverCoreServiceImpl) setCountry(ctx context.Context, in entity.Coun
 	if errors.Is(err, ErrObjectNotFound) {
 		country, err = s.countryrepo.Insert(ctx, in)
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -40,9 +41,11 @@ func (s *receiverCoreServiceImpl) setDistrict(ctx context.Context, in entity.Dis
 	if errors.Is(err, ErrObjectNotFound) {
 		district, err = s.districtrepo.Insert(ctx, in)
 	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return district, nil
 }
 
@@ -51,6 +54,7 @@ func (s *receiverCoreServiceImpl) getRegion(ctx context.Context, in entity.Regio
 	if err != nil {
 		return nil, err
 	}
+
 	return region, nil
 }
 
@@ -59,8 +63,10 @@ func (s *receiverCoreServiceImpl) setRegion(ctx context.Context, in entity.Regio
 	if errors.Is(err, ErrObjectNotFound) {
 		region, err = s.regionrepo.Insert(ctx, in)
 	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return region, nil
 }

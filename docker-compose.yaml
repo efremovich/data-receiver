@@ -1,6 +1,6 @@
 version: "3.8"
+
 services:
-  # application
   data-receiver:
     container_name: data-receiver
     image: efremovich/data-receiver
@@ -8,36 +8,27 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile
-      network: host
-    environment:
-      GO_ENVIRONMENT: local
-      GATEWAY_HTTP_PORT: 8080
-      GATEWAY_GRPC_PORT: 8090
     ports:
-      - 8001:8080
-      - 9001:8090
+      - "8080:8080"
+      - "8090:8090"
     depends_on:
       - postgres
       - creator-db
       - nats
-
-  # infra
   postgres:
     image: postgres:15.4
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - 5445:5432
-
+      - "5445:5432"
   nats:
     container_name: nats
     image: nats:2.9.21
     command: -js
     restart: unless-stopped
     ports:
-      - 4222:4222
-      
+      - "4222:4222"
   creator-db:
     image: postgres:15.4
     restart: 'on-failure' # контейнер может не отработать с первого раза, если postgres медленно стартует
@@ -45,7 +36,6 @@ services:
       "-c", "CREATE DATABASE \"erp_db\" WITH ENCODING = \"UTF8\""]
     depends_on:
       - postgres
-
   migrator-db:
     build:
       context: .
@@ -53,7 +43,6 @@ services:
     restart: on-failure
     environment:
       DB_HOST: postgres
-
   jaeger:
     image: jaegertracing/all-in-one:1.48
     ports:
@@ -70,7 +59,6 @@ services:
       - "3000:3000"
     volumes:
       - ./grafana_data:/var/lib/grafana
-
   prometheus:
     image: prom/prometheus:v2.37.9
     ports:

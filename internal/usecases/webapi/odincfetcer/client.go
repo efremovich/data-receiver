@@ -24,6 +24,7 @@ func New(_ context.Context, cfg config.SellerOdinC) []webapi.ExtAPIFetcher {
 		password: cfg.Password,
 	}
 	clients = append(clients, client)
+
 	return clients
 }
 

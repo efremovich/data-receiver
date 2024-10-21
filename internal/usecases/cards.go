@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
@@ -29,7 +30,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 	}
 
 	for _, in := range cards {
-		s.metricsCollector.IncTPCounter()
+		s.metricsCollector.IncServiceDocsTaskCounter()
 		// Seller
 		seller, err := s.getSeller(ctx, desc.Seller)
 		if err != nil {
@@ -98,9 +99,10 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 	if len(cards) != desc.Limit {
 		alogger.InfoFromCtx(ctx, "Задание успешно завершено")
 	} else {
+		lastID := strconv.Itoa(int(cards[len(cards)-1].ExternalID))
 		p := entity.PackageDescription{
 			PackageType: entity.PackageTypeCard,
-			Cursor:      int(cards[len(cards)-1].ExternalID),
+			Cursor:      lastID,
 			UpdatedAt:   cards[len(cards)-1].UpdatedAt,
 			Limit:       desc.Limit,
 			Seller:      desc.Seller,

@@ -20,7 +20,7 @@ func (s *receiverCoreServiceImpl) getBrand(ctx context.Context, brandIn entity.B
 	}
 
 	if err != nil {
-		return nil, wrapErr(fmt.Errorf("Ошибка при получении данных: %w", err))
+		return nil, wrapErr(fmt.Errorf("oшибка при получении данных: %w", err))
 	}
 
 	return brand, nil

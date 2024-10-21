@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
@@ -86,7 +85,7 @@ const LIMIT = "100000" // Максимальное количество стро
 func (wb *wbAPIclientImp) GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
 	const methodName = "/api/v5/supplier/reportDetailByPeriod"
 
-	rrdid := strconv.Itoa(desc.Cursor)
+	rrdid := desc.Cursor
 	urlValue := url.Values{}
 	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02 00:00:00"))
 	urlValue.Set("dateTo", desc.UpdatedAt.Format("2006-01-02 23:59:59"))

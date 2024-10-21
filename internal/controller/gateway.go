@@ -96,7 +96,6 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 		return fmt.Errorf("ошибка при запуске брокера потребителя для создания пакетов: %w", err)
 	}
 
-	gw.metricsCollector.IncOperator("Tuuu")
 	// gw.autoupdate(ctx, updateIntervalDefault)
 
 	g, ctx := errgroup.WithContext(ctx)

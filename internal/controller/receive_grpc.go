@@ -7,29 +7,24 @@ import (
 )
 
 func (gw *grpcGatewayServerImpl) CardReceiveV1Handler(req *fiber.Ctx) error {
-	desc := entity.PackageDescription{
-		Cursor: 0,
-		Limit:  100,
-		Seller: req.Query("seller", "wb"),
-	}
+	desc := entity.PackageDescription{}
 
 	err := gw.core.ReceiveCards(req.Context(), desc)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (gw *grpcGatewayServerImpl) WarehouseReceiveV1Handler(req *fiber.Ctx) error {
-	desc := entity.PackageDescription{
-		Cursor: 0,
-		Limit:  100,
-		Seller: req.Query("seller", "wb"),
-	}
+	desc := entity.PackageDescription{}
+
 	err := gw.core.ReceiveWarehouses(req.Context(), desc)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -38,5 +33,6 @@ func (gw *grpcGatewayServerImpl) StockReceiverV1Handler(req *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
