@@ -16,7 +16,7 @@ var ErrObjectNotFound = entity.ErrObjectNotFound
 type CategoryRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Category, error)
 	SelectBySellerID(ctx context.Context, sellerID int64) ([]*entity.Category, error)
-	SelectByTitle(ctx context.Context, title string) (*entity.Category, error)
+	SelectByTitle(ctx context.Context, title string, sellerID int64) (*entity.Category, error)
 	Insert(ctx context.Context, in entity.Category) (*entity.Category, error)
 	UpdateExecOne(ctx context.Context, in entity.Category) error
 
@@ -69,12 +69,12 @@ func (repo *charRepoImpl) SelectBySellerID(ctx context.Context, sellerID int64) 
 	return resEntity, nil
 }
 
-func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Category, error) {
+func (repo *charRepoImpl) SelectByTitle(ctx context.Context, title string, sellerID int64) (*entity.Category, error) {
 	var result categoryDB
 
-	query := "SELECT * FROM shop.categories WHERE title = $1"
+	query := "SELECT * FROM shop.categories WHERE title = $1 and seller_id = $2"
 
-	err := repo.getReadConnection().Get(&result, query, title)
+	err := repo.getReadConnection().Get(&result, query, title, sellerID)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrObjectNotFound
 	} else if err != nil {

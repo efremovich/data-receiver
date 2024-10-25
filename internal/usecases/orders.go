@@ -39,6 +39,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль sales:%w", desc.Seller, err))
 		}
+
 		meta.Seller = seller
 
 		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
@@ -49,17 +50,18 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 			query["barcode"] = meta.Barcode.Barcode
 			query["article"] = meta.Card.VendorID
 
-			desc := entity.PackageDescription{
+			desc = entity.PackageDescription{
 				Seller: "1c",
 				Query:  query,
 			}
+
 			err := s.ReceiveCards(ctx, desc)
 			if err != nil {
 				return err
 			}
 		}
 		if err != nil {
-			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", desc.Seller, err))
+			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", err))
 		}
 
 		card, err := s.getCardByVendorCode(ctx, meta.Card.VendorCode)

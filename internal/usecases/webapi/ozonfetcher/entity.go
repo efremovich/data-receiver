@@ -171,20 +171,22 @@ type AttributeMeta struct {
 		Default  bool   `json:"default"`
 		Index    int    `json:"index"`
 	} `json:"images"`
-	Images360  []any `json:"images360"`
-	PdfList    []any `json:"pdf_list"`
-	Attributes []struct {
-		AttrMeta    Attribute `json:"attr_meta"`
-		AttributeID int       `json:"attribute_id"`
-		ComplexID   int       `json:"complex_id"`
+	ImageGroupID string `json:"image_group_id"`
+	Images360    []any  `json:"images360"`
+	PdfList      []any  `json:"pdf_list"`
+	Attributes   []struct {
+		AttributeID int `json:"attribute_id"`
+		ComplexID   int `json:"complex_id"`
 		Values      []struct {
 			DictionaryValueID int    `json:"dictionary_value_id"`
 			Value             string `json:"value"`
 		} `json:"values"`
 	} `json:"attributes"`
-	ComplexAttributes []any  `json:"complex_attributes"`
-	ColorImage        string `json:"color_image"`
-	LastID            string `json:"last_id"`
+	ComplexAttributes     []any  `json:"complex_attributes"`
+	ColorImage            string `json:"color_image"`
+	LastID                string `json:"last_id"`
+	DescriptionCategoryID int    `json:"description_category_id"`
+	TypeID                int    `json:"type_id"`
 }
 
 type Categories struct {

@@ -12,7 +12,7 @@ func (s *receiverCoreServiceImpl) setCategory(ctx context.Context, card *entity.
 	categories := []*entity.Category{}
 
 	for _, cat := range card.Categories {
-		category, err := s.categoryRepo.SelectByTitle(ctx, cat.Title)
+		category, err := s.categoryRepo.SelectByTitle(ctx, cat.Title, seller.ID)
 		if errors.Is(err, ErrObjectNotFound) {
 			category, err = s.categoryRepo.Insert(ctx, entity.Category{
 				Title:      cat.Title,

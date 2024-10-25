@@ -28,7 +28,7 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 	categoryIDsMap := make(map[int]int)
 
 	for _, card := range cardsMeta {
-		categoryIDsMap[card.DescriptionCategoryID] = card.TypeID
+		categoryIDsMap[card.TypeID] = card.DescriptionCategoryID
 	}
 
 	categoriesMap, err := getCategory(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
@@ -89,10 +89,12 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 			}
 		}
 
-		categories = append(categories, &entity.Category{
-			Title:      categoriesMap[in.CategoryID].CategoryName,
-			ExternalID: int64(in.CategoryID),
-		})
+		if cat, ok := categoriesMap[in.DescriptionCategoryID]; ok {
+			categories = append(categories, &entity.Category{
+				Title:      cat.CategoryName,
+				ExternalID: int64(in.DescriptionCategoryID),
+			})
+		}
 
 		dimension.Width = in.Width
 		dimension.Height = in.Height
@@ -101,14 +103,26 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 		// Артикул, код, размер "RBB-061/00-0014881/58"
 
 		vendorData := strings.Split(in.OfferID, "/")
-		vendorID := ""
 		vendorCode := ""
+		vendorID := ""
 		currSize := ""
 
-		if len(vendorData) > 2 {
+		if len(vendorData) == 3 {
 			vendorCode = vendorData[0]
 			vendorID = vendorData[1]
 			currSize = vendorData[2]
+		}
+
+		if len(vendorData) == 2 {
+			vendorCode = vendorData[0]
+			vendorID = vendorData[0]
+			currSize = vendorData[1]
+		}
+
+		if len(vendorData) == 1 {
+			vendorCode = vendorData[0]
+			vendorID = vendorData[0]
+			currSize = "One size"
 		}
 
 		sizes = append(sizes, &entity.Size{
@@ -233,9 +247,9 @@ func getAttributeList(ctx context.Context, baseURL, clientID, apiKey string, lim
 	headers["Content-Type"] = "application/json"
 
 	for key, value := range categoryIDsMap {
-		filter.CategoryID = key
+		filter.CategoryID = value
 		filter.Language = "DEFAULT"
-		filter.TypeID = value
+		filter.TypeID = key
 
 		bodyData, err := json.Marshal(filter)
 		if err != nil {
@@ -414,11 +428,19 @@ func getCategory(ctx context.Context, baseURL, clientID, apiKey string, limit in
 }
 
 func flattenCategories(cat Category, parentID int, categories map[int]Category) {
-	cat.ParentID = parentID
-	categories[cat.DescriptionCategoryID] = cat
+	category := Category{
+		TypeName:              cat.TypeName,
+		TypeID:                cat.TypeID,
+		DescriptionCategoryID: cat.DescriptionCategoryID,
+		CategoryName:          cat.CategoryName,
+		Disabled:              cat.Disabled,
+		Children:              []Category{},
+		ParentID:              parentID,
+	}
+
+	categories[cat.DescriptionCategoryID] = category
 
 	for _, child := range cat.Children {
 		flattenCategories(child, cat.DescriptionCategoryID, categories)
 	}
-	cat.Children = []Category{}
 }

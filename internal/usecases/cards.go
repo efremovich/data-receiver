@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -117,9 +118,12 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 }
 
 func (s *receiverCoreServiceImpl) setCard(ctx context.Context, in entity.Card) (*entity.Card, error) {
-	card, err := s.cardRepo.Insert(ctx, in)
-	if err != nil {
-		return nil, wrapErr(fmt.Errorf("ошибка при сохранении карточки: %w", err))
+	card, err := s.cardRepo.SelectByVendorID(ctx, in.VendorID)
+	if errors.Is(err, ErrObjectNotFound) {
+		card, err = s.cardRepo.Insert(ctx, in)
+		if err != nil {
+			return nil, wrapErr(fmt.Errorf("ошибка при сохранении карточки: %w", err))
+		}
 	}
 	return card, nil
 }
