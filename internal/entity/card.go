@@ -51,6 +51,12 @@ type Category struct {
 	ParentID int64 // Родительская категория
 }
 
+type CardCategory struct {
+	ID         int64
+	CardID     int64
+	CategoryID int64
+}
+
 type Size struct {
 	ID         int64
 	ExternalID int64  // id в магазине
