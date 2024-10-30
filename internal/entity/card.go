@@ -46,9 +46,7 @@ type Category struct {
 	Title      string
 	ExternalID int64 // id в магазине
 
-	CardID   int64
 	SellerID int64
-	ParentID int64 // Родительская категория
 }
 
 type CardCategory struct {

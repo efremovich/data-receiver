@@ -10,6 +10,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/barcoderepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcategoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcharrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
@@ -114,6 +115,11 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Репозиторий CardCategories
+	cardcategoryRepo, err := cardcategoryrepo.NewCardCategory(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 	// Репозиторий Characteristic
 	charRepo, err := charrepo.NewCharRepo(ctx, conn)
 	if err != nil {
@@ -206,6 +212,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		cardcharrepo,
 		barcodeRepo,
 		categoryRepo,
+		cardcategoryRepo,
 		dimensionRepo,
 		mediafileRepo,
 		priceSizeRepo,

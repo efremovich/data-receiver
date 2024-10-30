@@ -7,6 +7,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/barcoderepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcategoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcharrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
@@ -45,24 +46,25 @@ type ReceiverCoreService interface {
 type receiverCoreServiceImpl struct {
 	cfg conf.Config
 	// Блок репозиотриев
-	sellerRepo    sellerrepo.SellerRepo
-	cardRepo      cardrepo.CardRepo
-	sizerepo      sizerepo.SizeRepo
-	brandRepo     brandrepo.BrandRepo
-	charRepo      charrepo.CharRepo
-	cardCharRepo  cardcharrepo.CardCharRepo
-	barcodeRepo   barcoderepo.BarcodeRepo
-	categoryRepo  categoryrepo.CategoryRepo
-	dimensionrepo dimensionrepo.DimensionsRepo
-	mediafilerepo mediafilerepo.MediaFileRepo
-	pricesizerepo pricerepo.PriceRepo
-	stockrepo     stockrepo.StockRepo
-	orderrepo     orderrepo.OrderRepo
-	statusrepo    statusrepo.StatusRepo
-	countryrepo   countryrepo.CountryRepo
-	regionrepo    regionrepo.RegoinRepo
-	districtrepo  districtrepo.DistrictRepo
-	salerepo      salerepo.SaleRepo
+	sellerRepo       sellerrepo.SellerRepo
+	cardRepo         cardrepo.CardRepo
+	sizerepo         sizerepo.SizeRepo
+	brandRepo        brandrepo.BrandRepo
+	charRepo         charrepo.CharRepo
+	cardCharRepo     cardcharrepo.CardCharRepo
+	barcodeRepo      barcoderepo.BarcodeRepo
+	categoryRepo     categoryrepo.CategoryRepo
+	cardcategoryrepo cardcategoryrepo.CardCategoryRepo
+	dimensionrepo    dimensionrepo.DimensionsRepo
+	mediafilerepo    mediafilerepo.MediaFileRepo
+	pricesizerepo    pricerepo.PriceRepo
+	stockrepo        stockrepo.StockRepo
+	orderrepo        orderrepo.OrderRepo
+	statusrepo       statusrepo.StatusRepo
+	countryrepo      countryrepo.CountryRepo
+	regionrepo       regionrepo.RegoinRepo
+	districtrepo     districtrepo.DistrictRepo
+	salerepo         salerepo.SaleRepo
 
 	seller2cardrepo seller2cardrepo.Seller2CardRepo
 
@@ -86,6 +88,7 @@ func NewPackageReceiverService(
 	cardcharRepo cardcharrepo.CardCharRepo,
 	barcoderepo barcoderepo.BarcodeRepo,
 	categoryRepo categoryrepo.CategoryRepo,
+	cardcategoryrepo cardcategoryrepo.CardCategoryRepo,
 	dimensionrepo dimensionrepo.DimensionsRepo,
 	mediafilerepo mediafilerepo.MediaFileRepo,
 	pricesizerepo pricerepo.PriceRepo,
@@ -107,25 +110,26 @@ func NewPackageReceiverService(
 	service := receiverCoreServiceImpl{
 		cfg: cfg,
 
-		cardRepo:        cardRepo,
-		sizerepo:        sizerepo,
-		sellerRepo:      sellerRepo,
-		brandRepo:       brandRepo,
-		charRepo:        charRepo,
-		cardCharRepo:    cardcharRepo,
-		barcodeRepo:     barcoderepo,
-		categoryRepo:    categoryRepo,
-		dimensionrepo:   dimensionrepo,
-		mediafilerepo:   mediafilerepo,
-		pricesizerepo:   pricesizerepo,
-		stockrepo:       stockrepo,
-		seller2cardrepo: seller2cardrepo,
-		orderrepo:       orderrepo,
-		statusrepo:      statusrepo,
-		countryrepo:     countryrepo,
-		regionrepo:      regionrepo,
-		districtrepo:    districtrepo,
-		salerepo:        salerepo,
+		cardRepo:         cardRepo,
+		sizerepo:         sizerepo,
+		sellerRepo:       sellerRepo,
+		brandRepo:        brandRepo,
+		charRepo:         charRepo,
+		cardCharRepo:     cardcharRepo,
+		barcodeRepo:      barcoderepo,
+		categoryRepo:     categoryRepo,
+		cardcategoryrepo: cardcategoryrepo,
+		dimensionrepo:    dimensionrepo,
+		mediafilerepo:    mediafilerepo,
+		pricesizerepo:    pricesizerepo,
+		stockrepo:        stockrepo,
+		seller2cardrepo:  seller2cardrepo,
+		orderrepo:        orderrepo,
+		statusrepo:       statusrepo,
+		countryrepo:      countryrepo,
+		regionrepo:       regionrepo,
+		districtrepo:     districtrepo,
+		salerepo:         salerepo,
 
 		warehouserepo:     warehouserepo,
 		warehousetyperepo: warehousetyperepo,

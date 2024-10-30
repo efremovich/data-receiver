@@ -53,8 +53,6 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 
 	var cardsList []entity.Card
 
-	brand := entity.Brand{}
-
 	const brandID = 31
 
 	for _, in := range attibutesMeta {
@@ -64,28 +62,35 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 		sizes := []*entity.Size{}
 		barcodes := []*entity.Barcode{}
 		mediaFile := []*entity.MediaFile{}
+		brand := entity.Brand{}
+		description := ""
 
 		// Char и Brand
 		for _, char := range in.Attributes {
-			if char.AttributeID == brandID {
+			switch {
+			case char.AttributeID == brandID:
 				// Brand
 				brand.ExternalID = int64(char.AttributeID)
 				for _, charVal := range char.Values {
 					brand.Title = charVal.Value
 				}
-			} else {
+			case attr[char.AttributeID].Name == "Аннотация":
+				// Description
+				for _, charVal := range char.Values {
+					description = charVal.Value
+				}
+			default:
+				// Characteristics
 				charValues := []string{}
-
 				for _, charVal := range char.Values {
 					charValues = append(charValues, charVal.Value)
-					brand.Title = charVal.Value
 				}
 
-				char := entity.CardCharacteristic{
+				characteristic := entity.CardCharacteristic{
 					Title: attr[char.AttributeID].Name,
 					Value: charValues,
 				}
-				characteristics = append(characteristics, &char)
+				characteristics = append(characteristics, &characteristic)
 			}
 		}
 
@@ -146,7 +151,7 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 			VendorID:        vendorID,
 			VendorCode:      vendorCode,
 			Title:           in.Name,
-			Description:     "",
+			Description:     description,
 			CreatedAt:       time.Now(),
 			Brand:           brand,
 			Dimension:       dimension,

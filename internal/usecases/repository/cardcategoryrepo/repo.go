@@ -1,4 +1,4 @@
-package cardcategory
+package cardcategoryrepo
 
 import (
 	"context"
@@ -13,11 +13,11 @@ import (
 
 var ErrObjectNotFound = entity.ErrObjectNotFound
 
-type CardCategory interface {
+type CardCategoryRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.CardCategory, error)
-	SelectByCardIDAndSellerID(ctx context.Context, cardID, sellerID int64) (*entity.CardCategory, error)
-	Insert(ctx context.Context, in entity.CardCategory) error
-	UpdateExecOne(ctx context.Context, in entity.CardCategory) error
+	SelectByCardIDAndCategoryID(ctx context.Context, cardID, categoryID int64) (*entity.CardCategory, error)
+	Insert(ctx context.Context, in entity.CardCategory) (*entity.CardCategory, error)
+	Update(ctx context.Context, in entity.CardCategory) error
 	Ping(ctx context.Context) error
 }
 
@@ -26,14 +26,14 @@ type cardCategoryImpl struct {
 	tx *postgresdb.Transaction
 }
 
-func NewCardCategory(_ context.Context, db *postgresdb.DBConnection) (CardCategory, error) {
+func NewCardCategory(_ context.Context, db *postgresdb.DBConnection) (CardCategoryRepo, error) {
 	return &cardCategoryImpl{db: db}, nil
 }
 
 func (repo *cardCategoryImpl) SelectByID(ctx context.Context, id int64) (*entity.CardCategory, error) {
 	var result cardCategoryDB
 
-	query := `SELECT * FROM shop.cards_categories WHERE id = $1`
+	query := `SELECT * FROM shop.card_categories WHERE id = $1`
 
 	err := repo.getReadConnection().Get(&result, query, id)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
@@ -45,38 +45,40 @@ func (repo *cardCategoryImpl) SelectByID(ctx context.Context, id int64) (*entity
 	return result.convertToEntityCardCategory(ctx), nil
 }
 
-func (repo *cardCategoryImpl) SelectByCardIDAndSellerID(ctx context.Context, cardID, sellerID int64) (*entity.CardCategory, error) {
+func (repo *cardCategoryImpl) SelectByCardIDAndCategoryID(ctx context.Context, cardID, categoryID int64) (*entity.CardCategory, error) {
 	var result cardCategoryDB
 
-	query := `SELECT * FROM shop.cards_categories WHERE card_id = $1 AND category_id = $2`
+	query := `SELECT * FROM shop.card_categories WHERE card_id = $1 AND category_id = $2`
 
-	err := repo.getReadConnection().Get(&result, query, cardID, sellerID)
+	err := repo.getReadConnection().Get(&result, query, cardID, categoryID)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrObjectNotFound
 	} else if err != nil {
-		return nil, fmt.Errorf("ошибка при поиске данных по title %d и sellerID %d в таблице card_categories: %w", cardID, sellerID, err)
+		return nil, fmt.Errorf("ошибка при поиске данных по title %d и sellerID %d в таблице card_categories: %w", cardID, categoryID, err)
 	}
 
 	return result.convertToEntityCardCategory(ctx), nil
 }
 
-func (repo *cardCategoryImpl) Insert(ctx context.Context, in entity.CardCategory) error {
+func (repo *cardCategoryImpl) Insert(ctx context.Context, in entity.CardCategory) (*entity.CardCategory, error) {
 	dbModel := convertToDB(ctx, in)
-	query := `INSERT INTO shop.cards_categories (card_id, category_id)
+	query := `INSERT INTO shop.card_categories (card_id, category_id)
   VALUES ($1, $2) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.CardID, dbModel.CategoryID)
 	if err != nil {
-		return fmt.Errorf("ошибка при вставке данных в таблицу cards_categories: %w", err)
+		return nil, fmt.Errorf("ошибка при вставке данных в таблицу cards_categories: %w", err)
 	}
 
-	return nil
+	in.ID = charIDWrap.ID.Int64
+
+	return &in, nil
 }
 
-func (repo *cardCategoryImpl) UpdateExecOne(ctx context.Context, in entity.CardCategory) error {
+func (repo *cardCategoryImpl) Update(ctx context.Context, in entity.CardCategory) error {
 	dbModel := convertToDB(ctx, in)
-	query := `UPDATE shop.cards_categories SET card_id = $1, category_id = $2 WHERE id = $3`
+	query := `UPDATE shop.card_categories SET card_id = $1, category_id = $2 WHERE id = $3`
 
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.CardID, dbModel.CategoryID, dbModel.ID)
 	if err != nil {
@@ -94,7 +96,7 @@ func (repo *cardCategoryImpl) BeginTX(ctx context.Context) (postgresdb.Transacti
 	return repo.db.GetReadConnection().BeginTX(ctx)
 }
 
-func (repo *cardCategoryImpl) WithTx(tx *postgresdb.Transaction) CardCategory {
+func (repo *cardCategoryImpl) WithTx(tx *postgresdb.Transaction) CardCategoryRepo {
 	return &cardCategoryImpl{db: repo.db, tx: tx}
 }
 

@@ -91,7 +91,12 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 		}
 
 		// Categorites
-		_, err = s.setCategory(ctx, card, seller)
+		categories, err := s.setCategory(ctx, card, seller)
+		if err != nil {
+			return err
+		}
+
+		err = s.setCardCategories(ctx, card.ID, categories)
 		if err != nil {
 			return err
 		}

@@ -1,4 +1,4 @@
-package cardcategory
+package cardcategoryrepo
 
 import (
 	"context"
@@ -7,9 +7,9 @@ import (
 )
 
 type cardCategoryDB struct {
-	ID         int64
-	CardID     int64
-	CategoryID int64
+	ID         int64 `db:"id"`
+	CardID     int64 `db:"card_id"`
+	CategoryID int64 `db:"category_id"`
 }
 
 func convertToDB(_ context.Context, in entity.CardCategory) *cardCategoryDB {

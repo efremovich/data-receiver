@@ -17,9 +17,7 @@ func (s *receiverCoreServiceImpl) setCategory(ctx context.Context, card *entity.
 			category, err = s.categoryRepo.Insert(ctx, entity.Category{
 				Title:      cat.Title,
 				ExternalID: cat.ExternalID,
-				CardID:     card.ID,
 				SellerID:   seller.ID,
-				ParentID:   0,
 			})
 		}
 
@@ -31,4 +29,21 @@ func (s *receiverCoreServiceImpl) setCategory(ctx context.Context, card *entity.
 	}
 
 	return categories, nil
+}
+
+func (s *receiverCoreServiceImpl) setCardCategories(ctx context.Context, cardID int64, categoryIDs []*entity.Category) error {
+	for _, category := range categoryIDs {
+		_, err := s.cardcategoryrepo.SelectByCardIDAndCategoryID(ctx, cardID, category.ID)
+		if errors.Is(err, ErrObjectNotFound) {
+			_, err = s.cardcategoryrepo.Insert(ctx, entity.CardCategory{
+				CardID:     cardID,
+				CategoryID: category.ID,
+			})
+		}
+
+		if err != nil {
+			return wrapErr(fmt.Errorf("ошибка при получении данных из бд: %w", err))
+		}
+	}
+	return nil
 }
