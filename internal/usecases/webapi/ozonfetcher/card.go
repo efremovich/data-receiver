@@ -112,7 +112,7 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 		vendorID := ""
 		currSize := ""
 
-		if len(vendorData) == 3 {
+		if len(vendorData) > 2 {
 			vendorCode = vendorData[0]
 			vendorID = vendorData[1]
 			currSize = vendorData[2]

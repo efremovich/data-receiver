@@ -6,11 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 )
+
+var reVendorCode = regexp.MustCompile(`\d{2}-\d{7,8}`)
 
 type WbResponse struct {
 	Cards  []Cards `json:"cards"`
@@ -192,10 +195,16 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 			Length:  v.Dimensions.Length,
 			IsVaild: v.Dimensions.IsValid,
 		}
+
+		vendorCode := v.VendorCode
+		if reVendorCode.MatchString(v.VendorCode) {
+			vendorCode = reVendorCode.FindString(v.VendorCode)
+		}
+
 		card := entity.Card{
 			ExternalID:      int64(v.NmID),
-			VendorID:        "",
-			VendorCode:      v.VendorCode,
+			VendorID:        vendorCode,
+			VendorCode:      vendorCode,
 			Title:           v.Title,
 			Description:     v.Description,
 			Brand:           brand,

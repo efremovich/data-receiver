@@ -201,3 +201,49 @@ type Category struct {
 	Children              []Category `json:"children"`
 	ParentID              int        `json:"parent_id"`
 }
+
+type SupplyData struct {
+	Orders     []Orders    `json:"orders"`
+	Warehouses []Warehouse `json:"warehouses"`
+}
+type Supplies struct {
+	SupplyID           int64  `json:"supply_id"`
+	BundleID           string `json:"bundle_id"`
+	StorageWarehouseID int64  `json:"storage_warehouse_id"`
+}
+type Orders struct {
+	SupplyOrderID      int        `json:"supply_order_id"`
+	SupplyOrderNumber  string     `json:"supply_order_number"`
+	CreationDate       string     `json:"creation_date"`
+	State              string     `json:"state"`
+	DropoffWarehouseID int64      `json:"dropoff_warehouse_id"`
+	Supplies           []Supplies `json:"supplies"`
+}
+type Warehouse struct {
+	WarehouseID int64  `json:"warehouse_id"`
+	Address     string `json:"address"`
+	Name        string `json:"name"`
+}
+type SupplyBundleData struct {
+	Items      []BundleItems `json:"items"`
+	TotalCount int           `json:"total_count"`
+	LastID     string        `json:"last_id"`
+	HasNext    bool          `json:"has_next"`
+}
+type BundleItems struct {
+	Sku                 int       `json:"sku"`
+	Quantity            int       `json:"quantity"`
+	OfferID             string    `json:"offer_id"`
+	IconPath            string    `json:"icon_path"`
+	Name                string    `json:"name"`
+	VolumeInLitres      float64   `json:"volume_in_litres"`
+	TotalVolumeInLitres int       `json:"total_volume_in_litres"`
+	Barcode             string    `json:"barcode"`
+	ProductID           int       `json:"product_id"`
+	Quant               int       `json:"quant"`
+	SfboAttribute       string    `json:"sfbo_attribute"`
+	ShipmentType        string    `json:"shipment_type"`
+	IsQuantEditable     bool      `json:"is_quant_editable"`
+	Warehouse           Warehouse `json:"warehouse"`
+	CreationDate        string    `json:"creation_date"`
+}

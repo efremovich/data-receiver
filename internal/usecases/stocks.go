@@ -28,7 +28,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 
 	stockMetaList, err := client.GetStocks(ctx, desc)
 	if err != nil {
-		return fmt.Errorf("ошибка получение данные из внешнего источника %s, %s", desc.Seller, err)
+		return fmt.Errorf("ошибка получение данные из внешнего источника %s, %w", desc.Seller, err)
 	}
 
 	alogger.InfoFromCtx(ctx, "Получение данных об остатках за %s", desc.UpdatedAt.Format("02.01.2006"))
@@ -49,17 +49,17 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 			query["barcode"] = meta.Barcode.Barcode
 			query["article"] = meta.SupplierArticle
 
-			desc := entity.PackageDescription{
+			descForOdin := entity.PackageDescription{
 				Seller: "1c",
 				Query:  query,
 			}
-			err := s.ReceiveCards(ctx, desc)
+			err := s.ReceiveCards(ctx, descForOdin)
 			if err != nil {
 				return err
 			}
 		}
 		if err != nil {
-			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", desc.Seller, err))
+			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом %s и товаром модуль stocks:%w", desc.Seller, err))
 		}
 
 		card, err := s.getCardByVendorCode(ctx, meta.SupplierArticle)
