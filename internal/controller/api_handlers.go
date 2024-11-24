@@ -67,17 +67,17 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// date := time.Now()
 	// daysToGet := 3
 	// delay := 61
-	// desc = entity.PackageDescription{
-	// 	Limit:       100,
-	// 	Cursor:      "0",
-	// 	PackageType: entity.PackageTypeCard,
-	// 	Seller:      "ozon",
-	// }
+	desc = entity.PackageDescription{
+		Limit:       100,
+		Cursor:      "0",
+		PackageType: entity.PackageTypeCard,
+		Seller:      "ozon",
+	}
 
-	// err = gw.core.ReceiveCards(ctx, desc)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveCards(ctx, desc)
+	if err != nil {
+		return err
+	}
 
 	// desc = entity.PackageDescription{
 	// 	Limit:       100,
@@ -95,7 +95,6 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 		PackageType: entity.PackageTypeStock,
 		UpdatedAt:   time.Now(),
 		Seller:      "ozon",
-		Limit:       7,
 	}
 
 	err = gw.core.ReceiveStocks(ctx, desc)

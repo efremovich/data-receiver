@@ -66,9 +66,9 @@ func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.
 func (repo *repoImpl) Insert(_ context.Context, in entity.WarehouseType) (*entity.WarehouseType, error) {
 	charIDWrap := repository.IDWrapper{}
 
-	query := "INSERT INTO shop.warehouse_types(id, name) VALUES ($1, $2) RETURNING id"
+	query := "INSERT INTO shop.warehouse_types(name) VALUES ($1) RETURNING id"
 
-	err := repo.getWriteConnection().Get(&charIDWrap, query, in.ID, in.Title)
+	err := repo.getWriteConnection().Get(&charIDWrap, query, in.Title)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при вставке данных %s в таблицу brands: %w", in.Title, err)
 	}

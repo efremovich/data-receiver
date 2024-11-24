@@ -105,31 +105,7 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 		dimension.Height = in.Height
 		dimension.Length = in.Depth
 
-		// Артикул, код, размер "RBB-061/00-0014881/58"
-
-		vendorData := strings.Split(in.OfferID, "/")
-		vendorCode := ""
-		vendorID := ""
-		currSize := ""
-
-		if len(vendorData) > 2 {
-			vendorCode = vendorData[0]
-			vendorID = vendorData[1]
-			currSize = vendorData[2]
-		}
-
-		if len(vendorData) == 2 {
-			vendorCode = vendorData[0]
-			vendorID = vendorData[0]
-			currSize = vendorData[1]
-		}
-
-		if len(vendorData) == 1 {
-			vendorCode = vendorData[0]
-			vendorID = vendorData[0]
-			currSize = "One size"
-		}
-
+		vendorCode, vendorID, currSize := getMetaFromVendorID(in.OfferID)
 		sizes = append(sizes, &entity.Size{
 			TechSize: currSize,
 			Title:    currSize,
@@ -167,7 +143,32 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 	return cardsList, nil
 }
 
-func getAttributeMetaList(ctx context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector) ([]AttributeMeta, error) {
+func getMetaFromVendorID(offerID string) (vendorCode, vendorID, vendorSize string) {
+	const lenVendorCode int = 2
+	// Артикул, код, размер "RBB-061/00-0014881/58"
+	vendorData := strings.Split(offerID, "/")
+	if len(vendorData) > lenVendorCode {
+		vendorCode = vendorData[0]
+		vendorID = vendorData[1]
+		vendorSize = vendorData[2]
+	}
+
+	if len(vendorData) == lenVendorCode {
+		vendorCode = vendorData[0]
+		vendorID = vendorData[0]
+		vendorSize = vendorData[1]
+	}
+
+	if len(vendorData) == 1 {
+		vendorCode = vendorData[0]
+		vendorID = vendorData[0]
+		vendorSize = "One size"
+	}
+
+	return vendorCode, vendorID, vendorSize
+}
+
+func getAttributeMetaList(_ context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector) ([]AttributeMeta, error) {
 	items := []AttributeMeta{}
 
 	methodName := "/v3/products/info/attributes"
@@ -281,7 +282,7 @@ func getAttributeList(ctx context.Context, baseURL, clientID, apiKey string, lim
 	return items, nil
 }
 
-func getCardList(ctx context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector) ([]ProductIdList, error) {
+func getCardList(ctx context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector) ([]int, error) {
 	offerIDs := []ProductIdList{}
 
 	methodName := "/v2/product/list"
@@ -305,6 +306,7 @@ func getCardList(ctx context.Context, baseURL, clientID, apiKey string, limit in
 	total := 0
 	run := true
 
+	productIDs := []int{}
 	for run {
 		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
 		if err != nil {
@@ -329,11 +331,13 @@ func getCardList(ctx context.Context, baseURL, clientID, apiKey string, limit in
 			run = false
 		}
 	}
-
-	return offerIDs, nil
+	for _, elem := range offerIDs {
+		productIDs = append(productIDs, elem.ProductID)
+	}
+	return productIDs, nil
 }
 
-func getCardsMeta(ctx context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector, productIDList []ProductIdList) ([]Items, error) {
+func getCardsMeta(ctx context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector, productIDList []int) ([]Items, error) {
 	items := []Items{}
 
 	methodName := "/v2/product/info/list"
@@ -342,7 +346,7 @@ func getCardsMeta(ctx context.Context, baseURL, clientID, apiKey string, limit i
 
 	type Filter struct {
 		OfferID   []string `json:"offer_id"`
-		ProductID []string `json:"product_id"`
+		ProductID []int    `json:"product_id"`
 		Sku       []string `json:"sku"`
 	}
 
@@ -353,35 +357,31 @@ func getCardsMeta(ctx context.Context, baseURL, clientID, apiKey string, limit i
 	headers["Api-Key"] = apiKey
 	headers["Content-Type"] = "application/json"
 
-	offerID := []string{}
-	for _, id := range productIDList {
-		offerID = append(offerID, id.OfferID)
-		filter.OfferID = offerID
+	chunkSize := 50
+	chunks := chunkIntSlice(productIDList, chunkSize)
 
-		if len(filter.OfferID) == limit { // Лимит в 1000 штук
-			bodyData, err := json.Marshal(filter)
-			if err != nil {
-				return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-			}
-
-			code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
-			if err != nil {
-				return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
-			}
-
-			if code != http.StatusOK {
-				return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
-			}
-
-			var productListResponse CardResponse
-			if err := json.Unmarshal(resp, &productListResponse); err != nil {
-				return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
-			}
-
-			items = append(items, productListResponse.Result.Items...)
-
-			offerID = []string{}
+	for _, chunk := range chunks {
+		filter.ProductID = chunk
+		bodyData, err := json.Marshal(filter)
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
 		}
+
+		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
+		}
+
+		if code != http.StatusOK {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
+		}
+
+		var productListResponse CardResponse
+		if err := json.Unmarshal(resp, &productListResponse); err != nil {
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
+		}
+
+		items = append(items, productListResponse.Result.Items...)
 	}
 
 	return items, nil

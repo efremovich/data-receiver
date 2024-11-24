@@ -14,7 +14,7 @@ import (
 var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type Seller2CardRepo interface {
-	SelectByExternalID(ctx context.Context, externalID int64) (*entity.Seller2Card, error)
+	SelectByExternalID(ctx context.Context, externalID, sellerID int64) (*entity.Seller2Card, error)
 	SelectByCardID(ctx context.Context, cardID int64) (*entity.Seller2Card, error)
 	SelectByNMUUID(ctx context.Context, nmUUID string) (*entity.Seller2Card, error)
 	SelectByKTID(ctx context.Context, ktID int) (*entity.Seller2Card, error)
@@ -35,12 +35,12 @@ func NewWb2CardRepo(_ context.Context, db *postgresdb.DBConnection) (Seller2Card
 	return &seller2cardRepoImpl{db: db}, nil
 }
 
-func (repo *seller2cardRepoImpl) SelectByExternalID(ctx context.Context, externalID int64) (*entity.Seller2Card, error) {
+func (repo *seller2cardRepoImpl) SelectByExternalID(ctx context.Context, externalID, sellerID int64) (*entity.Seller2Card, error) {
 	var result seller2cardDB
 
-	query := "SELECT id, external_id, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE external_id = $1"
+	query := "SELECT id, external_id, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE external_id = $1 and seller_id = $2"
 
-	err := repo.getReadConnection().Get(&result, query, externalID)
+	err := repo.getReadConnection().Get(&result, query, externalID, sellerID)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrObjectNotFound
 	} else if err != nil {

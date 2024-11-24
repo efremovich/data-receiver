@@ -44,7 +44,6 @@ func (s *receiverCoreServiceImpl) setWarehouse(ctx context.Context, in *entity.W
 		if err != nil {
 			return nil, err
 		}
-
 		warehouse, err = s.warehouserepo.Insert(ctx, entity.Warehouse{
 			ExternalID: in.ExternalID,
 			Title:      in.Title,

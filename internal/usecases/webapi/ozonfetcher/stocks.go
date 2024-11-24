@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/pkg/httputil"
+	"github.com/efremovich/data-receiver/pkg/logger"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 )
 
@@ -28,15 +30,83 @@ func (ozon *ozonAPIclientImp) GetStocks(ctx context.Context, desc entity.Package
 		return nil, err
 	}
 
-	_, err = getSupplyBundle(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyData)
+	stockResponce, err := getSupplyBundle(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyData)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	var stockMetaList []entity.StockMeta
+
+	for _, elem := range stockResponce.StocksMeta {
+		stockMeta := entity.StockMeta{}
+
+		stockDate, err := time.Parse("02.01.2006", elem.CreationDate)
+		if err != nil {
+			stockDate = time.Now()
+
+			logger.GetLoggerFromContext(ctx).Warnf("Не удалось распознать дату остатка %s", elem.CreationDate)
+		}
+
+		stockMeta.Stock = entity.Stock{
+			Quantity:  elem.Quantity,
+			CreatedAt: stockDate,
+		}
+
+		stockMeta.Seller2Card = entity.Seller2Card{
+			ExternalID: int64(elem.ProductID),
+		}
+
+		stockMeta.Barcode = entity.Barcode{
+			ExternalID: int64(elem.ProductID),
+			Barcode:    elem.Barcode,
+		}
+
+		stockMeta.Warehouse = entity.Warehouse{
+			Title:      elem.Warehouse.Name,
+			Address:    elem.Warehouse.Address,
+			ExternalID: elem.Warehouse.WarehouseID,
+			TypeName:   "FBO",
+		}
+
+		vendorCode, _, currSize := getMetaFromVendorID(elem.OfferID)
+		stockMeta.Size = entity.Size{
+			TechSize: currSize,
+			Title:    currSize,
+		}
+		stockMeta.SupplierArticle = vendorCode
+
+		for _, cardMeta := range stockResponce.CardMeta {
+			if cardMeta.ID == elem.ProductID {
+				price, err := strconv.ParseFloat(cardMeta.Price, 32)
+				if err != nil {
+					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", &cardMeta.Price)
+				}
+
+				oldPrice, err := strconv.ParseFloat(cardMeta.OldPrice, 32)
+				if err != nil {
+					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", &cardMeta.Price)
+				}
+
+				marketingPrice, err := strconv.ParseFloat(cardMeta.MarketingPrice, 32)
+				if err != nil {
+					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", &cardMeta.Price)
+				}
+
+				stockMeta.PriceSize = entity.PriceSize{
+					Price:        float32(price),
+					Discount:     float32(oldPrice - price),
+					SpecialPrice: float32(marketingPrice),
+				}
+			}
+		}
+
+		stockMetaList = append(stockMetaList, stockMeta)
+	}
+
+	return stockMetaList, nil
 }
 
-func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metric metrics.Collector, supplyData *SupplyData) ([]BundleItems, error) {
+func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metric metrics.Collector, supplyData *SupplyData) (*StocksMeta, error) {
 	timeout := time.Second * time.Duration(30)
 
 	methodName := "/v1/supply-order/bundle"
@@ -61,7 +131,9 @@ func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metr
 	headers["Api-Key"] = apiKey
 	headers["Content-Type"] = "application/json"
 
-	items := []BundleItems{}
+	stockMeta := []BundleItems{}
+	productIDList := []int{}
+	stocksMeta := StocksMeta{}
 
 	for _, order := range supplyData.Orders {
 		bundles := []string{}
@@ -94,6 +166,8 @@ func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metr
 
 			if response.HasNext {
 				filter.LastID = response.LastID
+			} else {
+				filter.LastID = ""
 			}
 
 			endOfList = !response.HasNext
@@ -106,14 +180,23 @@ func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metr
 				}
 
 				item.CreationDate = order.CreationDate
-				items = append(items, item)
+				stockMeta = append(stockMeta, item)
+				productIDList = append(productIDList, item.ProductID)
 			}
 
 			time.Sleep(3 * time.Second)
 		}
 	}
 
-	return items, nil
+	cardsMeta, err := getCardsMeta(ctx, baseURL, clientID, apiKey, 1000, timeout, metric, productIDList)
+	if err != nil {
+		return nil, err
+	}
+
+	stocksMeta.StocksMeta = stockMeta
+	stocksMeta.CardMeta = cardsMeta
+
+	return &stocksMeta, nil
 }
 
 func getSupplyDataList(ctx context.Context, baseURL, clientID, apiKey string, metric metrics.Collector, supplyList []int) (*SupplyData, error) {
@@ -127,37 +210,61 @@ func getSupplyDataList(ctx context.Context, baseURL, clientID, apiKey string, me
 		OrderIDs []int `json:"order_ids"`
 	}
 
-	filter := SupplyFilterList{}
-
-	for i := 0; i < 50; i++ {
-		filter.OrderIDs = append(filter.OrderIDs, supplyList[i])
-	}
-
 	headers := make(map[string]string)
 	headers["Client-Id"] = clientID
 	headers["Api-Key"] = apiKey
 	headers["Content-Type"] = "application/json"
 
-	bodyData, err := json.Marshal(filter)
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-	}
-
-	code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
-	}
-
-	if code != http.StatusOK {
-		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
-	}
+	chunkSize := 50
+	// TODO Срез из 100 для теста. В бою удалть.
+	chunks := chunkIntSlice(supplyList, chunkSize)
 
 	var response SupplyData
-	if err := json.Unmarshal(resp, &response); err != nil {
-		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
+
+	for _, chunk := range chunks {
+		filter := SupplyFilterList{
+			OrderIDs: chunk,
+		}
+
+		bodyData, err := json.Marshal(filter)
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
+		}
+
+		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
+		}
+
+		if code != http.StatusOK {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
+		}
+
+		var sd SupplyData
+		if err := json.Unmarshal(resp, &sd); err != nil {
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
+		}
+
+		response.Orders = append(response.Orders, sd.Orders...)
+		response.Warehouses = append(response.Warehouses, sd.Warehouses...)
 	}
 
 	return &response, nil
+}
+
+func chunkIntSlice(slice []int, chunkSize int) [][]int {
+	var chunks [][]int
+
+	for i := 0; i < len(slice); i += chunkSize {
+		end := i + chunkSize
+		if end > len(slice) {
+			end = len(slice)
+		}
+
+		chunks = append(chunks, slice[i:end])
+	}
+
+	return chunks
 }
 
 func getSupplyList(ctx context.Context, baseURL, clientID, apiKey string, metric metrics.Collector) ([]int, error) {

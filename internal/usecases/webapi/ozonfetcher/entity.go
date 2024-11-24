@@ -118,7 +118,6 @@ type Items struct {
 	IsKgt                 bool              `json:"is_kgt"`
 	ColorImage            string            `json:"color_image"`
 	PrimaryImage          string            `json:"primary_image"`
-	Status                Status            `json:"status"`
 	CategoryID            int               `json:"category_id,omitempty"`
 	PriceIndex            string            `json:"price_index,omitempty"`
 }
@@ -246,4 +245,9 @@ type BundleItems struct {
 	IsQuantEditable     bool      `json:"is_quant_editable"`
 	Warehouse           Warehouse `json:"warehouse"`
 	CreationDate        string    `json:"creation_date"`
+}
+
+type StocksMeta struct {
+	StocksMeta []BundleItems `json:"stocks_items"`
+	CardMeta   []Items       `json:"cards_items"`
 }

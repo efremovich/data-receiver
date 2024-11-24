@@ -9,6 +9,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/alogger"
+	"github.com/efremovich/data-receiver/pkg/logger"
 )
 
 func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity.PackageDescription) error {
@@ -50,7 +51,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 			query["article"] = meta.SupplierArticle
 
 			descForOdin := entity.PackageDescription{
-				Seller: "1c",
+				Seller: "odinc",
 				Query:  query,
 			}
 			err := s.ReceiveCards(ctx, descForOdin)
@@ -59,7 +60,8 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 			}
 		}
 		if err != nil {
-			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом %s и товаром модуль stocks:%w", desc.Seller, err))
+			logger.GetLoggerFromContext(ctx).Errorf("ошибка получения данных о товаре %s модуль stocks: %s", desc.Seller, err.Error())
+			continue
 		}
 
 		card, err := s.getCardByVendorCode(ctx, meta.SupplierArticle)

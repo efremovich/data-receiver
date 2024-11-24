@@ -9,7 +9,7 @@ import (
 )
 
 func (s *receiverCoreServiceImpl) setSeller2Card(ctx context.Context, in entity.Seller2Card) (*entity.Seller2Card, error) {
-	seller2Card, err := s.seller2cardrepo.SelectByExternalID(ctx, in.ExternalID)
+	seller2Card, err := s.seller2cardrepo.SelectByExternalID(ctx, in.ExternalID, in.SellerID)
 	if errors.Is(err, ErrObjectNotFound) {
 		seller2Card, err = s.seller2cardrepo.Insert(ctx, in)
 	}
@@ -22,9 +22,9 @@ func (s *receiverCoreServiceImpl) setSeller2Card(ctx context.Context, in entity.
 }
 
 func (s *receiverCoreServiceImpl) getSeller2Card(ctx context.Context, externalID, sellerID int64) (*entity.Seller2Card, error) {
-	seller2Card, err := s.seller2cardrepo.SelectByExternalID(ctx, externalID)
+	seller2Card, err := s.seller2cardrepo.SelectByExternalID(ctx, externalID, sellerID)
 	if err != nil {
-		return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
+		return nil, errors.Join(fmt.Errorf("ошибка при получении данных"), err)
 	}
 	return seller2Card, err
 }

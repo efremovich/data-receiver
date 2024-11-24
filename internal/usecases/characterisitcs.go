@@ -18,8 +18,9 @@ func (s *receiverCoreServiceImpl) setCharacterisitc(ctx context.Context, card *e
 				Title: elem.Title,
 			})
 		}
+
 		if err != nil {
-			return nil, wrapErr(fmt.Errorf("Ошибка при получении данных: %w", err))
+			return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
 		}
 
 		cardCharacteristic, err := s.cardCharRepo.SelectByCardIDAndCharID(ctx, card.ID, char.ID)
@@ -32,8 +33,9 @@ func (s *receiverCoreServiceImpl) setCharacterisitc(ctx context.Context, card *e
 				CardID:           card.ID,
 			})
 		}
+
 		if err != nil {
-			return nil, wrapErr(fmt.Errorf("Ошибка при получении данных: %w", err))
+			return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
 		}
 
 		cardCharacteristics = append(cardCharacteristics, cardCharacteristic)

@@ -109,7 +109,7 @@ func TestConvertToDBWb2Card(t *testing.T) {
 	assert.Equal(t, modelSelectWb2Card.NMUUID, newWb2Card.NMUUID)
 	assert.Equal(t, modelSelectWb2Card.CardID, newWb2Card.CardID)
 
-	modelSelectWb2Card, err = sqlWb2CardRepo.SelectByExternalID(ctx, newWb2Card.ExternalID)
+	modelSelectWb2Card, err = sqlWb2CardRepo.SelectByExternalID(ctx, newWb2Card.ExternalID, newWb2Card.SellerID)
 	if err != nil {
 		t.Fatal(err)
 	}

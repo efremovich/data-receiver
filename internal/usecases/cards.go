@@ -54,11 +54,10 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 
 		// Seller2Card
 		seller2card := entity.Seller2Card{
-			ExternalID: card.ExternalID,
+			ExternalID: in.ExternalID,
 			CardID:     card.ID,
 			SellerID:   seller.ID,
 		}
-
 		_, err = s.setSeller2Card(ctx, seller2card)
 		if err != nil {
 			return err
