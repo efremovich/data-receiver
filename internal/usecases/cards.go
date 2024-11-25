@@ -30,7 +30,9 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 		return fmt.Errorf("ошибка получение данные из внешнего источника %s, %w", desc.Seller, err)
 	}
 
+
 	alogger.InfoFromCtx(ctx, "Начали загрузку карточек товара %d от %s", len(cards), desc.Seller)
+
 	for _, in := range cards {
 		s.metricsCollector.IncServiceDocsTaskCounter()
 		// Seller
@@ -59,6 +61,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 			CardID:     card.ID,
 			SellerID:   seller.ID,
 		}
+
 
 		_, err = s.setSeller2Card(ctx, seller2card)
 		if err != nil {
