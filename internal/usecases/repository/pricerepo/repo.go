@@ -2,11 +2,16 @@ package pricerepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type PriceRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.PriceSize, error)
@@ -67,8 +72,10 @@ func (repo *charRepoImpl) SelectByCardIDAndSizeID(ctx context.Context, cardID, s
 	query := "SELECT * FROM shop.price_sizes WHERE card_id = $1 and size_id = $2"
 
 	err := repo.getReadConnection().Get(&result, query, cardID, sizeID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по cardID %d sizeID %d в таблице priceSize: %w", cardID, sizeID, err)
 	}
 
 	return result.convertToEntityPrice(ctx), nil

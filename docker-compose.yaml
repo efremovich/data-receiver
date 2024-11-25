@@ -1,6 +1,6 @@
 version: "3.8"
+
 services:
-  # application
   data-receiver:
     container_name: data-receiver
     image: efremovich/data-receiver
@@ -8,48 +8,62 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile
-      network: host
-    environment:
-      GO_ENVIRONMENT: local
-      GATEWAY_HTTP_PORT: 8080
-      GATEWAY_GRPC_PORT: 8090
     ports:
-      - 8001:8080
-      - 9001:8090
+      - "8080:8080"
+      - "8090:8090"
     depends_on:
-      - postgres_db
-      - db_creator
+      - postgres
+      - creator-db
       - nats
-
-  # infra
-  postgres_db:
+  postgres:
     image: postgres:15.4
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - 5445:5432
-
+      - "5445:5432"
   nats:
     container_name: nats
     image: nats:2.9.21
     command: -js
     restart: unless-stopped
     ports:
-      - 4222:4222
-      
-  db_creator:
+      - "4222:4222"
+  creator-db:
     image: postgres:15.4
     restart: 'on-failure' # контейнер может не отработать с первого раза, если postgres медленно стартует
-    entrypoint: ["psql", "postgres://postgres:postgres@postgres_db:5432", 
+    entrypoint: ["psql", "postgres://postgres:postgres@postgres:5432", 
       "-c", "CREATE DATABASE \"erp_db\" WITH ENCODING = \"UTF8\""]
     depends_on:
-      - postgres_db
-
-  migrator:
+      - postgres
+  migrator-db:
     build:
       context: .
       dockerfile: ./migrations/Dockerfile
     restart: on-failure
     environment:
-      DB_HOST: postgres_db
+      DB_HOST: postgres
+  jaeger:
+    image: jaegertracing/all-in-one:1.48
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686" # web
+      - "14268:14268"
+      - "9411:9411"
+  grafana:
+    image: grafana/grafana-oss:10.0.3
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+  prometheus:
+    image: prom/prometheus:v2.37.9
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml
+      # - ./infra/alerts.yml:/etc/prometheus/alerts.yml
+      - ./prometheus_data:/prometheus

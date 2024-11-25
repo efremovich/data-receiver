@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE shop.warehouses (
     id serial NOT NULL,
-    external_id integer NOT NULL,
+    external_id bigint NOT NULL,
     name text NOT NULL,
     address text,
     warehouse_type_id integer,

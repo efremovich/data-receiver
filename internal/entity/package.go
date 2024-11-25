@@ -2,13 +2,15 @@ package entity
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
 
 // Описание пакета по которому создается пакет.
 type PackageDescription struct {
-	Cursor      int               `json:"cursor"`       // Курсор пакета.
+	Cursor      string            `json:"cursor"` // Курсор пакета.
+	LastID      string            `json:"last_id"`
 	Limit       int               `json:"limit"`        // Количество записей в запросе
 	UpdatedAt   time.Time         `json:"updated_at"`   // Дата обновления.
 	PackageType PackageType       `json:"package_type"` // Тип пакета.
@@ -52,3 +54,12 @@ const (
 	PackageStatusSuccess = PackageStatus("SUCCESS") // Пакет успешно обработан.
 	PackageStatusFailed  = PackageStatus("FAILED")  // Обработка пакета завершена с ошибкой.
 )
+
+func (p *PackageDescription) ConvertCursorToInt() int {
+	v, err := strconv.Atoi(p.Cursor)
+	if err != nil {
+		return 0
+	}
+
+	return v
+}

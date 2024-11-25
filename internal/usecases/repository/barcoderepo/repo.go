@@ -2,11 +2,16 @@ package barcoderepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type BarcodeRepo interface {
 	SelectByBarcode(ctx context.Context, barcode string) (*entity.Barcode, error)
@@ -33,9 +38,12 @@ func (repo *charRepoImpl) SelectByBarcode(ctx context.Context, barcode string) (
 	query := "SELECT * FROM shop.barcodes WHERE barcode = $1"
 
 	err := repo.getReadConnection().Get(&result, query, barcode)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по barcode %s в таблице barcode: %w", barcode, err)
 	}
+
 	return result.convertToEntityBarcode(ctx), nil
 }
 
@@ -48,7 +56,9 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Barcode) (*entit
 	if err != nil {
 		return nil, err
 	}
+
 	in.ID = charIDWrap.ID.Int64
+
 	return &in, nil
 }
 
@@ -56,6 +66,7 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Barcode) 
 	dbModel := convertToDBBarcode(ctx, in)
 
 	query := `UPDATE shop.barcodes SET price_size_id = $1, seller_id = $2 WHERE barcode = $3`
+
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.PriceSizeID, dbModel.SellerID, dbModel.Barcode)
 	if err != nil {
 		return err

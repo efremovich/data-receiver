@@ -11,18 +11,24 @@ import (
 )
 
 type StrockResponce struct {
-	SupplierArticle string  `json:"supplierArticle"`
-	WarehouseName   string  `json:"warehouseName"`
-	NmID            int     `json:"nmId"`
-	Barcode         string  `json:"barcode"`
-	Quantity        int     `json:"quantity"`
-	InWayToClient   int     `json:"inWayToClient"`
-	InWayFromClient int     `json:"inWayFromClient"`
-	Category        string  `json:"category"`
-	Brand           string  `json:"brand"`
-	TechSize        string  `json:"techSize"`
-	Price           float32 `json:"Price"`
-	Discount        float32 `json:"Discount"`
+	LastChangeDate  string `json:"lastChangeDate"`
+	WarehouseName   string `json:"warehouseName"`
+	SupplierArticle string `json:"supplierArticle"`
+	NmID            int    `json:"nmId"`
+	Barcode         string `json:"barcode"`
+	Quantity        int    `json:"quantity"`
+	InWayToClient   int    `json:"inWayToClient"`
+	InWayFromClient int    `json:"inWayFromClient"`
+	QuantityFull    int    `json:"quantityFull"`
+	Category        string `json:"category"`
+	Subject         string `json:"subject"`
+	Brand           string `json:"brand"`
+	TechSize        string `json:"techSize"`
+	Price           int    `json:"Price"`
+	Discount        int    `json:"Discount"`
+	IsSupply        bool   `json:"isSupply"`
+	IsRealization   bool   `json:"isRealization"`
+	SCCode          string `json:"SCCode"`
 }
 
 func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
@@ -62,6 +68,7 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 			Quantity:        elem.Quantity,
 			InWayToClient:   elem.InWayToClient,
 			InWayFromClient: elem.InWayToClient,
+			CreatedAt:       desc.UpdatedAt,
 		}
 
 		stockMeta.PriceSize = entity.PriceSize{
@@ -70,8 +77,8 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 			SpecialPrice: 0,
 		}
 
-		stockMeta.Wb2Card = entity.Wb2Card{
-			NMID: int64(elem.NmID),
+		stockMeta.Seller2Card = entity.Seller2Card{
+			ExternalID: int64(elem.NmID),
 		}
 
 		stockMeta.Barcode = entity.Barcode{
@@ -84,6 +91,7 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 
 		stockMeta.Size = entity.Size{
 			TechSize: elem.TechSize,
+			Title:    elem.TechSize,
 		}
 		stockMeta.SupplierArticle = elem.SupplierArticle
 

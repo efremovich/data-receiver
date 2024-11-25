@@ -2,11 +2,16 @@ package warehouserepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type WarehouseRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Warehouse, error)
@@ -31,11 +36,16 @@ func NewWarehouseRepo(_ context.Context, db *postgresdb.DBConnection) (Warehouse
 
 func (repo *repoImpl) SelectBySellerIDAndTitle(ctx context.Context, sellerID int64, title string) (*entity.Warehouse, error) {
 	var result warehouseDB
+
 	query := "SELECT * FROM shop.warehouses WHERE seller_id = $1 AND name like $2"
-  err := repo.getReadConnection().Get(&result, query, sellerID, "%"+title+"%")
-	if err != nil {
-		return nil, err
+
+	err := repo.getReadConnection().Get(&result, query, sellerID, "%"+title+"%")
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по sellerID %d title %s в таблице warehouses: %w", sellerID, title, err)
 	}
+
 	return result.convertToEntityWarehouse(ctx), nil
 }
 
@@ -45,9 +55,12 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Warehou
 	query := "SELECT * FROM shop.warehouses WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по ID %d в таблице warehouses: %w", id, err)
 	}
+
 	return result.convertToEntityWarehouse(ctx), nil
 }
 
@@ -57,14 +70,17 @@ func (repo *repoImpl) SelectBySellerID(ctx context.Context, sellerID int64) ([]*
 	query := "SELECT * FROM shop.warehouses WHERE seller_id = $1"
 
 	err := repo.getReadConnection().Select(&result, query, sellerID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по sellerID %d в таблице warehouses: %w", sellerID, err)
 	}
 
 	var resEntity []*entity.Warehouse
 	for _, v := range result {
 		resEntity = append(resEntity, v.convertToEntityWarehouse(ctx))
 	}
+
 	return resEntity, nil
 }
 

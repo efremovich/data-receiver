@@ -5,8 +5,9 @@ type Warehouse struct {
 	ExternalID int64
 	Title      string
 	Address    string
-	TypeID     int64
+	TypeName   string
 
+	TypeID   int64
 	SellerID int64
 }
 

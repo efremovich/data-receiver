@@ -96,10 +96,6 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 		return fmt.Errorf("ошибка при запуске брокера потребителя для создания пакетов: %w", err)
 	}
 
-	err = gw.update(ctx)
-	if err != nil {
-		return err
-	}
 	// gw.autoupdate(ctx, updateIntervalDefault)
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -134,6 +130,14 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 		err := gw.httpServer.Listen(adr)
 		if err != nil {
 			return fmt.Errorf("ошибка при запуске http сервера: %w", err)
+		}
+
+		return nil
+	})
+	g.Go(func() error {
+		err = gw.update(ctx)
+		if err != nil {
+			return err
 		}
 
 		return nil

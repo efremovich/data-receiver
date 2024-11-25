@@ -125,6 +125,9 @@ func (odinc *odincAPIclientImp) GetSales(ctx context.Context, desc entity.Packag
 	return nil, nil
 }
 
+func (odinc *odincAPIclientImp) GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
+	return nil, nil
+}
 func (odinc *odincAPIclientImp) Ping(ctx context.Context) error {
 	return nil
 }

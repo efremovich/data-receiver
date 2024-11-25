@@ -10,6 +10,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/barcoderepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcategoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardcharrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
@@ -22,15 +23,16 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/salerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/seller2cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/statusrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/stockrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehouserepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi/odincfetcer"
+	"github.com/efremovich/data-receiver/internal/usecases/webapi/ozonfetcher"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi/wbfetcher"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/broker/brokerconsumer"
@@ -77,10 +79,11 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, err
 	}
 
-	apiFetcher := make(map[string]webapi.ExtAPIFetcher)
+	apiFetcher := make(map[string][]webapi.ExtAPIFetcher)
 	// TODO Завернем клиентов всех маркетплейсов в мапу
 	apiFetcher["wb"] = wbfetcher.New(ctx, conf.Seller.WB)
 	apiFetcher["odinc"] = odincfetcer.New(ctx, conf.Seller.OdinC)
+	apiFetcher["ozon"] = ozonfetcher.New(ctx, conf.Seller.OZON, metricsCollector)
 
 	// Репозиторий Cards.
 	cardRepo, err := cardrepo.NewCardRepo(ctx, conn)
@@ -109,6 +112,11 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	}
 	// Репозитозий Categories
 	categoryRepo, err := categoryrepo.NewCategoryRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+	// Репозиторий CardCategories
+	cardcategoryRepo, err := cardcategoryrepo.NewCardCategory(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +160,8 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Репозиторий Wb2Card
-	wb2carRepo, err := wb2cardrepo.NewWb2CardRepo(ctx, conn)
+	// Репозиторий seller2Card
+	seller2carRepo, err := seller2cardrepo.NewWb2CardRepo(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
@@ -204,11 +212,12 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		cardcharrepo,
 		barcodeRepo,
 		categoryRepo,
+		cardcategoryRepo,
 		dimensionRepo,
 		mediafileRepo,
 		priceSizeRepo,
 		stockRepo,
-		wb2carRepo,
+		seller2carRepo,
 		orderRepo,
 		statusRepo,
 		countryRepo,

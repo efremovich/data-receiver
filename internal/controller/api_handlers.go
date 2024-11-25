@@ -10,15 +10,7 @@ import (
 )
 
 func (gw *grpcGatewayServerImpl) ReceiveCard(ctx context.Context, in *package_receiver.ReceiveCardRequest) (*package_receiver.ReceiveCardResponse, error) {
-	desc := entity.PackageDescription{
-		Cursor:      0,
-		Limit:       100,
-		PackageType: entity.PackageTypeCard,
-		Seller:      in.GetSeller(),
-		Query: map[string]string{
-			"seller": in.GetSeller(),
-		},
-	}
+	desc := entity.PackageDescription{}
 
 	err := gw.core.ReceiveCards(ctx, desc)
 	if err != nil {
@@ -28,8 +20,9 @@ func (gw *grpcGatewayServerImpl) ReceiveCard(ctx context.Context, in *package_re
 	return nil, nil
 }
 
-func (gw *grpcGatewayServerImpl) ReceiveWarehouse(ctx context.Context, _ *package_receiver.ReceiveWarehouseRequest) (*package_receiver.ReceiveWarehouseResponse, error) {
-	err := gw.core.ReceiveWarehouses(ctx)
+func (gw *grpcGatewayServerImpl) ReceiveWarehouse(ctx context.Context, in *package_receiver.ReceiveWarehouseRequest) (*package_receiver.ReceiveWarehouseResponse, error) {
+	desc := entity.PackageDescription{}
+	err := gw.core.ReceiveWarehouses(ctx, desc)
 	if err != nil {
 		return nil, err
 	}
@@ -38,13 +31,7 @@ func (gw *grpcGatewayServerImpl) ReceiveWarehouse(ctx context.Context, _ *packag
 }
 
 func (gw *grpcGatewayServerImpl) ReceiveStock(ctx context.Context, in *package_receiver.ReceiveStockRequest) (*package_receiver.ReceiveStockResponse, error) {
-	desc := entity.PackageDescription{
-		PackageType: entity.PackageTypeCard,
-		Seller:      in.GetSeller(),
-		Query: map[string]string{
-			"dateFrom": in.GetDateFrom(),
-		},
-	}
+	desc := entity.PackageDescription{}
 
 	err := gw.core.ReceiveStocks(ctx, desc)
 	if err != nil {
@@ -77,37 +64,43 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	)
 
 	// date := time.Date(2024, 7, 31, 0, 0, 0, 0, time.UTC)
-	date := time.Now()
-	daysToGet := 365
-	delay := 61
+	// date := time.Now()
+	// daysToGet := 3
+	// delay := 61
+	desc = entity.PackageDescription{
+		Limit:       100,
+		Cursor:      "0",
+		PackageType: entity.PackageTypeCard,
+		Seller:      "ozon",
+	}
+
+	err = gw.core.ReceiveCards(ctx, desc)
+	if err != nil {
+		return err
+	}
+
 	// desc = entity.PackageDescription{
-	// 	Cursor:      0,
 	// 	Limit:       100,
+	// 	Cursor:      "0",
 	// 	PackageType: entity.PackageTypeCard,
-	// 	Seller:      "wb",
+	// 	Seller:      "ozon",
 	// }
 
-	// err = gw.core.ReceiveCards(ctx, desc)
+	// err = gw.core.ReceiveWarehouses(ctx, desc)
 	// if err != nil {
 	// 	return err
 	// }
 
-	// err = gw.core.ReceiveWarehouses(ctx)
-	// if err != nil {
-	// 	return err
-	// }
+	desc = entity.PackageDescription{
+		PackageType: entity.PackageTypeStock,
+		UpdatedAt:   time.Now(),
+		Seller:      "ozon",
+	}
 
-	// desc = entity.PackageDescription{
-	// 	PackageType: entity.PackageTypeStock,
-	// 	UpdatedAt:   date,
-	// 	Seller:      "wb",
-	// 	Limit:       7,
-	// }
-
-	// err = gw.core.ReceiveStocks(ctx, desc)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveStocks(ctx, desc)
+	if err != nil {
+		return err
+	}
 
 	// desc = entity.PackageDescription{
 	// 	PackageType: entity.PackageTypeOrder,
@@ -122,18 +115,18 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// 	return err
 	// }
 
-	desc = entity.PackageDescription{
-		PackageType: entity.PackageTypeSale,
-		UpdatedAt:   date,
-		Seller:      "wb",
-		Limit:       daysToGet,
-		Delay:       delay,
-	}
+	// desc = entity.PackageDescription{
+	// 	PackageType: entity.PackageTypeSale,
+	// 	UpdatedAt:   date,
+	// 	Seller:      "wb",
+	// 	Limit:       daysToGet,
+	// 	Delay:       delay,
+	// }
 
-	err = gw.core.ReceiveSales(ctx, desc)
-	if err != nil {
-		return err
-	}
+	// err = gw.core.ReceiveSales(ctx, desc)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

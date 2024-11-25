@@ -75,7 +75,7 @@ func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageD
 }
 
 type tmpPackageSenderMsg struct {
-	Cursor      int        `json:"cursor"` // Указатель на последнюю полученную запись из внешнего источника
+	Cursor      string     `json:"cursor"` // Указатель на последнюю полученную запись из внешнего источника
 	UpdatedAt   *time.Time `json:"updated_at"`
 	Limit       int        `json:"limit"`
 	Seller      string     `json:"seller"`

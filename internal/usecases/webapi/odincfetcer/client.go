@@ -11,20 +11,21 @@ import (
 
 const SellerType = "odinc"
 
-func New(_ context.Context, cfg config.Seller) webapi.ExtAPIFetcher {
+func New(_ context.Context, cfg config.SellerOdinC) []webapi.ExtAPIFetcher {
 	timeout := time.Second * time.Duration(cfg.ProcessTimeoutSeconds)
 	c := &http.Client{
 		Timeout: timeout,
 	}
-
+	clients := []webapi.ExtAPIFetcher{}
 	client := &odincAPIclientImp{
 		client:   c,
 		addr:     cfg.URL,
 		login:    cfg.Login,
 		password: cfg.Password,
 	}
+	clients = append(clients, client)
 
-	return client
+	return clients
 }
 
 type odincAPIclientImp struct {

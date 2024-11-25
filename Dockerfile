@@ -12,4 +12,6 @@ COPY --from=builder /build/package-receiver ./
 COPY --from=builder /build/docs/swagger ./docs/swagger
 COPY --from=builder /build/config/vars.env ./config/
 
+EXPOSE 8080
+
 CMD ["/app/package-receiver"]

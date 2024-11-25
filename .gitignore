@@ -1,3 +1,5 @@
 bin
 vendor.protogen
 config/*.env
+/prometheus_data
+/grafana_data

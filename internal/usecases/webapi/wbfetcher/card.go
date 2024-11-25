@@ -6,11 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 )
+
+var reVendorCode = regexp.MustCompile(`\d{2}-\d{7,8}`)
 
 type WbResponse struct {
 	Cards  []Cards `json:"cards"`
@@ -66,7 +69,7 @@ type Cards struct {
 }
 
 type Cursor struct {
-	NmID      int        `json:"nmID,omitempty"`
+	NmID      int        `json:"external_id,omitempty"`
 	Total     int        `json:"total,omitempty"`
 	Limit     int        `json:"limit,omitempty"`
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
@@ -92,11 +95,16 @@ type Setting struct {
 
 func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
 	const methodName = "/content/v2/get/cards/list?locale=ru"
-	// TODO вынести настройки и передавать их в теле сообщения nats
+
+	lastID, err := strconv.Atoi(desc.Cursor)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка конвертации lastID: %w", err)
+	}
+
 	requestSettings := Settings{
 		Sort:   Sort{Ascending: true},
 		Filter: Filter{WithPhoto: -1},
-		Cursor: Cursor{Limit: desc.Limit, NmID: desc.Cursor, UpdatedAt: &desc.UpdatedAt},
+		Cursor: Cursor{Limit: desc.Limit, NmID: lastID, UpdatedAt: &desc.UpdatedAt},
 	}
 
 	requestData, err := json.Marshal(Setting{Setting: requestSettings})
@@ -187,10 +195,16 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 			Length:  v.Dimensions.Length,
 			IsVaild: v.Dimensions.IsValid,
 		}
+
+		vendorCode := v.VendorCode
+		if reVendorCode.MatchString(v.VendorCode) {
+			vendorCode = reVendorCode.FindString(v.VendorCode)
+		}
+
 		card := entity.Card{
 			ExternalID:      int64(v.NmID),
-			VendorID:        "",
-			VendorCode:      v.VendorCode,
+			VendorID:        vendorCode,
+			VendorCode:      vendorCode,
 			Title:           v.Title,
 			Description:     v.Description,
 			Brand:           brand,

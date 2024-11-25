@@ -2,11 +2,16 @@ package dimensionrepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type DimensionsRepo interface {
 	SelectByCardID(ctx context.Context, cardID int64) (*entity.Dimension, error)
@@ -27,28 +32,33 @@ func NewDimensionRepo(_ context.Context, db *postgresdb.DBConnection) (Dimension
 	return &charRepoImpl{db: db}, nil
 }
 
-func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64) (*entity.Dimension, error) {
+func (repo *charRepoImpl) SelectByCardID(ctx context.Context, id int64) (*entity.Dimension, error) {
 	var result dimensionDB
 
 	query := "SELECT * FROM shop.dimensions WHERE card_id = $1"
 
-	err := repo.getReadConnection().Get(&result, query, cardID)
-	if err != nil {
-		return nil, err
+	err := repo.getReadConnection().Get(&result, query, id)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по id %d в таблице dimensions: %w", id, err)
 	}
+
 	return result.convertToEntityDimension(ctx), nil
 }
 
-func (repo *charRepoImpl) Insert(ctx context.Context, in entity.Dimension) (*entity.Dimension, error) {
+func (repo *charRepoImpl) Insert(_ context.Context, in entity.Dimension) (*entity.Dimension, error) {
 	query := `INSERT INTO shop.dimensions (length, width, height, is_valid, card_id) 
             VALUES ($1, $2, $3, $4, $5) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Length, in.Width, in.Height, in.IsVaild, in.CardID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка при вставке данных таблицу dimensions: %w", err)
 	}
+
 	in.ID = charIDWrap.ID.Int64
+
 	return &in, nil
 }
 
@@ -56,15 +66,16 @@ func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.Dimension
 	dbModel := convertToDBDimension(ctx, in)
 
 	query := `UPDATE shop.dimensions SET length = $1, width = $2, height = $3, is_valid = $4, card_id = $5 WHERE id = $6`
+
 	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Length, dbModel.Width, dbModel.Height, dbModel.IsValid, dbModel.CardID, dbModel.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка при обновлении данных таблицу dimensions: %w", err)
 	}
 
 	return nil
 }
 
-func (repo *charRepoImpl) Ping(ctx context.Context) error {
+func (repo *charRepoImpl) Ping(_ context.Context) error {
 	return repo.getWriteConnection().Ping()
 }
 

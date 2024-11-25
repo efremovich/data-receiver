@@ -1,4 +1,4 @@
-package wb2cardrepo_test
+package seller2cardrepo_test
 
 import (
 	"context"
@@ -7,12 +7,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/efremovich/data-receiver/pkg/postgresdb"
+
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/seller2cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
-	"github.com/efremovich/data-receiver/internal/usecases/repository/wb2cardrepo"
-	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
 
 func TestConvertToDBWb2Card(t *testing.T) {
@@ -28,11 +29,13 @@ func TestConvertToDBWb2Card(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	newSeller := entity.Seller{
 		Title:      uuid.NewString(),
 		IsEnabled:  true,
 		ExternalID: uuid.NewString(),
 	}
+
 	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
 	if err != nil {
 		t.Fatal(err)
@@ -41,13 +44,14 @@ func TestConvertToDBWb2Card(t *testing.T) {
 	// Создание Brand
 	sqlRepo, err := brandrepo.NewBrandRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 
 	newBrand := entity.Brand{
 		Title:    uuid.NewString(),
 		SellerID: modelSeller.ID,
 	}
+
 	modelBrand, err := sqlRepo.Insert(ctx, newBrand)
 	if err != nil {
 		t.Fatal(err)
@@ -56,7 +60,7 @@ func TestConvertToDBWb2Card(t *testing.T) {
 	// Создание Card
 	sqlCardRepo, err := cardrepo.NewCardRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 
 	newCard := entity.Card{
@@ -73,16 +77,16 @@ func TestConvertToDBWb2Card(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sqlWb2CardRepo, err := wb2cardrepo.NewWb2CardRepo(ctx, conn)
+	sqlWb2CardRepo, err := seller2cardrepo.NewWb2CardRepo(ctx, conn)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	newWb2Card := entity.Wb2Card{
-		NMID:   111,
-		KTID:   222,
-		NMUUID: "FDA",
-		CardID: modelCard.ID,
+	newWb2Card := entity.Seller2Card{
+		ExternalID: 111,
+		KTID:       222,
+		NMUUID:     "FDA",
+		CardID:     modelCard.ID,
 	}
 
 	modelWb2Card, err := sqlWb2CardRepo.Insert(ctx, newWb2Card)
@@ -90,7 +94,7 @@ func TestConvertToDBWb2Card(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, modelWb2Card.NMID, newWb2Card.NMID)
+	assert.Equal(t, modelWb2Card.ExternalID, newWb2Card.ExternalID)
 	assert.Equal(t, modelWb2Card.KTID, newWb2Card.KTID)
 	assert.Equal(t, modelWb2Card.NMUUID, newWb2Card.NMUUID)
 	assert.Equal(t, modelWb2Card.CardID, newWb2Card.CardID)
@@ -99,16 +103,18 @@ func TestConvertToDBWb2Card(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, modelSelectWb2Card.NMID, newWb2Card.NMID)
+
+	assert.Equal(t, modelSelectWb2Card.ExternalID, newWb2Card.ExternalID)
 	assert.Equal(t, modelSelectWb2Card.KTID, newWb2Card.KTID)
 	assert.Equal(t, modelSelectWb2Card.NMUUID, newWb2Card.NMUUID)
 	assert.Equal(t, modelSelectWb2Card.CardID, newWb2Card.CardID)
 
-	modelSelectWb2Card, err = sqlWb2CardRepo.SelectByNmid(ctx, newWb2Card.NMID)
+	modelSelectWb2Card, err = sqlWb2CardRepo.SelectByExternalID(ctx, newWb2Card.ExternalID, newWb2Card.SellerID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, modelSelectWb2Card.NMID, newWb2Card.NMID)
+
+	assert.Equal(t, modelSelectWb2Card.ExternalID, newWb2Card.ExternalID)
 	assert.Equal(t, modelSelectWb2Card.KTID, newWb2Card.KTID)
 	assert.Equal(t, modelSelectWb2Card.NMUUID, newWb2Card.NMUUID)
 	assert.Equal(t, modelSelectWb2Card.CardID, newWb2Card.CardID)
@@ -117,7 +123,8 @@ func TestConvertToDBWb2Card(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, modelSelectWb2Card.NMID, newWb2Card.NMID)
+
+	assert.Equal(t, modelSelectWb2Card.ExternalID, newWb2Card.ExternalID)
 	assert.Equal(t, modelSelectWb2Card.KTID, newWb2Card.KTID)
 	assert.Equal(t, modelSelectWb2Card.NMUUID, newWb2Card.NMUUID)
 	assert.Equal(t, modelSelectWb2Card.CardID, newWb2Card.CardID)
@@ -126,7 +133,8 @@ func TestConvertToDBWb2Card(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, modelSelectWb2Card.NMID, newWb2Card.NMID)
+
+	assert.Equal(t, modelSelectWb2Card.ExternalID, newWb2Card.ExternalID)
 	assert.Equal(t, modelSelectWb2Card.KTID, newWb2Card.KTID)
 	assert.Equal(t, modelSelectWb2Card.NMUUID, newWb2Card.NMUUID)
 	assert.Equal(t, modelSelectWb2Card.CardID, newWb2Card.CardID)
