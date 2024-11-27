@@ -64,9 +64,9 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	)
 
 	// date := time.Date(2024, 7, 31, 0, 0, 0, 0, time.UTC)
-	// date := time.Now()
-	// daysToGet := 3
-	// delay := 61
+	date := time.Now()
+	daysToGet := 365
+	delay := 61
 	desc = entity.PackageDescription{
 		Limit:       100,
 		Cursor:      "0",
@@ -78,18 +78,29 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	desc = entity.PackageDescription{
+		Limit:       100,
+		Cursor:      "0",
+		PackageType: entity.PackageTypeCard,
+		Seller:      "wb",
+	}
 
-	// desc = entity.PackageDescription{
-	// 	Limit:       100,
-	// 	Cursor:      "0",
-	// 	PackageType: entity.PackageTypeCard,
-	// 	Seller:      "ozon",
-	// }
+	err = gw.core.ReceiveCards(ctx, desc)
+	if err != nil {
+		return err
+	}
 
-	// err = gw.core.ReceiveWarehouses(ctx, desc)
-	// if err != nil {
-	// 	return err
-	// }
+	desc = entity.PackageDescription{
+		Limit:       100,
+		Cursor:      "0",
+		PackageType: entity.PackageTypeCard,
+		Seller:      "wb",
+	}
+
+	err = gw.core.ReceiveWarehouses(ctx, desc)
+	if err != nil {
+		return err
+	}
 
 	desc = entity.PackageDescription{
 		PackageType: entity.PackageTypeStock,
@@ -102,31 +113,31 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 		return err
 	}
 
-	// desc = entity.PackageDescription{
-	// 	PackageType: entity.PackageTypeOrder,
-	// 	UpdatedAt:   date,
-	// 	Seller:      "wb",
-	// 	Limit:       daysToGet,
-	// 	Delay:       61,
-	// }
+	desc = entity.PackageDescription{
+		PackageType: entity.PackageTypeOrder,
+		UpdatedAt:   date,
+		Seller:      "wb",
+		Limit:       daysToGet,
+		Delay:       61,
+	}
 
-	// err = gw.core.ReceiveOrders(ctx, desc)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveOrders(ctx, desc)
+	if err != nil {
+		return err
+	}
 
-	// desc = entity.PackageDescription{
-	// 	PackageType: entity.PackageTypeSale,
-	// 	UpdatedAt:   date,
-	// 	Seller:      "wb",
-	// 	Limit:       daysToGet,
-	// 	Delay:       delay,
-	// }
+	desc = entity.PackageDescription{
+		PackageType: entity.PackageTypeSale,
+		UpdatedAt:   date,
+		Seller:      "wb",
+		Limit:       daysToGet,
+		Delay:       delay,
+	}
 
-	// err = gw.core.ReceiveSales(ctx, desc)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveSales(ctx, desc)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
