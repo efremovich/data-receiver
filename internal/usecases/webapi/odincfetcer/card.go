@@ -109,7 +109,7 @@ func (odinc *odincAPIclientImp) GetCards(ctx context.Context, desc entity.Packag
 	return cardsList, nil
 }
 
-func (odinc *odincAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
+func (odinc *odincAPIclientImp) GetStocks(_ context.Context, _ entity.PackageDescription) ([]entity.StockMeta, error) {
 	return nil, nil
 }
 
@@ -137,5 +137,6 @@ func mapToURLValues(data map[string]string) url.Values {
 	for key, value := range data {
 		values.Add(key, value)
 	}
+
 	return values
 }

@@ -93,7 +93,15 @@ func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 			TechSize: elem.TechSize,
 			Title:    elem.TechSize,
 		}
-		stockMeta.SupplierArticle = elem.SupplierArticle
+
+		vendorID := elem.SupplierArticle
+		if reVendorCode.MatchString(elem.SupplierArticle) {
+			vendorID = reVendorCode.FindString(elem.SupplierArticle)
+		}
+
+		stockMeta.Card = entity.Card{
+			VendorID: vendorID,
+		}
 
 		stockMetaList = append(stockMetaList, stockMeta)
 	}

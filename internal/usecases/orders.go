@@ -15,7 +15,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 	clients := s.apiFetcher[desc.Seller]
 
 	for _, client := range clients {
-		err := s.receiveAndSaveCard(ctx, client, desc)
+		err := s.receiveAndSaveOrders(ctx, client, desc)
 		if err != nil {
 			return err
 		}
@@ -50,21 +50,20 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 			query["barcode"] = meta.Barcode.Barcode
 			query["article"] = meta.Card.VendorID
 
-			desc = entity.PackageDescription{
-				Seller: "1c",
+			descOdinAss := entity.PackageDescription{
+				Seller: "odinc",
 				Query:  query,
 			}
 
-			err := s.ReceiveCards(ctx, desc)
+			err := s.ReceiveCards(ctx, descOdinAss)
 			if err != nil {
 				return err
 			}
-		}
-		if err != nil {
+		} else if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", err))
 		}
 
-		card, err := s.getCardByVendorCode(ctx, meta.Card.VendorCode)
+		card, err := s.getCardByVendorID(ctx, meta.Card.VendorID)
 		if errors.Is(err, ErrObjectNotFound) {
 			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
 			// TODO Писать эти данные в jaeger
@@ -78,10 +77,12 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 			CardID:   card.ID,
 			SellerID: seller.ID,
 		}
+
 		_, err = s.setSeller2Card(ctx, seller2card)
 		if err != nil {
 			return err
 		}
+
 		meta.Card = card
 
 		// Size
@@ -93,15 +94,18 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 		// PriceSize
 		meta.PriceSize.CardID = card.ID
 		meta.PriceSize.SizeID = size.ID
+
 		priceSize, err := s.setPriceSize(ctx, *meta.PriceSize)
 		if err != nil {
 			return err
 		}
+
 		meta.PriceSize = priceSize
 
 		// Barcode
 		meta.Barcode.SellerID = seller.ID
 		meta.Barcode.PriceSizeID = priceSize.ID
+
 		_, err = s.setBarcode(ctx, *meta.Barcode)
 		if err != nil {
 			return err
@@ -109,10 +113,12 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		// Warehouse
 		meta.Warehouse.SellerID = seller.ID
+
 		warehouse, err := s.setWarehouse(ctx, meta.Warehouse)
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных по складам хранения модуль orders:%w", err))
 		}
+
 		meta.Warehouse = warehouse
 
 		// Status
@@ -120,6 +126,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных по статусу заказа модуль orders:%w", err))
 		}
+
 		meta.Status = status
 
 		// Region
@@ -127,16 +134,21 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 		if err != nil {
 			return err
 		}
+
 		meta.Region.Country.ID = country.ID
+
 		district, err := s.setDistrict(ctx, meta.Region.District)
 		if err != nil {
 			return err
 		}
+
 		meta.Region.District.ID = district.ID
+
 		region, err := s.setRegion(ctx, *meta.Region)
 		if err != nil {
 			return err
 		}
+
 		meta.Region = region
 
 		_, err = s.setOrder(ctx, &meta)
@@ -146,6 +158,8 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	}
 
 	alogger.InfoFromCtx(ctx, "Загружена информация о заказах всего: %d из них не найдено %d", len(ordersMetaList), notFoundElements)
+
+	alogger.InfoFromCtx(ctx, "постановка задачи в очередь %d", desc.Limit)
 
 	if desc.Limit > 0 {
 		p := entity.PackageDescription{
@@ -159,7 +173,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		err = s.brokerPublisher.SendPackage(ctx, &p)
 		if err != nil {
-			return fmt.Errorf("Ошибка постановки задачи в очередь: %w", err)
+			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
 		}
 
 		alogger.InfoFromCtx(ctx, "Создана очередь для получения заказов на %s", p.UpdatedAt.Format("02.01.2006"))
@@ -170,8 +184,8 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	return nil
 }
 
-func (s *receiverCoreServiceImpl) getOrder(ctx context.Context, orderID int64) (*entity.Order, error) {
-	order, err := s.orderrepo.SelectByID(ctx, orderID)
+func (s *receiverCoreServiceImpl) getOrderByExternalID(ctx context.Context, externalID string) (*entity.Order, error) {
+	order, err := s.orderrepo.SelectByExternalID(ctx, externalID)
 	if err != nil {
 		return nil, err
 	}
@@ -179,29 +193,24 @@ func (s *receiverCoreServiceImpl) getOrder(ctx context.Context, orderID int64) (
 }
 
 func (s *receiverCoreServiceImpl) setOrder(ctx context.Context, in *entity.Order) (*entity.Order, error) {
-	order, err := s.orderrepo.SelectByCardIDAndDate(ctx, in.Card.ID, in.CreatedAt)
+	order, err := s.orderrepo.SelectByExternalID(ctx, in.ExternalID)
 	if errors.Is(err, ErrObjectNotFound) {
 		order, err = s.orderrepo.Insert(ctx, *in)
 	}
-	if err != nil {
-		return nil, err
-	}
-	return order, nil
-}
 
-func (s *receiverCoreServiceImpl) getStatus(ctx context.Context, statusName string) (*entity.Status, error) {
-	status, err := s.statusrepo.SelectByName(ctx, statusName)
 	if err != nil {
 		return nil, err
 	}
-	return status, err
+
+	return order, nil
 }
 
 func (s *receiverCoreServiceImpl) setStatus(ctx context.Context, in *entity.Status) (*entity.Status, error) {
 	status, err := s.statusrepo.SelectByName(ctx, in.Name)
 	if errors.Is(err, ErrObjectNotFound) {
-		status, err = s.statusrepo.Insert(ctx, *status)
+		status, err = s.statusrepo.Insert(ctx, *in)
 	}
+
 	if err != nil {
 		return nil, err
 	}

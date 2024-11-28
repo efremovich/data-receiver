@@ -19,11 +19,11 @@ type Stock struct {
 }
 
 type StockMeta struct {
-	Stock           Stock
-	PriceSize       PriceSize
-	Barcode         Barcode
-	Warehouse       Warehouse
-	Seller2Card     Seller2Card
-	Size            Size
-	SupplierArticle string
+	Stock       Stock
+	PriceSize   PriceSize
+	Barcode     Barcode
+	Warehouse   Warehouse
+	Seller2Card Seller2Card
+	Size        Size
+	Card        Card
 }

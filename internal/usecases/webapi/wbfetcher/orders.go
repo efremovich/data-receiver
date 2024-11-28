@@ -75,6 +75,14 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %s", methodName, err.Error())
 	}
 
+	// На ВБ 1 товар одна строка с данными
+	// Попробуем получить дату заказа
+	orders := fillOrderStruct(orderResponce)
+
+	return orders, nil
+}
+
+func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 	var orders []entity.Order
 
 	for _, elem := range orderResponce {
@@ -84,9 +92,14 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 		barcode := entity.Barcode{}
 		barcode.Barcode = elem.Barcode
 
+		vendorID := elem.SupplierArticle
+		if reVendorCode.MatchString(elem.SupplierArticle) {
+			vendorID = reVendorCode.FindString(elem.SupplierArticle)
+		}
+
 		card := entity.Card{}
 		card.ExternalID = int64(elem.NmID)
-		card.VendorCode = elem.SupplierArticle
+		card.VendorID = vendorID
 
 		status := entity.Status{
 			Name: elem.OrderType,
@@ -121,9 +134,8 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 		order.ExternalID = elem.Srid
 		order.Price = elem.TotalPrice
 		order.Type = elem.OrderType
-		order.Quantity = 1 // На ВБ 1 товар одна строка с данными
+		order.Quantity = 1
 
-		// Попробуем получить дату заказа
 		order.CreatedAt, _ = time.Parse("2006-01-02T15:04:05", elem.Date)
 
 		order.Size = &size
@@ -138,5 +150,5 @@ func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 		orders = append(orders, order)
 	}
 
-	return orders, nil
+	return orders
 }

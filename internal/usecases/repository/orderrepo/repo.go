@@ -2,12 +2,17 @@ package orderrepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type OrderRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Order, error)
@@ -36,8 +41,10 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Order, 
 	query := "SELECT * FROM shop.orders WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по ID %d в таблице order: %w", id, err)
 	}
 
 	return result.convertToEntityOrder(ctx), nil
@@ -49,8 +56,10 @@ func (repo *repoImpl) SelectByExternalID(ctx context.Context, externalID string)
 	query := "SELECT * FROM shop.orders WHERE external_id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, externalID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по externalID %s в таблице order: %w", externalID, err)
 	}
 
 	return result.convertToEntityOrder(ctx), nil
@@ -62,8 +71,10 @@ func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, d
 	query := "SELECT * FROM shop.orders WHERE id = $1 and created_at = $2"
 
 	err := repo.getReadConnection().Get(&result, query, cardID, date.Format("2006-01-02 00:00:00"))
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по cardID %d в таблице order: %w", cardID, err)
 	}
 
 	return result.convertToEntityOrder(ctx), nil
@@ -105,7 +116,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 		dbModel.PriceSizeID,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка вставки в таблицу orders %w", err)
 	}
 
 	in.ID = charIDWrap.ID.Int64
@@ -150,14 +161,15 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error 
 		dbModel.PriceSizeID,
 		dbModel.ID,
 	)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка обновления данных в таблице orders %w", err)
 	}
 
 	return nil
 }
 
-func (repo *repoImpl) Ping(ctx context.Context) error {
+func (repo *repoImpl) Ping(_ context.Context) error {
 	return repo.getWriteConnection().Ping()
 }
 

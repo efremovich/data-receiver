@@ -98,7 +98,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 
 	lastID, err := strconv.Atoi(desc.Cursor)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка конвертации lastID: %w", err)
+		return nil, fmt.Errorf("ошибка конвертации lastID: %s,  %w", desc.Cursor, err)
 	}
 
 	requestSettings := Settings{
@@ -112,7 +112,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", wb.addr, methodName), bytes.NewReader(requestData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", wb.addrContent, methodName), bytes.NewReader(requestData))
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}

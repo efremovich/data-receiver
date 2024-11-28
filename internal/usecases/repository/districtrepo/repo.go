@@ -2,11 +2,16 @@ package districtrepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type DistrictRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.District, error)
@@ -29,21 +34,31 @@ func NewDistrictRepo(_ context.Context, db *postgresdb.DBConnection) (DistrictRe
 
 func (repo *districtRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.District, error) {
 	var result districtDB
+
 	query := "SELECT id, name FROM shop.districts WHERE id = $1"
+
 	err := repo.getReadConnection().Get(&result, query, id)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по ID %d в таблице districts: %w", id, err)
 	}
+
 	return result.ConvertToEntityDistrict(ctx), nil
 }
 
 func (repo *districtRepoImpl) SelectByName(ctx context.Context, name string) (*entity.District, error) {
 	var result districtDB
+
 	query := "SELECT id, name FROM shop.districts WHERE name = $1"
+
 	err := repo.getReadConnection().Get(&result, query, name)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по имени %s в таблице districts: %w", name, err)
 	}
+
 	return result.ConvertToEntityDistrict(ctx), nil
 }
 
@@ -52,25 +67,31 @@ func (repo *districtRepoImpl) Insert(ctx context.Context, in entity.District) (*
             VALUES ($1) RETURNING id`
 	districtIDWrap := repository.IDWrapper{}
 	dbModel := convertToDBDistrict(ctx, in)
+
 	err := repo.getWriteConnection().QueryAndScan(&districtIDWrap, query, dbModel.Name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка вставки данных в таблицу districts %s: %w", in.Name, err)
 	}
+
 	in.ID = districtIDWrap.ID.Int64
+
 	return &in, nil
 }
 
 func (repo *districtRepoImpl) UpdateExecOne(ctx context.Context, in entity.District) error {
 	dbModel := convertToDBDistrict(ctx, in)
+
 	query := `UPDATE shop.districts SET name = $1 WHERE id = $2`
+
 	_, err := repo.getWriteConnection().Exec(query, dbModel.Name, dbModel.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка обновления данных в таблице districts %s: %w", in.Name, err)
 	}
+
 	return nil
 }
 
-func (repo *districtRepoImpl) Ping(ctx context.Context) error {
+func (repo *districtRepoImpl) Ping(_ context.Context) error {
 	return repo.getReadConnection().Ping()
 }
 

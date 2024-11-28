@@ -22,7 +22,7 @@ func (s *receiverCoreServiceImpl) setDimension(ctx context.Context, card *entity
 	}
 
 	if err != nil {
-		return nil, wrapErr(fmt.Errorf("Ошибка при получении данных из бд: %w", err))
+		return nil, wrapErr(fmt.Errorf("ошибка при получении данных из бд: %w", err))
 	}
 	return dimension, nil
 }

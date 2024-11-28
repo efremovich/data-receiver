@@ -18,7 +18,7 @@ func (s *receiverCoreServiceImpl) getSeller(ctx context.Context, sellerTitle str
 	}
 
 	if err != nil {
-		return nil, wrapErr(fmt.Errorf("Ошибка при получении данных из бд: %w", err))
+		return nil, wrapErr(fmt.Errorf("ошибка при получении данных из бд: %w", err))
 	}
 
 	return seller, nil

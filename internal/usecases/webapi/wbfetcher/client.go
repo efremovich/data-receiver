@@ -22,11 +22,13 @@ func New(_ context.Context, cfg config.SellerWB) []webapi.ExtAPIFetcher {
 
 	for i := 0; i < len(cfg.Token); i++ {
 		client := &wbAPIclientImp{
-			client:    c,
-			token:     cfg.Token[i],
-			addr:      cfg.URL,
-			addrStat:  cfg.URLStat,
-			tokenStat: cfg.TokenStat[i],
+			client:          c,
+			token:           cfg.Token[i],
+			addr:            cfg.URL,
+			addrContent:     cfg.URLContent,
+			addrMarketPlace: cfg.URLMarketPlace,
+			addrStat:        cfg.URLStat,
+			tokenStat:       cfg.TokenStat[i],
 		}
 		clients = append(clients, client)
 	}
@@ -35,9 +37,11 @@ func New(_ context.Context, cfg config.SellerWB) []webapi.ExtAPIFetcher {
 }
 
 type wbAPIclientImp struct {
-	client    *http.Client
-	addr      string
-	addrStat  string
-	token     string
-	tokenStat string
+	client          *http.Client
+	addr            string
+	addrContent     string
+	addrMarketPlace string
+	addrStat        string
+	token           string
+	tokenStat       string
 }

@@ -16,7 +16,7 @@ func (s *receiverCoreServiceImpl) setSize(ctx context.Context, in *entity.Size) 
 	}
 
 	if err != nil {
-		return nil, wrapErr(fmt.Errorf("Ошибка при получении данных: %w", err))
+		return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
 	}
 
 	return size, nil

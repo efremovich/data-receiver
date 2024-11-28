@@ -26,12 +26,12 @@ func main() {
 	if envPath != "" {
 		err := aconf.PreloadEnvsFile(envPath)
 		if err != nil {
-			log.Fatalf("Ошибка загрузки конфигурационного файла: %s", err.Error())
+			log.Fatalf("ошибка загрузки конфигурационного файла: %s", err.Error())
 		}
 	}
 
 	if err := aconf.Load(&cfg); err != nil {
-		log.Fatalf("Ошибка инициализации конфигурации: %s", err.Error())
+		log.Fatalf("ошибка инициализации конфигурации: %s", err.Error())
 	}
 
 	app, err := app.New(ctx, cfg)

@@ -2,11 +2,16 @@ package countryrepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type CountryRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Country, error)
@@ -30,21 +35,31 @@ func NewCountryRepo(_ context.Context, db *postgresdb.DBConnection) (CountryRepo
 
 func (repo *countryRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Country, error) {
 	var result countryDB
+
 	query := "SELECT id, name FROM shop.countries WHERE id = $1"
+
 	err := repo.getReadConnection().Get(&result, query, id)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по внешнему ID %d в таблице countries: %w", id, err)
 	}
+
 	return result.ConvertToEntityCountry(ctx), nil
 }
 
 func (repo *countryRepoImpl) SelectByName(ctx context.Context, name string) (*entity.Country, error) {
 	var result countryDB
+
 	query := "SELECT id, name FROM shop.countries WHERE name = $1"
+
 	err := repo.getReadConnection().Get(&result, query, name)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по имени %s в таблице countries: %w", name, err)
 	}
+
 	return result.ConvertToEntityCountry(ctx), nil
 }
 
@@ -53,10 +68,12 @@ func (repo *countryRepoImpl) Insert(ctx context.Context, in entity.Country) (*en
             VALUES ($1) RETURNING id`
 	countryIDWrap := repository.IDWrapper{}
 	dbModel := convertToDBCountry(ctx, in)
+
 	err := repo.getWriteConnection().QueryAndScan(&countryIDWrap, query, dbModel.Name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка вставки данных в таблицу countries %s: %w", in.Name, err)
 	}
+
 	in.ID = countryIDWrap.ID.Int64
 
 	return &in, nil
@@ -65,14 +82,16 @@ func (repo *countryRepoImpl) Insert(ctx context.Context, in entity.Country) (*en
 func (repo *countryRepoImpl) UpdateExecOne(ctx context.Context, in entity.Country) error {
 	query := `UPDATE shop.countries SET name = $1 WHERE id = $2`
 	dbModel := convertToDBCountry(ctx, in)
+
 	_, err := repo.getWriteConnection().Exec(query, dbModel.Name, dbModel.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка обновления данных в таблице countries %s: %w", in.Name, err)
 	}
+
 	return nil
 }
 
-func (repo *countryRepoImpl) Ping(ctx context.Context) error {
+func (repo *countryRepoImpl) Ping(_ context.Context) error {
 	return repo.getWriteConnection().Ping()
 }
 

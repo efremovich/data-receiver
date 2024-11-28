@@ -76,6 +76,15 @@ func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %s", methodName, err.Error())
 	}
 
+	// TODO Уточнить какую скидку ставить
+	// sale.DiscountP = 0
+	// Попробуем получить дату заказа
+	sales := fillSaleStruct(saleResponce)
+
+	return sales, nil
+}
+
+func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 	var sales []entity.Sale
 
 	for _, elem := range saleResponce {
@@ -85,9 +94,14 @@ func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 		barcode := entity.Barcode{}
 		barcode.Barcode = elem.Barcode
 
+		vendorCode := elem.SupplierArticle
+		if reVendorCode.MatchString(elem.SupplierArticle) {
+			vendorCode = reVendorCode.FindString(elem.SupplierArticle)
+		}
+
 		card := entity.Card{}
 		card.ExternalID = int64(elem.NmID)
-		card.VendorCode = elem.SupplierArticle
+		card.VendorCode = vendorCode
 
 		status := entity.Status{
 			Name: elem.OrderType,
@@ -130,10 +144,7 @@ func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 		sale.DiscountP = elem.DiscountPercent
 		sale.ForPay = elem.ForPay
 		sale.FinalPrice = elem.FinishedPrice
-		// TODO Уточнить какую скидку ставить
-		// sale.DiscountP = 0
 
-		// Попробуем получить дату заказа
 		sale.CreatedAt, _ = time.Parse("2006-01-02T15:04:05", elem.Date)
 
 		sale.Status = &status
@@ -148,5 +159,5 @@ func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 		sales = append(sales, sale)
 	}
 
-	return sales, nil
+	return sales
 }

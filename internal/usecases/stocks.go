@@ -26,7 +26,6 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 }
 
 func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, client webapi.ExtAPIFetcher, desc entity.PackageDescription) error {
-
 	stockMetaList, err := client.GetStocks(ctx, desc)
 	if err != nil {
 		return fmt.Errorf("ошибка получение данные из внешнего источника %s, %w", desc.Seller, err)
@@ -48,23 +47,23 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 		if errors.Is(err, ErrObjectNotFound) {
 			query := make(map[string]string)
 			query["barcode"] = meta.Barcode.Barcode
-			query["article"] = meta.SupplierArticle
+			query["article"] = meta.Card.VendorID
 
 			descForOdin := entity.PackageDescription{
 				Seller: "odinc",
 				Query:  query,
 			}
+
 			err := s.ReceiveCards(ctx, descForOdin)
 			if err != nil {
 				return err
 			}
-		}
-		if err != nil {
+		} else if err != nil {
 			logger.GetLoggerFromContext(ctx).Errorf("ошибка получения данных о товаре %s модуль stocks: %s", desc.Seller, err.Error())
 			continue
 		}
 
-		card, err := s.getCardByVendorCode(ctx, meta.SupplierArticle)
+		card, err := s.getCardByVendorID(ctx, meta.Card.VendorID)
 		if errors.Is(err, ErrObjectNotFound) {
 			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
 			// TODO Писать эти данные в jaeger
@@ -76,13 +75,14 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 		// Проверим и создадим связь продавца и товара
 		meta.Seller2Card.CardID = card.ID
 		meta.Seller2Card.SellerID = seller.ID
+
 		_, err = s.setSeller2Card(ctx, meta.Seller2Card)
 		if err != nil {
 			return err
 		}
 
 		// Size
-		size, err := s.getSizeByTitle(ctx, meta.Size.TechSize)
+		size, err := s.setSize(ctx, &meta.Size)
 		if err != nil {
 			return err
 		}
@@ -91,6 +91,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 		// PriceSize
 		meta.PriceSize.CardID = card.ID
 		meta.PriceSize.SizeID = size.ID
+
 		priceSize, err := s.setPriceSize(ctx, meta.PriceSize)
 		if err != nil {
 			return err
@@ -99,6 +100,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 		// Barcode
 		meta.Barcode.SellerID = seller.ID
 		meta.Barcode.PriceSizeID = priceSize.ID
+
 		barcode, err := s.setBarcode(ctx, meta.Barcode)
 		if err != nil {
 			return err
@@ -106,10 +108,12 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 
 		// Warehouse
 		meta.Warehouse.SellerID = seller.ID
+
 		warehouse, err := s.setWarehouse(ctx, &meta.Warehouse)
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных по складам хранения модуль stock:%w", err))
 		}
+
 		stock := meta.Stock
 		stock.BarcodeID = barcode.ID
 		stock.WarehouseID = warehouse.ID
@@ -136,7 +140,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 
 		err = s.brokerPublisher.SendPackage(ctx, &p)
 		if err != nil {
-			return fmt.Errorf("Ошибка постановки задачи в очередь: %w", err)
+			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
 		}
 
 		alogger.InfoFromCtx(ctx, "Создана очередь на получение остатков на дату: %s", p.UpdatedAt.Format("02.01.2006"))

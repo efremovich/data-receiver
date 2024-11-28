@@ -104,7 +104,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 		}
 	}
 
-	if len(cards) != desc.Limit {
+	if len(cards) > 0 && len(cards) != desc.Limit {
 		alogger.InfoFromCtx(ctx, "Задание успешно завершено")
 	} else {
 		lastID := strconv.Itoa(int(cards[len(cards)-1].ExternalID))
@@ -121,6 +121,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 			return fmt.Errorf("ошибка постановки задачи в очередь %s: %w", desc.Seller, err)
 		}
 	}
+
 	return nil
 }
 
@@ -132,24 +133,12 @@ func (s *receiverCoreServiceImpl) setCard(ctx context.Context, in entity.Card) (
 			return nil, wrapErr(fmt.Errorf("ошибка при сохранении карточки: %w", err))
 		}
 	}
+
 	return card, nil
 }
 
-func (s *receiverCoreServiceImpl) getCardByVendorCode(ctx context.Context, vendorCode string) (*entity.Card, error) {
-	card, err := s.cardRepo.SelectByVendorCode(ctx, vendorCode)
-	if err != nil {
-		return nil, err
-	}
-	return card, nil
-}
-
-func (s *receiverCoreServiceImpl) getCardByExternalID(ctx context.Context, externalID, sellerID int64) (*entity.Card, error) {
-	seller2Card, err := s.getSeller2Card(ctx, externalID, sellerID)
-	if err != nil {
-		return nil, err
-	}
-
-	card, err := s.cardRepo.SelectByID(ctx, seller2Card.CardID)
+func (s *receiverCoreServiceImpl) getCardByVendorID(ctx context.Context, vendorID string) (*entity.Card, error) {
+	card, err := s.cardRepo.SelectByVendorID(ctx, vendorID)
 	if err != nil {
 		return nil, err
 	}

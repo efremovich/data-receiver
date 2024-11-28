@@ -39,6 +39,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль sales:%w", desc.Seller, err))
 		}
+
 		meta.Seller = seller
 		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
 		_, err = s.getSeller2Card(ctx, meta.Card.ExternalID, seller.ID)
@@ -50,19 +51,19 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 
 			in := entity.PackageDescription{
 				PackageType: desc.PackageType,
-				Seller:      "1c",
+				Seller:      "odinc",
 				Query:       query,
 			}
+
 			err := s.ReceiveCards(ctx, in)
 			if err != nil {
 				return err
 			}
-		}
-		if err != nil {
+		} else if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром %s модуль stocks:%w", desc.Seller, err))
 		}
 
-		card, err := s.getCardByVendorCode(ctx, meta.Card.VendorCode)
+		card, err := s.getCardByVendorID(ctx, meta.Card.VendorID)
 		if errors.Is(err, ErrObjectNotFound) {
 			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
 			// TODO Писать эти данные в jaeger
@@ -76,6 +77,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 			CardID:   card.ID,
 			SellerID: seller.ID,
 		}
+
 		_, err = s.setSeller2Card(ctx, seller2card)
 		if err != nil {
 			return err
@@ -91,15 +93,18 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 		// PriceSize
 		meta.PriceSize.CardID = card.ID
 		meta.PriceSize.SizeID = size.ID
+
 		priceSize, err := s.setPriceSize(ctx, *meta.PriceSize)
 		if err != nil {
 			return err
 		}
+
 		meta.PriceSize = priceSize
 
 		// Barcode
 		meta.Barcode.SellerID = seller.ID
 		meta.Barcode.PriceSizeID = priceSize.ID
+
 		_, err = s.setBarcode(ctx, *meta.Barcode)
 		if err != nil {
 			return err
@@ -108,9 +113,11 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 		// Warehouse
 		meta.Warehouse.SellerID = seller.ID
 		warehouse, err := s.setWarehouse(ctx, meta.Warehouse)
+
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных по складам хранения модуль stock:%w", err))
 		}
+
 		meta.Warehouse = warehouse
 
 		// Region
@@ -118,20 +125,25 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 		if err != nil {
 			return err
 		}
+
 		meta.Region.Country.ID = country.ID
+
 		district, err := s.setDistrict(ctx, meta.Region.District)
 		if err != nil {
 			return err
 		}
+
 		meta.Region.District.ID = district.ID
+
 		region, err := s.setRegion(ctx, *meta.Region)
 		if err != nil {
 			return err
 		}
+
 		meta.Region = region
 
 		// Order
-		order, err := s.getOrder(ctx, meta.Order.ID)
+		order, err := s.getOrderByExternalID(ctx, meta.Order.ExternalID)
 		if errors.Is(err, ErrObjectNotFound) {
 			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
 			// TODO Писать эти данные в jaeger
@@ -140,6 +152,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 		} else if err != nil {
 			return err
 		}
+
 		meta.Order = order
 
 		_, err = s.setSale(ctx, &meta)
@@ -163,7 +176,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 
 		err = s.brokerPublisher.SendPackage(ctx, &p)
 		if err != nil {
-			return fmt.Errorf("Ошибка постановки задачи в очередь: %w", err)
+			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
 		}
 
 		alogger.InfoFromCtx(ctx, "Создана очередь для получения продаж на %s", p.UpdatedAt.Format("02.01.2006"))
@@ -187,8 +200,10 @@ func (s *receiverCoreServiceImpl) setSale(ctx context.Context, in *entity.Sale) 
 	if errors.Is(err, ErrObjectNotFound) {
 		sale, err = s.salerepo.Insert(ctx, *in)
 	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return sale, nil
 }

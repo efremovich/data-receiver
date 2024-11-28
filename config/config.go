@@ -48,6 +48,8 @@ type Sellers struct {
 }
 
 type SellerWB struct {
+	URLMarketPlace        string   `env:"URL_MP"`
+	URLContent            string   `env:"URL_CONTENT"`
 	URL                   string   `env:"URL"`
 	URLStat               string   `env:"URL_STAT"`
 	Token                 []string `env:"TOKEN"`

@@ -20,22 +20,6 @@ func (s *receiverCoreServiceImpl) setCountry(ctx context.Context, in entity.Coun
 	return country, nil
 }
 
-func (s *receiverCoreServiceImpl) getCountry(ctx context.Context, title string) (*entity.Country, error) {
-	country, err := s.countryrepo.SelectByName(ctx, title)
-	if err != nil {
-		return nil, err
-	}
-	return country, nil
-}
-
-func (s *receiverCoreServiceImpl) getDistrict(ctx context.Context, title string) (*entity.District, error) {
-	district, err := s.districtrepo.SelectByName(ctx, title)
-	if err != nil {
-		return nil, err
-	}
-	return district, nil
-}
-
 func (s *receiverCoreServiceImpl) setDistrict(ctx context.Context, in entity.District) (*entity.District, error) {
 	district, err := s.districtrepo.SelectByName(ctx, in.Name)
 	if errors.Is(err, ErrObjectNotFound) {
@@ -47,15 +31,6 @@ func (s *receiverCoreServiceImpl) setDistrict(ctx context.Context, in entity.Dis
 	}
 
 	return district, nil
-}
-
-func (s *receiverCoreServiceImpl) getRegion(ctx context.Context, in entity.Region) (*entity.Region, error) {
-	region, err := s.regionrepo.SelectByName(ctx, in.RegionName, in.District.ID, in.Country.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return region, nil
 }
 
 func (s *receiverCoreServiceImpl) setRegion(ctx context.Context, in entity.Region) (*entity.Region, error) {

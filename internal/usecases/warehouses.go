@@ -25,10 +25,15 @@ func (s *receiverCoreServiceImpl) ReceiveWarehouses(ctx context.Context, desc en
 func (s *receiverCoreServiceImpl) receiveAndSaveWarehouse(ctx context.Context, client webapi.ExtAPIFetcher, desc entity.PackageDescription) error {
 	warehouses, err := client.GetWarehouses(ctx)
 	if err != nil {
-		return wrapErr(fmt.Errorf("ошбка при получении данных из источника %s : %w", desc.Seller, err))
+		return wrapErr(fmt.Errorf("ошибка при получении данных из источника %s : %w", desc.Seller, err))
+	}
+	seller, err := s.getSeller(ctx, desc.Seller)
+	if err != nil {
+		return err
 	}
 
 	for _, in := range warehouses {
+		in.SellerID = seller.ID
 		_, err := s.setWarehouse(ctx, &in)
 		if err != nil {
 			return err
@@ -52,7 +57,7 @@ func (s *receiverCoreServiceImpl) setWarehouse(ctx context.Context, in *entity.W
 			SellerID:   in.SellerID,
 		})
 		if err != nil {
-			return nil, wrapErr(fmt.Errorf("Ошибка при получении данных: %w", err))
+			return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
 		}
 	}
 
@@ -68,7 +73,7 @@ func (s *receiverCoreServiceImpl) getWarehouseType(ctx context.Context, typeTitl
 		})
 	}
 	if err != nil {
-		return nil, wrapErr(fmt.Errorf("Ошибка при получении данных: %w", err))
+		return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
 	}
 	return warehouseType, nil
 }

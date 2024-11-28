@@ -2,11 +2,16 @@ package regionrepo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
+
+var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type RegoinRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Region, error)
@@ -34,8 +39,10 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Region,
 	query := "SELECT * FROM shop.regions WHERE id = $1"
 
 	err := repo.getReadConnection().Get(&result, query, id)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по ID %d в таблице regions: %w", id, err)
 	}
 
 	return result.convertToEntityRegion(ctx), nil
@@ -47,8 +54,10 @@ func (repo *repoImpl) SelectByName(ctx context.Context, regionName string, distr
 	query := "SELECT * FROM shop.regions WHERE country_id = $1 and region_name = $2 and district_id = $3"
 
 	err := repo.getReadConnection().Get(&result, query, countryID, regionName, districtID)
-	if err != nil {
-		return nil, err
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по имени %s в таблице regions: %w", regionName, err)
 	}
 
 	return result.convertToEntityRegion(ctx), nil
@@ -61,7 +70,7 @@ func (repo *repoImpl) Insert(ctx context.Context, region entity.Region) (*entity
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, dbModel.CountryID, dbModel.RegionName, dbModel.DistrictID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка вставки данных в таблицу region %s в таблице region %w", region.RegionName, err)
 	}
 
 	region.ID = charIDWrap.ID.Int64
@@ -81,7 +90,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, region *entity.Region) 
 	return nil
 }
 
-func (repo *repoImpl) Ping(ctx context.Context) error {
+func (repo *repoImpl) Ping(_ context.Context) error {
 	return repo.getWriteConnection().Ping()
 }
 
