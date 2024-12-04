@@ -77,7 +77,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 			CardID:   card.ID,
 			SellerID: seller.ID,
 		}
-
+		meta.Card = card
 		_, err = s.setSeller2Card(ctx, seller2card)
 		if err != nil {
 			return err
@@ -98,7 +98,6 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 		if err != nil {
 			return err
 		}
-
 		meta.PriceSize = priceSize
 
 		// Barcode
@@ -187,16 +186,8 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 	return nil
 }
 
-func (s *receiverCoreServiceImpl) getSale(ctx context.Context, orderID int64) (*entity.Sale, error) {
-	sale, err := s.salerepo.SelectByOrderID(ctx, orderID)
-	if err != nil {
-		return nil, err
-	}
-	return sale, nil
-}
-
 func (s *receiverCoreServiceImpl) setSale(ctx context.Context, in *entity.Sale) (*entity.Sale, error) {
-	sale, err := s.salerepo.SelectByCardIDAndDate(ctx, in.Card.ID, in.CreatedAt)
+	sale, err := s.salerepo.SelectByExternalID(ctx, in.ExternalID, in.CreatedAt)
 	if errors.Is(err, ErrObjectNotFound) {
 		sale, err = s.salerepo.Insert(ctx, *in)
 	}

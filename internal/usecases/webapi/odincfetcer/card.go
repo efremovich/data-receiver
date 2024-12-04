@@ -92,7 +92,7 @@ func (odinc *odincAPIclientImp) GetCards(ctx context.Context, desc entity.Packag
 		}
 
 		card := entity.Card{
-			VendorID:    "",
+			VendorID:    v.VendorID,
 			VendorCode:  v.VendorCode,
 			Title:       v.Title,
 			Description: v.Description,
