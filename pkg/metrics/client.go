@@ -26,16 +26,19 @@ type Collector interface {
 
 	// Время получение ответа от внешних источников.
 	AddDocumentsAPIRequestTime(d time.Duration)
+
+	// Время получения данных от маркетпрейсов.
+	AddReceiveReqestTime(d time.Duration, method, part string)
 }
 
 type metricsCollectorImplementation struct {
 	metrics ametrics.Middleware
 
 	serviceDocsTaskCounter           ametrics.MetricCount // Счетчик входящих заданий на создание служебных документов.
-	apiMethodsMapCounter             ametrics.CounterVec  // Использование API сервиса.
 	documentsAPIrequestTimeHistogram ametrics.MetricBase  // Время запросов в API документов.
 	temporaryErrorMapCounter         ametrics.CounterVec  // Счетчик временных ошибок.
 	criticalErrorsMapCounter         ametrics.CounterVec  // Счетчик критических ошибок.
+	receveDataRequestTimeHitogram    ametrics.HistogramVec
 }
 
 func NewMetricCollector(serviceName string) (Collector, error) {
@@ -46,11 +49,6 @@ func NewMetricCollector(serviceName string) (Collector, error) {
 	}
 
 	var err error
-
-	collector.apiMethodsMapCounter, err = metrics.AddNewCounterMetricWithLabel("creator_api_methods_use_counter", "creator_api_methods_use_counter", []string{apiCounterLabel})
-	if err != nil {
-		return nil, err
-	}
 
 	collector.serviceDocsTaskCounter, err = metrics.AddNewCounterMetric("creator_task_counter", "creator_task_counter")
 	if err != nil {
@@ -74,6 +72,10 @@ func NewMetricCollector(serviceName string) (Collector, error) {
 		return nil, err
 	}
 
+	collector.receveDataRequestTimeHitogram, err = metrics.AddNewHistogramMetricWithLabel("data_receve_use_counter", "data_receve_use_counter", []string{"method", "stage"})
+	if err != nil {
+		return nil, err
+	}
 	return &collector, nil
 }
 
@@ -82,16 +84,15 @@ func (m *metricsCollectorImplementation) AddDocumentsAPIRequestTime(d time.Durat
 		m.documentsAPIrequestTimeHistogram.Observe(d.Seconds())
 	}
 }
-
 func (m *metricsCollectorImplementation) IncServiceDocsTaskCounter() {
 	if m.serviceDocsTaskCounter != nil {
 		m.serviceDocsTaskCounter.Inc()
 	}
 }
 
-func (m *metricsCollectorImplementation) AddAPIMethodUse(method string) {
-	if m.apiMethodsMapCounter != nil {
-		_ = m.apiMethodsMapCounter.Inc(map[string]string{apiCounterLabel: method})
+func (m *metricsCollectorImplementation) AddReceiveReqestTime(d time.Duration, method, stage string) {
+	if m.receveDataRequestTimeHitogram != nil {
+		_ = m.receveDataRequestTimeHitogram.Observe(d.Seconds(), map[string]string{"method": method, "stage": stage})
 	}
 }
 

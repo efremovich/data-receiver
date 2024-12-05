@@ -10,7 +10,6 @@ type Config struct {
 	BrokerConsumerURL  []string `env:"BROKER_CONSUMER_URL" validate:"required"`
 	BrokerPublisherURL []string `env:"BROKER_PUBLISHER_URL" validate:"required"`
 	Gateway            Gateway  `env:", prefix=GATEWAY_"`
-	Nats               NATS     `env:", prefix=NATS_"`
 	Seller             Sellers  `env:", prefix=SELLER_"`
 	Queue              Queue    `env:", prefix=QUEUE_"`
 }
@@ -25,10 +24,6 @@ type Gateway struct {
 type Adr struct {
 	Host string `env:"HOST"`
 	Port string `env:"PORT"`
-}
-
-type NATS struct {
-	URLS string `env:"URLS" validate:"required"`
 }
 
 // Настройки очереди.
