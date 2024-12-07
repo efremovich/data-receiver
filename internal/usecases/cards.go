@@ -104,9 +104,9 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 		}
 	}
 
-	if len(cards) > 0 && len(cards) != desc.Limit {
+	if len(cards) != desc.Limit {
 		alogger.InfoFromCtx(ctx, "Задание успешно завершено")
-	} else {
+	} else if len(cards) > 0 {
 		lastID := strconv.Itoa(int(cards[len(cards)-1].ExternalID))
 		p := entity.PackageDescription{
 			PackageType: entity.PackageTypeCard,
