@@ -102,6 +102,7 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		card := entity.Card{}
 		card.ExternalID = int64(elem.NmID)
 		card.VendorCode = vendorCode
+		card.VendorID = vendorCode
 
 		status := entity.Status{
 			Name: elem.OrderType,

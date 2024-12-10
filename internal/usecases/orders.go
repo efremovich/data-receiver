@@ -34,7 +34,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	}
 
 	s.metricsCollector.AddReceiveReqestTime(time.Since(startTime), "orders", "receive")
-	alogger.InfoFromCtx(ctx, "Получение данных об продажах за %s", desc.UpdatedAt.Format("02.01.2006"))
+	alogger.InfoFromCtx(ctx, "Получение данных о заказах за %s", desc.UpdatedAt.Format("02.01.2006"))
 
 	var notFoundElements int
 
@@ -48,26 +48,26 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		meta.Seller = seller
 
-		// // Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
-		// _, err = s.getSeller2Card(ctx, meta.Card.ExternalID, seller.ID)
-		// // Получаем ошибку что такой записи нет, поищем карточку товара в 1с
-		// if errors.Is(err, ErrObjectNotFound) {
-		// 	query := make(map[string]string)
-		// 	query["barcode"] = meta.Barcode.Barcode
-		// 	query["article"] = meta.Card.VendorID
+		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
+		_, err = s.getSeller2Card(ctx, meta.Card.ExternalID, seller.ID)
+		// Получаем ошибку что такой записи нет, поищем карточку товара в 1с
+		if errors.Is(err, ErrObjectNotFound) {
+			query := make(map[string]string)
+			query["barcode"] = meta.Barcode.Barcode
+			query["article"] = meta.Card.VendorID
 
-		// 	descOdinAss := entity.PackageDescription{
-		// 		Seller: "odinc",
-		// 		Query:  query,
-		// 	}
+			descOdinAss := entity.PackageDescription{
+				Seller: "odinc",
+				Query:  query,
+			}
 
-		// 	err := s.ReceiveCards(ctx, descOdinAss)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// } else if err != nil {
-		// 	return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", err))
-		// }
+			err := s.ReceiveCards(ctx, descOdinAss)
+			if err != nil {
+				return err
+			}
+		} else if err != nil {
+			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", err))
+		}
 
 		card, err := s.getCardByVendorID(ctx, meta.Card.VendorID)
 		if errors.Is(err, ErrObjectNotFound) {
@@ -200,8 +200,7 @@ func (s *receiverCoreServiceImpl) getOrderByExternalID(ctx context.Context, exte
 }
 
 func (s *receiverCoreServiceImpl) setOrder(ctx context.Context, in *entity.Order) (*entity.Order, error) {
-	order, err := s.orderrepo.SelectByCardIDAndDate(ctx, in.Card.ID, in.CreatedAt)
-	// order, err := s.orderrepo.SelectByExternalID(ctx, in.ExternalID)
+	order, err := s.orderrepo.SelectByExternalID(ctx, in.ExternalID)
 	if errors.Is(err, ErrObjectNotFound) {
 		order, err = s.orderrepo.Insert(ctx, *in)
 	}

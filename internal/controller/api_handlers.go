@@ -58,14 +58,13 @@ func (gw *grpcGatewayServerImpl) autoupdate(ctx context.Context, upd time.Durati
 }
 
 func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
-	var (
-		err error
-		// desc entity.PackageDescription
-	)
+	var err error
+	// desc entity.PackageDescription
 
-	// date := time.Date(2024, 11, 27, 0, 0, 0, 0, time.UTC)
+	// dateForOrder := time.Date(2024, 03, 30, 0, 0, 0, 0, time.UTC)
 	date := time.Now()
 	daysToGet := 365
+	// d2tToGet := 90
 	delay := 61
 	// desc = entity.PackageDescription{
 	// 	Limit:       100,
@@ -78,6 +77,22 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// if err != nil {
 	// 	return err
 	// }
+
+	// // Odinass
+	// query := make(map[string]string)
+	// query["barcode"] = "2900000191327"
+	// query["article"] = "00-0022466"
+
+	// descOdinAss := entity.PackageDescription{
+	// 	Seller: "odinc",
+	// 	Query:  query,
+	// }
+
+	// err = gw.core.ReceiveCards(ctx, descOdinAss)
+	// if err != nil {
+	// 	return err
+	// }
+
 	// descCard := entity.PackageDescription{
 	// 	Limit:       100,
 	// 	Cursor:      "0",
@@ -116,7 +131,7 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// descStocks := entity.PackageDescription{
 	// 	PackageType: entity.PackageTypeStock,
 	// 	UpdatedAt:   time.Now(),
-	// 	Limit:       3,
+	// 	Limit:       daysToGet,
 	// 	Seller:      "wb",
 	// }
 
