@@ -145,12 +145,3 @@ func (s *receiverCoreServiceImpl) getCardByVendorID(ctx context.Context, vendorI
 
 	return card, nil
 }
-
-func (s *receiverCoreServiceImpl) getCardByExternalID(ctx context.Context, externalID int64) (*entity.Card, error) {
-	card, err := s.cardRepo.SelectByVendorID(ctx, vendorID)
-	if err != nil {
-		return nil, err
-	}
-
-	return card, nil
-}
