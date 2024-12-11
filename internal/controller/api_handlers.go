@@ -61,22 +61,22 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	var err error
 	// desc entity.PackageDescription
 
-	// dateForOrder := time.Date(2024, 03, 30, 0, 0, 0, 0, time.UTC)
-	date := time.Now()
-	daysToGet := 365
+	// dateForOrder := time.Date(2024, 02, 01, 0, 0, 0, 0, time.UTC)
+	// date := time.Now()
+	// daysToGet := 60
 	// d2tToGet := 90
-	delay := 61
-	// desc = entity.PackageDescription{
-	// 	Limit:       100,
-	// 	Cursor:      "0",
-	// 	PackageType: entity.PackageTypeCard,
-	// 	Seller:      "ozon",
-	// }
+	// delay := 61
+	descOzon := entity.PackageDescription{
+		Limit:       100,
+		Cursor:      "0",
+		PackageType: entity.PackageTypeCard,
+		Seller:      "ozon",
+	}
 
-	// err = gw.core.ReceiveCards(ctx, desc)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveCards(ctx, descOzon)
+	if err != nil {
+		return err
+	}
 
 	// // Odinass
 	// query := make(map[string]string)
@@ -86,6 +86,7 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// descOdinAss := entity.PackageDescription{
 	// 	Seller: "odinc",
 	// 	Query:  query,
+
 	// }
 
 	// err = gw.core.ReceiveCards(ctx, descOdinAss)
@@ -140,22 +141,22 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// 	return err
 	// }
 
-	descOrder := entity.PackageDescription{
-		PackageType: entity.PackageTypeOrder,
-		UpdatedAt:   date,
-		Seller:      "wb",
-		Limit:       daysToGet,
-		Delay:       delay,
-	}
+	// descOrder := entity.PackageDescription{
+	// 	PackageType: entity.PackageTypeOrder,
+	// 	UpdatedAt:   date,
+	// 	Seller:      "wb",
+	// 	Limit:       daysToGet,
+	// 	Delay:       delay,
+	// }
 
-	err = gw.core.ReceiveOrders(ctx, descOrder)
-	if err != nil {
-		return err
-	}
+	// err = gw.core.ReceiveOrders(ctx, descOrder)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// descDescription := entity.PackageDescription{
 	// 	PackageType: entity.PackageTypeSale,
-	// 	UpdatedAt:   date,
+	// 	UpdatedAt:   dateForOrder,
 	// 	Seller:      "wb",
 	// 	Limit:       daysToGet,
 	// 	Delay:       delay,

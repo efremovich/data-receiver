@@ -13,7 +13,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 )
 
-var reVendorCode = regexp.MustCompile(`\d{2}-\d{7,8}`)
+var reVendorCode = regexp.MustCompile(`\d{2}-\d{5,8}`)
 
 type WbResponse struct {
 	Cards  []Cards `json:"cards"`
