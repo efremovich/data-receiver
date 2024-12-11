@@ -143,20 +143,19 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 	return cardsList, nil
 }
 
-func getMetaFromVendorID(offerID string) (vendorCode, vendorID, vendorSize string) {
-	const lenVendorCode int = 2
+func getMetaFromVendorID(offerID string) (string, string, string) {
+	var vendorID, vendorCode, vendorSize string
 	// Артикул, код, размер "RBB-061/00-0014881/58"
 	vendorData := strings.Split(offerID, "/")
-	if len(vendorData) > lenVendorCode {
+	if len(vendorData) == 2 {
+		vendorID = vendorData[0]
+		vendorSize = vendorData[1]
+	}
+
+	if len(vendorData) == 3 {
 		vendorCode = vendorData[0]
 		vendorID = vendorData[1]
 		vendorSize = vendorData[2]
-	}
-
-	if len(vendorData) == lenVendorCode {
-		vendorCode = vendorData[0]
-		vendorID = vendorData[0]
-		vendorSize = vendorData[1]
 	}
 
 	if len(vendorData) == 1 {
@@ -165,7 +164,7 @@ func getMetaFromVendorID(offerID string) (vendorCode, vendorID, vendorSize strin
 		vendorSize = "One size"
 	}
 
-	return vendorCode, vendorID, vendorSize
+	return vendorID, vendorCode, vendorSize
 }
 
 func getAttributeMetaList(_ context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector) ([]AttributeMeta, error) {

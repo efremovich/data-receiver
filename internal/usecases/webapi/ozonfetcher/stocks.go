@@ -68,13 +68,14 @@ func (ozon *ozonAPIclientImp) GetStocks(ctx context.Context, desc entity.Package
 			TypeName:   "FBO",
 		}
 
-		vendorID, _, currSize := getMetaFromVendorID(elem.OfferID)
+		vendorID, vendorCode, currSize := getMetaFromVendorID(elem.OfferID)
 		stockMeta.Size = entity.Size{
 			TechSize: currSize,
 			Title:    currSize,
 		}
 		stockMeta.Card = entity.Card{
-			VendorID: vendorID,
+			VendorCode: vendorCode,
+			VendorID:   vendorID,
 		}
 
 		for _, cardMeta := range stockResponce.CardMeta {
