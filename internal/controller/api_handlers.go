@@ -86,6 +86,7 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	// descOdinAss := entity.PackageDescription{
 	// 	Seller: "odinc",
 	// 	Query:  query,
+
 	// }
 
 	// err = gw.core.ReceiveCards(ctx, descOdinAss)

@@ -17,6 +17,7 @@ type Card struct {
 	VendorID    string `json:"vendor_id"`
 	VendorCode  string `json:"vendor_code"`
 	Title       string `json:"title"`
+	ExternalID  int64  `json:"external_id"`
 	Description string `json:"description"`
 	Category    struct {
 		ID    string `json:"ID"`
@@ -93,6 +94,7 @@ func (odinc *odincAPIclientImp) GetCards(ctx context.Context, desc entity.Packag
 
 		card := entity.Card{
 			VendorID:    v.VendorID,
+			ExternalID:  v.ExternalID,
 			VendorCode:  v.VendorCode,
 			Title:       v.Title,
 			Description: v.Description,
