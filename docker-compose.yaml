@@ -68,3 +68,9 @@ services:
       - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml
       # - ./infra/alerts.yml:/etc/prometheus/alerts.yml
       - ./prometheus_data:/prometheus
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.23.0
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./infra/blackbox.yml:/etc/blackbox_exporter/config.yml

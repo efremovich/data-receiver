@@ -61,83 +61,95 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 	var err error
 	// desc entity.PackageDescription
 
-	date := time.Date(2024, 01, 01, 0, 0, 0, 0, time.UTC)
-	// date := time.Now()
-	daysToGet := 360
+	// date := time.Date(2024, 01, 01, 0, 0, 0, 0, time.UTC)
+	date := time.Now()
+	daysToGet := 15
 	// d2tToGet := 90
 	delay := 61
-	// descOzon := entity.PackageDescription{
-	// 	Limit:       100,
-	// 	Cursor:      "0",
-	// 	PackageType: entity.PackageTypeCard,
-	// 	Seller:      "ozon",
-	// }
+	descOzon := entity.PackageDescription{
+		Limit:       100,
+		Cursor:      "0",
+		PackageType: entity.PackageTypeCard,
+		Seller:      "ozon",
+	}
 
-	// err = gw.core.ReceiveCards(ctx, descOzon)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveCards(ctx, descOzon)
+	if err != nil {
+		return err
+	}
 
-	// descCard := entity.PackageDescription{
-	// 	Limit:       100,
-	// 	Cursor:      "0",
-	// 	PackageType: entity.PackageTypeCard,
-	// 	Seller:      "wb",
-	// }
+	descCard := entity.PackageDescription{
+		Limit:       100,
+		Cursor:      "0",
+		PackageType: entity.PackageTypeCard,
+		Seller:      "wb",
+	}
 
-	// err = gw.core.ReceiveCards(ctx, descCard)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveCards(ctx, descCard)
+	if err != nil {
+		return err
+	}
 
-	// descWarehouse := entity.PackageDescription{
-	// 	Limit:       100,
-	// 	Cursor:      "0",
-	// 	PackageType: entity.PackageTypeCard,
-	// 	Seller:      "wb",
-	// }
+	descWarehouse := entity.PackageDescription{
+		Limit:       100,
+		Cursor:      "0",
+		PackageType: entity.PackageTypeCard,
+		Seller:      "wb",
+	}
 
-	// err = gw.core.ReceiveWarehouses(ctx, descWarehouse)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveWarehouses(ctx, descWarehouse)
+	if err != nil {
+		return err
+	}
 
-	// descOzonStock := entity.PackageDescription{
-	// 	PackageType: entity.PackageTypeStock,
-	// 	UpdatedAt:   time.Now(),
-	// 	Seller:      "ozon",
-	// }
+	descOzonStock := entity.PackageDescription{
+		PackageType: entity.PackageTypeStock,
+		UpdatedAt:   time.Now(),
+		Seller:      "ozon",
+	}
 
-	// err = gw.core.ReceiveStocks(ctx, descOzonStock)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveStocks(ctx, descOzonStock)
+	if err != nil {
+		return err
+	}
 
-	// descStocks := entity.PackageDescription{
-	// 	PackageType: entity.PackageTypeStock,
-	// 	UpdatedAt:   time.Now(),
-	// 	Limit:       daysToGet,
-	// 	Seller:      "wb",
-	// }
+	descStocks := entity.PackageDescription{
+		PackageType: entity.PackageTypeStock,
+		UpdatedAt:   time.Now(),
+		Limit:       daysToGet,
+		Seller:      "wb",
+	}
 
-	// err = gw.core.ReceiveStocks(ctx, descStocks)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveStocks(ctx, descStocks)
+	if err != nil {
+		return err
+	}
 
-	// descOrder := entity.PackageDescription{
-	// 	PackageType: entity.PackageTypeOrder,
-	// 	UpdatedAt:   date,
-	// 	Seller:      "wb",
-	// 	Limit:       daysToGet,
-	// 	Delay:       delay,
-	// }
+	descOrderWb := entity.PackageDescription{
+		PackageType: entity.PackageTypeOrder,
+		UpdatedAt:   date,
+		Seller:      "ozon",
+		Limit:       daysToGet,
+		Delay:       delay,
+	}
 
-	// err = gw.core.ReceiveOrders(ctx, descOrder)
-	// if err != nil {
-	// 	return err
-	// }
+	err = gw.core.ReceiveOrders(ctx, descOrderWb)
+	if err != nil {
+		return err
+	}
 
+	descOrderOzon := entity.PackageDescription{
+		PackageType: entity.PackageTypeOrder,
+		UpdatedAt:   date,
+		Seller:      "ozon",
+		Limit:       daysToGet,
+		Delay:       delay,
+	}
+
+	err = gw.core.ReceiveOrders(ctx, descOrderOzon)
+	if err != nil {
+		return err
+	}
 	descDescription := entity.PackageDescription{
 		PackageType: entity.PackageTypeSale,
 		UpdatedAt:   date,

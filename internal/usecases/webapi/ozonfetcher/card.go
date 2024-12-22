@@ -306,6 +306,7 @@ func getCardList(ctx context.Context, baseURL, clientID, apiKey string, limit in
 	run := true
 
 	productIDs := []int{}
+
 	for run {
 		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
 		if err != nil {

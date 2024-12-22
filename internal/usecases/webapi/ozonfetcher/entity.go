@@ -251,3 +251,126 @@ type StocksMeta struct {
 	StocksMeta []BundleItems `json:"stocks_items"`
 	CardMeta   []Items       `json:"cards_items"`
 }
+
+type OrderFilter struct {
+	Dir    string `json:"dir"`
+	Filter struct {
+		Since  time.Time `json:"since"`
+		Status string    `json:"status"`
+		To     time.Time `json:"to"`
+	} `json:"filter"`
+	Limit    int  `json:"limit"`
+	Offset   int  `json:"offset"`
+	Translit bool `json:"translit"`
+	With     struct {
+		AnalyticsData bool `json:"analytics_data"`
+		FinancialData bool `json:"financial_data"`
+	} `json:"with"`
+}
+
+type OrderRespose struct {
+	Result []struct {
+		OrderID        int       `json:"order_id"`
+		OrderNumber    string    `json:"order_number"`
+		PostingNumber  string    `json:"posting_number"`
+		Status         string    `json:"status"`
+		CancelReasonID int       `json:"cancel_reason_id"`
+		CreatedAt      time.Time `json:"created_at"`
+		InProcessAt    time.Time `json:"in_process_at"`
+		Products       []struct {
+			Sku          int    `json:"sku"`
+			Name         string `json:"name"`
+			Quantity     int    `json:"quantity"`
+			OfferID      string `json:"offer_id"`
+			Price        string `json:"price"`
+			DigitalCodes []any  `json:"digital_codes"`
+			CurrencyCode string `json:"currency_code"`
+		} `json:"products"`
+		AnalyticsData struct {
+			Region               string `json:"region"`
+			City                 string `json:"city"`
+			DeliveryType         string `json:"delivery_type"`
+			IsPremium            bool   `json:"is_premium"`
+			PaymentTypeGroupName string `json:"payment_type_group_name"`
+			WarehouseID          int64  `json:"warehouse_id"`
+			WarehouseName        string `json:"warehouse_name"`
+			IsLegal              bool   `json:"is_legal"`
+		} `json:"analytics_data"`
+		FinancialData struct {
+			Products []struct {
+				CommissionAmount     float64  `json:"commission_amount"`
+				CommissionPercent    int      `json:"commission_percent"`
+				Payout               float64  `json:"payout"`
+				ProductID            int      `json:"product_id"`
+				CurrencyCode         string   `json:"currency_code"`
+				OldPrice             float32  `json:"old_price"`
+				Price                float32  `json:"price"`
+				TotalDiscountValue   float32  `json:"total_discount_value"`
+				TotalDiscountPercent float64  `json:"total_discount_percent"`
+				Actions              []string `json:"actions"`
+				Picking              any      `json:"picking"`
+				Quantity             int      `json:"quantity"`
+				ClientPrice          string   `json:"client_price"`
+				ItemServices         struct {
+					MarketplaceServiceItemFulfillment                float64 `json:"marketplace_service_item_fulfillment"`
+					MarketplaceServiceItemPickup                     int     `json:"marketplace_service_item_pickup"`
+					MarketplaceServiceItemDropoffPvz                 int     `json:"marketplace_service_item_dropoff_pvz"`
+					MarketplaceServiceItemDropoffSc                  int     `json:"marketplace_service_item_dropoff_sc"`
+					MarketplaceServiceItemDropoffFf                  int     `json:"marketplace_service_item_dropoff_ff"`
+					MarketplaceServiceItemDirectFlowTrans            int     `json:"marketplace_service_item_direct_flow_trans"`
+					MarketplaceServiceItemReturnFlowTrans            int     `json:"marketplace_service_item_return_flow_trans"`
+					MarketplaceServiceItemDelivToCustomer            int     `json:"marketplace_service_item_deliv_to_customer"`
+					MarketplaceServiceItemReturnNotDelivToCustomer   int     `json:"marketplace_service_item_return_not_deliv_to_customer"`
+					MarketplaceServiceItemReturnPartGoodsCustomer    int     `json:"marketplace_service_item_return_part_goods_customer"`
+					MarketplaceServiceItemReturnAfterDelivToCustomer int     `json:"marketplace_service_item_return_after_deliv_to_customer"`
+				} `json:"item_services"`
+			} `json:"products"`
+			PostingServices struct {
+				MarketplaceServiceItemFulfillment                int `json:"marketplace_service_item_fulfillment"`
+				MarketplaceServiceItemPickup                     int `json:"marketplace_service_item_pickup"`
+				MarketplaceServiceItemDropoffPvz                 int `json:"marketplace_service_item_dropoff_pvz"`
+				MarketplaceServiceItemDropoffSc                  int `json:"marketplace_service_item_dropoff_sc"`
+				MarketplaceServiceItemDropoffFf                  int `json:"marketplace_service_item_dropoff_ff"`
+				MarketplaceServiceItemDirectFlowTrans            int `json:"marketplace_service_item_direct_flow_trans"`
+				MarketplaceServiceItemReturnFlowTrans            int `json:"marketplace_service_item_return_flow_trans"`
+				MarketplaceServiceItemDelivToCustomer            int `json:"marketplace_service_item_deliv_to_customer"`
+				MarketplaceServiceItemReturnNotDelivToCustomer   int `json:"marketplace_service_item_return_not_deliv_to_customer"`
+				MarketplaceServiceItemReturnPartGoodsCustomer    int `json:"marketplace_service_item_return_part_goods_customer"`
+				MarketplaceServiceItemReturnAfterDelivToCustomer int `json:"marketplace_service_item_return_after_deliv_to_customer"`
+			} `json:"posting_services"`
+		} `json:"financial_data"`
+		AdditionalData []any `json:"additional_data"`
+	} `json:"result"`
+}
+
+type ProductInfoResponse struct {
+	Items []ItemsResponse `json:"items"`
+}
+
+type ItemsResponse struct {
+	Barcodes              []string  `json:"barcodes"`
+	CreatedAt             time.Time `json:"created_at"`
+	CurrencyCode          string    `json:"currency_code"`
+	DescriptionCategoryID int       `json:"description_category_id"`
+	DiscountedFboStocks   int       `json:"discounted_fbo_stocks"`
+	HasDiscountedFboItem  bool      `json:"has_discounted_fbo_item"`
+	ID                    int       `json:"id"`
+	IsArchived            bool      `json:"is_archived"`
+	IsAutoarchived        bool      `json:"is_autoarchived"`
+	IsDiscounted          bool      `json:"is_discounted"`
+	IsKgt                 bool      `json:"is_kgt"`
+	IsPrepaymentAllowed   bool      `json:"is_prepayment_allowed"`
+	MarketingPrice        string    `json:"marketing_price"`
+	MinPrice              string    `json:"min_price"`
+	Name                  string    `json:"name"`
+	OfferID               string    `json:"offer_id"`
+	OldPrice              string    `json:"old_price"`
+	Price                 string    `json:"price"`
+	Sources               []struct {
+		CreatedAt    time.Time `json:"created_at"`
+		QuantCode    string    `json:"quant_code"`
+		ShipmentType string    `json:"shipment_type"`
+		Sku          int       `json:"sku"`
+		Source       string    `json:"source"`
+	} `json:"sources"`
+}
