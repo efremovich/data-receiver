@@ -15,9 +15,7 @@ scrape_configs:
     params:
       module: [http_2xx] # Используем модуль из blackbox.yml
     static_configs:
-      - targets:
-          - http://127.0.0.1 # Добавьте сюда URL, который нужно проверять
-          - http://data-receiver:8080
+      - targets: ["data-receiver:8080"]
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -25,3 +23,6 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox-exporter:9115 # Указываем Blackbox Exporter 
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: [ "node-exporter:9100" ]
