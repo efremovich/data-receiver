@@ -4,115 +4,92 @@ import (
 	"context"
 	"time"
 
+	"github.com/robfig/cron/v3"
+
 	"github.com/efremovich/data-receiver/internal/entity"
-	package_receiver "github.com/efremovich/data-receiver/pkg/data-receiver-service"
 	"github.com/efremovich/data-receiver/pkg/logger"
 )
 
-func (gw *grpcGatewayServerImpl) ReceiveCard(ctx context.Context, in *package_receiver.ReceiveCardRequest) (*package_receiver.ReceiveCardResponse, error) {
-	desc := entity.PackageDescription{}
-
-	err := gw.core.ReceiveCards(ctx, desc)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+type Task struct {
+	Name     string
+	Interval string
+	Function func(ctx context.Context) error
 }
 
-func (gw *grpcGatewayServerImpl) ReceiveWarehouse(ctx context.Context, in *package_receiver.ReceiveWarehouseRequest) (*package_receiver.ReceiveWarehouseResponse, error) {
-	desc := entity.PackageDescription{}
-	err := gw.core.ReceiveWarehouses(ctx, desc)
-	if err != nil {
-		return nil, err
+func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
+	c := cron.New()
+	tasks := []Task{
+		{"Загрузка товарных позиций wildberries", "0 12 * * *", gw.receiveCardsWB}, // Каждый день в 12
+		{"Загрузка товарных позиций ozon", "05 12 * * *", gw.receiveCardsOzon},
+
+		{"Загрузка складов wildberries", "15 12 * * *", gw.receiveWarehousesWB},
+
+		{"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
+		{"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
+
+		{"Загрузка заказов wildberries", "0 15 * * *", gw.receiveOrdersWB},
+		{"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
+
+		{"Загрузка продаж wildberries", "0 18 * * *", gw.receiveSalesWB},
 	}
 
-	return nil, nil
-}
-
-func (gw *grpcGatewayServerImpl) ReceiveStock(ctx context.Context, in *package_receiver.ReceiveStockRequest) (*package_receiver.ReceiveStockResponse, error) {
-	desc := entity.PackageDescription{}
-
-	err := gw.core.ReceiveStocks(ctx, desc)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, nil
-}
-
-func (gw *grpcGatewayServerImpl) autoupdate(ctx context.Context, upd time.Duration) {
-	t := time.NewTicker(upd)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-t.C:
-			err := gw.update(ctx)
-			if err != nil {
-				logger.GetLoggerFromContext(ctx).Errorf("ошибка получение карточек товара %s", err.Error())
+	for _, task := range tasks {
+		_, err := c.AddFunc(task.Interval, func() {
+			if err := task.Function(ctx); err != nil {
+				logger.GetLoggerFromContext(ctx).Errorf("задание %s завершилось с ошибкой: %v", task.Name, err)
+			} else {
+				logger.GetLoggerFromContext(ctx).Infof("задача %s успешно завершена", task.Name)
 			}
+		})
+		if err != nil {
+			logger.GetLoggerFromContext(ctx).Errorf("Failed to schedule task %s: %v", task.Name, err)
 		}
 	}
+
+	c.Start()
+	select {} // Block forever
 }
 
-func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
-	var err error
-	// desc entity.PackageDescription
-
-	// date := time.Date(2024, 01, 01, 0, 0, 0, 0, time.UTC)
-	date := time.Now()
-	daysToGet := 15
-	// d2tToGet := 90
-	delay := 61
-	descOzon := entity.PackageDescription{
-		Limit:       100,
-		Cursor:      "0",
-		PackageType: entity.PackageTypeCard,
-		Seller:      "ozon",
-	}
-
-	err = gw.core.ReceiveCards(ctx, descOzon)
-	if err != nil {
-		return err
-	}
-
-	descCard := entity.PackageDescription{
-		Limit:       100,
+func (gw *grpcGatewayServerImpl) receiveCardsWB(ctx context.Context) error {
+	limit := 100
+	desc := entity.PackageDescription{
+		Limit:       limit,
 		Cursor:      "0",
 		PackageType: entity.PackageTypeCard,
 		Seller:      "wb",
 	}
 
-	err = gw.core.ReceiveCards(ctx, descCard)
-	if err != nil {
-		return err
+	return gw.core.ReceiveCards(ctx, desc)
+}
+
+func (gw *grpcGatewayServerImpl) receiveCardsOzon(ctx context.Context) error {
+	limit := 100
+	desc := entity.PackageDescription{
+		Limit:       limit,
+		Cursor:      "0",
+		PackageType: entity.PackageTypeCard,
+		Seller:      "ozon",
 	}
 
+	return gw.core.ReceiveCards(ctx, desc)
+}
+
+func (gw *grpcGatewayServerImpl) receiveWarehousesWB(ctx context.Context) error {
+	limit := 100
 	descWarehouse := entity.PackageDescription{
-		Limit:       100,
+		Limit:       limit,
 		Cursor:      "0",
 		PackageType: entity.PackageTypeCard,
 		Seller:      "wb",
 	}
 
-	err = gw.core.ReceiveWarehouses(ctx, descWarehouse)
-	if err != nil {
-		return err
-	}
+	return gw.core.ReceiveWarehouses(ctx, descWarehouse)
 
-	descOzonStock := entity.PackageDescription{
-		PackageType: entity.PackageTypeStock,
-		UpdatedAt:   time.Now(),
-		Seller:      "ozon",
-	}
+}
 
-	err = gw.core.ReceiveStocks(ctx, descOzonStock)
-	if err != nil {
-		return err
-	}
-
+func (gw *grpcGatewayServerImpl) receiveStocksWB(ctx context.Context) error {
+	// TODO Перенести в конфиг
+	daysToGet := 15 // Количество дней для загрузки
 	descStocks := entity.PackageDescription{
 		PackageType: entity.PackageTypeStock,
 		UpdatedAt:   time.Now(),
@@ -120,48 +97,63 @@ func (gw *grpcGatewayServerImpl) update(ctx context.Context) error {
 		Seller:      "wb",
 	}
 
-	err = gw.core.ReceiveStocks(ctx, descStocks)
-	if err != nil {
-		return err
-	}
+	return gw.core.ReceiveStocks(ctx, descStocks)
+}
 
-	descOrderWb := entity.PackageDescription{
-		PackageType: entity.PackageTypeOrder,
-		UpdatedAt:   date,
+func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
+
+	descOzonStock := entity.PackageDescription{
+		PackageType: entity.PackageTypeStock,
+		UpdatedAt:   time.Now(),
 		Seller:      "ozon",
-		Limit:       daysToGet,
-		Delay:       delay,
 	}
 
-	err = gw.core.ReceiveOrders(ctx, descOrderWb)
-	if err != nil {
-		return err
-	}
+	return gw.core.ReceiveStocks(ctx, descOzonStock)
 
+}
+
+func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
+	// TODO Перенести в конфиг
+	daysToGet := 15 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
-		UpdatedAt:   date,
+		UpdatedAt:   time.Now(),
 		Seller:      "ozon",
 		Limit:       daysToGet,
 		Delay:       delay,
 	}
 
-	err = gw.core.ReceiveOrders(ctx, descOrderOzon)
-	if err != nil {
-		return err
-	}
-	descDescription := entity.PackageDescription{
-		PackageType: entity.PackageTypeSale,
-		UpdatedAt:   date,
+	return gw.core.ReceiveOrders(ctx, descOrderOzon)
+}
+
+func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
+	// TODO Перенести в конфиг
+	daysToGet := 15 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
+	descOrderOzon := entity.PackageDescription{
+		PackageType: entity.PackageTypeOrder,
+		UpdatedAt:   time.Now(),
 		Seller:      "wb",
 		Limit:       daysToGet,
 		Delay:       delay,
 	}
 
-	err = gw.core.ReceiveSales(ctx, descDescription)
-	if err != nil {
-		return err
+	return gw.core.ReceiveOrders(ctx, descOrderOzon)
+}
+
+func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
+	// TODO Перенести в конфиг
+	daysToGet := 15 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
+
+	descDescription := entity.PackageDescription{
+		PackageType: entity.PackageTypeSale,
+		UpdatedAt:   time.Now(),
+		Seller:      "wb",
+		Limit:       daysToGet,
+		Delay:       delay,
 	}
 
-	return nil
+	return gw.core.ReceiveSales(ctx, descDescription)
 }

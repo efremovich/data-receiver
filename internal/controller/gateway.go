@@ -135,10 +135,7 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 		return nil
 	})
 	g.Go(func() error {
-		err = gw.update(ctx)
-		if err != nil {
-			return err
-		}
+		gw.scheduleTasks(ctx)
 
 		return nil
 	})
