@@ -27,10 +27,10 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 		{"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
 		{"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
 
-		{"Загрузка заказов wildberries", "0 15 * * *", gw.receiveOrdersWB},
+		{"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
 		{"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
 
-		{"Загрузка продаж wildberries", "0 18 * * *", gw.receiveSalesWB},
+		{"Загрузка продаж wildberries", "30 19 * * *", gw.receiveSalesWB},
 	}
 
 	for _, task := range tasks {
@@ -114,7 +114,7 @@ func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
 
 func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
 	// TODO Перенести в конфиг
-	daysToGet := 15 // Количество дней для загрузки
+	daysToGet := 30 // Количество дней для загрузки
 	delay := 61     // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
@@ -129,7 +129,7 @@ func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
 
 func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
 	// TODO Перенести в конфиг
-	daysToGet := 15 // Количество дней для загрузки
+	daysToGet := 30 // Количество дней для загрузки
 	delay := 61     // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
@@ -144,7 +144,7 @@ func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
 
 func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
 	// TODO Перенести в конфиг
-	daysToGet := 15 // Количество дней для загрузки
+	daysToGet := 30 // Количество дней для загрузки
 	delay := 61     // Количество секунд задержки перед следующим запросом
 
 	descDescription := entity.PackageDescription{
