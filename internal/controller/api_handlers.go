@@ -10,6 +10,10 @@ import (
 	"github.com/efremovich/data-receiver/pkg/logger"
 )
 
+func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
+	// gw.receiveOrdersWB(ctx)
+}
+
 type Task struct {
 	Name     string
 	Interval string
@@ -89,7 +93,7 @@ func (gw *grpcGatewayServerImpl) receiveWarehousesWB(ctx context.Context) error 
 
 func (gw *grpcGatewayServerImpl) receiveStocksWB(ctx context.Context) error {
 	// TODO Перенести в конфиг
-	daysToGet := 15 // Количество дней для загрузки
+	daysToGet := 5 // Количество дней для загрузки
 	descStocks := entity.PackageDescription{
 		PackageType: entity.PackageTypeStock,
 		UpdatedAt:   time.Now(),
@@ -114,8 +118,8 @@ func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
 
 func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
 	// TODO Перенести в конфиг
-	daysToGet := 30 // Количество дней для загрузки
-	delay := 61     // Количество секунд задержки перед следующим запросом
+	daysToGet := 5 // Количество дней для загрузки
+	delay := 61    // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),
@@ -129,8 +133,8 @@ func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
 
 func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
 	// TODO Перенести в конфиг
-	daysToGet := 30 // Количество дней для загрузки
-	delay := 61     // Количество секунд задержки перед следующим запросом
+	daysToGet := 5 // Количество дней для загрузки
+	delay := 61    // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),
@@ -144,8 +148,8 @@ func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
 
 func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
 	// TODO Перенести в конфиг
-	daysToGet := 30 // Количество дней для загрузки
-	delay := 61     // Количество секунд задержки перед следующим запросом
+	daysToGet := 5 // Количество дней для загрузки
+	delay := 61    // Количество секунд задержки перед следующим запросом
 
 	descDescription := entity.PackageDescription{
 		PackageType: entity.PackageTypeSale,

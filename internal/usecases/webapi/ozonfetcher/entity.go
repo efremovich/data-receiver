@@ -311,33 +311,7 @@ type OrderRespose struct {
 				Picking              any      `json:"picking"`
 				Quantity             int      `json:"quantity"`
 				ClientPrice          string   `json:"client_price"`
-				ItemServices         struct {
-					MarketplaceServiceItemFulfillment                float64 `json:"marketplace_service_item_fulfillment"`
-					MarketplaceServiceItemPickup                     int     `json:"marketplace_service_item_pickup"`
-					MarketplaceServiceItemDropoffPvz                 int     `json:"marketplace_service_item_dropoff_pvz"`
-					MarketplaceServiceItemDropoffSc                  int     `json:"marketplace_service_item_dropoff_sc"`
-					MarketplaceServiceItemDropoffFf                  int     `json:"marketplace_service_item_dropoff_ff"`
-					MarketplaceServiceItemDirectFlowTrans            int     `json:"marketplace_service_item_direct_flow_trans"`
-					MarketplaceServiceItemReturnFlowTrans            int     `json:"marketplace_service_item_return_flow_trans"`
-					MarketplaceServiceItemDelivToCustomer            int     `json:"marketplace_service_item_deliv_to_customer"`
-					MarketplaceServiceItemReturnNotDelivToCustomer   int     `json:"marketplace_service_item_return_not_deliv_to_customer"`
-					MarketplaceServiceItemReturnPartGoodsCustomer    int     `json:"marketplace_service_item_return_part_goods_customer"`
-					MarketplaceServiceItemReturnAfterDelivToCustomer int     `json:"marketplace_service_item_return_after_deliv_to_customer"`
-				} `json:"item_services"`
 			} `json:"products"`
-			PostingServices struct {
-				MarketplaceServiceItemFulfillment                int `json:"marketplace_service_item_fulfillment"`
-				MarketplaceServiceItemPickup                     int `json:"marketplace_service_item_pickup"`
-				MarketplaceServiceItemDropoffPvz                 int `json:"marketplace_service_item_dropoff_pvz"`
-				MarketplaceServiceItemDropoffSc                  int `json:"marketplace_service_item_dropoff_sc"`
-				MarketplaceServiceItemDropoffFf                  int `json:"marketplace_service_item_dropoff_ff"`
-				MarketplaceServiceItemDirectFlowTrans            int `json:"marketplace_service_item_direct_flow_trans"`
-				MarketplaceServiceItemReturnFlowTrans            int `json:"marketplace_service_item_return_flow_trans"`
-				MarketplaceServiceItemDelivToCustomer            int `json:"marketplace_service_item_deliv_to_customer"`
-				MarketplaceServiceItemReturnNotDelivToCustomer   int `json:"marketplace_service_item_return_not_deliv_to_customer"`
-				MarketplaceServiceItemReturnPartGoodsCustomer    int `json:"marketplace_service_item_return_part_goods_customer"`
-				MarketplaceServiceItemReturnAfterDelivToCustomer int `json:"marketplace_service_item_return_after_deliv_to_customer"`
-			} `json:"posting_services"`
 		} `json:"financial_data"`
 		AdditionalData []any `json:"additional_data"`
 	} `json:"result"`

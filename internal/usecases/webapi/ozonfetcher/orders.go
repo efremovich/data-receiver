@@ -54,6 +54,7 @@ func (o *ozonAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDes
 	}
 
 	skus := []int{}
+
 	for _, elem := range response.Result {
 		for _, product := range elem.Products {
 			skus = append(skus, product.Sku)

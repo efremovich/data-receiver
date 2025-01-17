@@ -140,6 +140,12 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 		return nil
 	})
 
+	//Для теста
+	g.Go(func() error {
+		gw.runTask(ctx)
+
+		return nil
+	})
 	g.Go(func() error {
 		<-ctx.Done()
 		gw.grpcServer.GracefulStop()
