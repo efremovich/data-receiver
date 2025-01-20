@@ -9,14 +9,14 @@ import (
 )
 
 func (s *receiverCoreServiceImpl) setMediaFile(ctx context.Context, card *entity.Card) ([]*entity.MediaFile, error) {
-	var err error
+	var mediaFile *entity.MediaFile
 
 	mediaFiles := []*entity.MediaFile{}
 
 	for _, elem := range card.MediaFile {
-		mediaFiles, err = s.mediafilerepo.SelectByCardID(ctx, card.ID, elem.Link)
+		mfList, err := s.mediafilerepo.SelectByCardID(ctx, card.ID, elem.Link)
 		if errors.Is(err, ErrObjectNotFound) {
-			mediaFile, err := s.mediafilerepo.Insert(ctx, entity.MediaFile{
+			mediaFile, err = s.mediafilerepo.Insert(ctx, entity.MediaFile{
 				Link:   elem.Link,
 				TypeID: elem.TypeID,
 				CardID: card.ID,
@@ -25,6 +25,8 @@ func (s *receiverCoreServiceImpl) setMediaFile(ctx context.Context, card *entity
 				return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
 			}
 			mediaFiles = append(mediaFiles, mediaFile)
+		} else {
+			mediaFiles = append(mediaFiles, mfList...)
 		}
 	}
 

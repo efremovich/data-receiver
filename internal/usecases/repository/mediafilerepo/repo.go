@@ -38,7 +38,7 @@ func (repo *mediafileRepoImpl) SelectByCardID(ctx context.Context, id int64, lin
 	query := "SELECT id, link, card_id, type_id FROM shop.media_files WHERE card_id = $1 and link = $2"
 
 	err := repo.getReadConnection().Select(&result, query, id, link)
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
+	if err != nil && errors.Is(err, sql.ErrNoRows) || len(result) == 0 {
 		return nil, ErrObjectNotFound
 	} else if err != nil {
 		return nil, fmt.Errorf("ошибка при поиске данных по id %d в таблице mediaFiles: %w", id, err)

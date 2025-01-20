@@ -11,7 +11,8 @@ import (
 )
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	// gw.receiveOrdersWB(ctx)
+	gw.receiveCardsWB(ctx)
+	gw.receiveCardsOzon(ctx)
 }
 
 type Task struct {

@@ -87,6 +87,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 		}
 
 		// Mediafile
+		card.MediaFile = in.MediaFile
 		_, err = s.setMediaFile(ctx, card)
 		if err != nil {
 			return err
