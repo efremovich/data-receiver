@@ -24,8 +24,6 @@ import (
 	"github.com/efremovich/data-receiver/pkg/metrics"
 )
 
-const updateIntervalDefault = time.Hour * 10
-
 type GrpcGatewayServer interface {
 	Start(ctx context.Context) error
 	gracefulStop()
@@ -140,7 +138,7 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 		return nil
 	})
 
-	//Для теста
+	// Для теста
 	g.Go(func() error {
 		gw.runTask(ctx)
 
