@@ -49,6 +49,10 @@ service CardReceiver {
   rpc ReceiveStock(ReceiveStockRequest) returns (ReceiveStockResponse) {
     option (google.api.http) = {get: "/stock"};
   }
+  
+  rpc OfferFeed(google.protobuf.Empty) returns (OfferFeedResponse) {
+    option (google.api.http) = {get: "/offerfeed"};
+  }
 }
 
 message ReceiveCardRequest {
@@ -74,4 +78,8 @@ message ReceiveStockRequest {
 
 message ReceiveStockResponse {
   string id = 1;
+}
+
+message OfferFeedResponse {
+  string body = 1;
 }

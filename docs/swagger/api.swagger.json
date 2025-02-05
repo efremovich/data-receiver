@@ -73,6 +73,28 @@
         ]
       }
     },
+    "/offerfeed": {
+      "get": {
+        "operationId": "CardReceiver_OfferFeed",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/package_receiverOfferFeedResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "CardReceiver"
+        ]
+      }
+    },
     "/stock": {
       "get": {
         "operationId": "CardReceiver_ReceiveStock",
@@ -141,6 +163,14 @@
     }
   },
   "definitions": {
+    "package_receiverOfferFeedResponse": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string"
+        }
+      }
+    },
     "package_receiverReceiveCardResponse": {
       "type": "object",
       "properties": {

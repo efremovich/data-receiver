@@ -16,6 +16,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/districtrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/mediafilerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/offerfeedrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
@@ -38,6 +39,7 @@ type ReceiverCoreService interface {
 	ReceiveStocks(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveOrders(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveSales(ctx context.Context, desc entity.PackageDescription) error
+	OfferFeed(ctx context.Context) ([]byte, error)
 
 	PingDB(ctx context.Context) error
 	PingNATS(_ context.Context) error
@@ -65,6 +67,7 @@ type receiverCoreServiceImpl struct {
 	regionrepo       regionrepo.RegoinRepo
 	districtrepo     districtrepo.DistrictRepo
 	salerepo         salerepo.SaleRepo
+	offerfeedrepo    offerfeedrepo.OfferRepo
 
 	seller2cardrepo seller2cardrepo.Seller2CardRepo
 
@@ -100,6 +103,7 @@ func NewPackageReceiverService(
 	regionrepo regionrepo.RegoinRepo,
 	districtrepo districtrepo.DistrictRepo,
 	salerepo salerepo.SaleRepo,
+	offerfeedrepo offerfeedrepo.OfferRepo,
 	warehouserepo warehouserepo.WarehouseRepo,
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo,
 
@@ -130,6 +134,7 @@ func NewPackageReceiverService(
 		regionrepo:       regionrepo,
 		districtrepo:     districtrepo,
 		salerepo:         salerepo,
+		offerfeedrepo:    offerfeedrepo,
 
 		warehouserepo:     warehouserepo,
 		warehousetyperepo: warehousetyperepo,

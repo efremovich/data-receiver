@@ -24,8 +24,8 @@ func newRouter(grpcGateway *runtime.ServeMux, cfg config.Gateway, cardHandler fu
 		middleware.LoggerMiddleware(cardHandler),
 	))
 
-	server.Static("/receiver/swagger", cfg.PathToSwaggerDir)
-	server.Static("/receiver/data-receiver/swagger", cfg.PathToSwaggerDir) // Swagger для локальной сборки.
+	server.Static("/swagger", cfg.PathToSwaggerDir)
+	server.Static("/data-receiver/swagger", cfg.PathToSwaggerDir) // Swagger для локальной сборки.
 
 	server.All("/metrics", middleware.CorsMiddleware(adaptor.HTTPHandler(metricsCollector.ServeHTTP())))
 

@@ -19,6 +19,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/districtrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/mediafilerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/offerfeedrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
@@ -200,6 +201,13 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Репозиторий OffersFeed
+	offerFeedRepo, err := offerfeedrepo.NewOfferRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
 	// Основной бизнес-сервис.
 	packageReceiverCoreService := usecases.NewPackageReceiverService(
 		conf,
@@ -224,6 +232,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		regionRepo,
 		districtRepo,
 		saleRepo,
+		offerFeedRepo,
 
 		warehouseRepo,
 		warehouseTypeRepo,

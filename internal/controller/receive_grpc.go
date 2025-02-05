@@ -36,3 +36,12 @@ func (gw *grpcGatewayServerImpl) StockReceiverV1Handler(req *fiber.Ctx) error {
 
 	return nil
 }
+
+func (gw *grpcGatewayServerImpl) OfferFeedV1Handler(req *fiber.Ctx) ([]byte, error) {
+	offers, err := gw.core.OfferFeed(req.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	return offers, nil
+}
