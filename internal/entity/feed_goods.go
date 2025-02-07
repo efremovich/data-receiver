@@ -29,7 +29,7 @@ type Offer struct {
 	GroupID      string   `xml:"group_id,attr"`
 	Name         string   `xml:"name"`
 	Similar      string   `xml:"similar"`
-	Price        float32  `xml:"price"`
+	Price        float64  `xml:"price"`
 	Barcode      string   `xml:"barcode"`
 	URL          string   `xml:"url"`
 	VendorCode   string   `xml:"vendorCode"`
@@ -38,7 +38,7 @@ type Offer struct {
 	Rating       float32  `xml:"rating"`
 	ReviewsCount int      `xml:"reviews_count"`
 	Description  string   `xml:"description"`
-	OldPrice     float32  `xml:"oldprice"`
+	OldPrice     float64  `xml:"oldprice"`
 	CategoryIDs  []int64  `xml:"category_ids"`
 	Pictures     []string `xml:"picture"`
 	MarketIDs    []int64  `xml:"market_ids"`

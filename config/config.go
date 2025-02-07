@@ -3,7 +3,7 @@ package config
 import "time"
 
 type Config struct {
-	ServiceName        string   `env:"SERVICE_NAME, default=receiver"`
+	ServiceName        string   `env:"SERVICE_NAME, default=data-receiver"`
 	PGWriterConn       string   `env:"POSTGRES_WRITER_CONN"`
 	PGReaderConn       string   `env:"POSTGRES_READER_CONN"`
 	LogLevel           int      `env:"LOG_LEVEL, default=-4"` // debug = -4, info = 0, warn = 4

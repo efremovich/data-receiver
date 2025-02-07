@@ -7,7 +7,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 
 	"github.com/efremovich/data-receiver/config"
-	"github.com/efremovich/data-receiver/internal/controller/middleware"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 )
 
@@ -20,18 +19,12 @@ func newRouter(grpcGateway *runtime.ServeMux, cfg config.Gateway, cardHandler fu
 		AllowMethods: "GET, POST, OPTIONS",
 	}))
 
-	server.All("/card/v1", middleware.CorsMiddleware(
-		middleware.LoggerMiddleware(cardHandler),
-	))
+	server.All("/feed/v1/order", cardHandler)
 
 	server.Static("/swagger", cfg.PathToSwaggerDir)
 	server.Static("/data-receiver/swagger", cfg.PathToSwaggerDir) // Swagger для локальной сборки.
-
-	server.All("/metrics", middleware.CorsMiddleware(adaptor.HTTPHandler(metricsCollector.ServeHTTP())))
-
-	server.All("/*", middleware.CorsMiddleware(
-		middleware.LoggerMiddleware(adaptor.HTTPHandler(grpcGateway)),
-	))
+	server.All("/metrics", adaptor.HTTPHandler(metricsCollector.ServeHTTP()))
+	server.All("/*", adaptor.HTTPHandler(grpcGateway))
 
 	return server
 }

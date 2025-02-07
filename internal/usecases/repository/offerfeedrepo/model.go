@@ -2,25 +2,27 @@ package offerfeedrepo
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/internal/usecases/repository"
 )
 
 type offerDB struct {
-	ID          int64    `db:"id"`
-	Available   bool     `db:"available"`
-	GroupID     string   `db:"group_id"`
-	Name        string   `db:"name"`
-	Similar     string   `db:"similar"`
-	Price       float32  `db:"price"`
-	OldPrice    float32  `db:"old_price"`
-	Barcode     string   `db:"barcode"`
-	VendorCode  string   `db:"vendor_code"`
-	MarketIDs   []int64  `db:"market_id"`
-	Vendor      string   `db:"vendor"`
-	Pictures    []string `db:"picture"`
-	CategoryIDs []int64  `db:"category_id"`
-	Description string   `db:"description"`
+	ID          int64           `db:"id"`
+	Available   bool            `db:"available"`
+	GroupID     string          `db:"group_id"`
+	Name        string          `db:"name"`
+	Similar     string          `db:"similar"`
+	Price       sql.NullFloat64 `db:"price"`
+	OldPrice    sql.NullFloat64 `db:"old_price"`
+	Barcode     sql.NullString  `db:"barcode"`
+	VendorCode  string          `db:"vendor_code"`
+	MarketIDs   string          `db:"market_id"`
+	Vendor      string          `db:"vendor"`
+	Pictures    string          `db:"picture"`
+	CategoryIDs string          `db:"category_id"`
+	Description string          `db:"description"`
 }
 
 func (c offerDB) ConvertToEntityOffer(_ context.Context) *entity.Offer {
@@ -30,8 +32,8 @@ func (c offerDB) ConvertToEntityOffer(_ context.Context) *entity.Offer {
 		GroupID:      c.GroupID,
 		Name:         c.Name,
 		Similar:      c.Similar,
-		Price:        c.Price,
-		Barcode:      c.Barcode,
+		Price:        repository.NullFloatToFloat(c.Price),
+		Barcode:      repository.NullStringToString(c.Barcode),
 		URL:          "",
 		VendorCode:   c.VendorCode,
 		Sort:         1,
@@ -39,11 +41,11 @@ func (c offerDB) ConvertToEntityOffer(_ context.Context) *entity.Offer {
 		Rating:       0,
 		ReviewsCount: 0,
 		Description:  c.Description,
-		OldPrice:     c.OldPrice,
-		CategoryIDs:  c.CategoryIDs,
-		Pictures:     c.Pictures,
-		MarketIDs:    c.MarketIDs,
-		Params:       []entity.Param{},
-		Badges:       []entity.Badge{},
+		OldPrice:     repository.NullFloatToFloat(c.OldPrice),
+		// CategoryIDs:  c.CategoryIDs,
+		// Pictures:     c.Pictures,
+		// MarketIDs:    c.MarketIDs,
+		Params: []entity.Param{},
+		Badges: []entity.Badge{},
 	}
 }

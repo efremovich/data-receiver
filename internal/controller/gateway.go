@@ -4,6 +4,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -43,15 +44,15 @@ type grpcGatewayServerImpl struct {
 	desc.UnimplementedCardReceiverServer
 }
 
-func NewGatewayServer(ctx context.Context, cfg conf.Config, packageReceiver usecases.ReceiverCoreService, metricsCollector metrics.Collector, broker brokerconsumer.BrokerConsumer) (GrpcGatewayServer, error) {
+func NewGatewayServer(ctx context.Context, cfg conf.Config, core usecases.ReceiverCoreService, metricsCollector metrics.Collector, broker brokerconsumer.BrokerConsumer) (GrpcGatewayServer, error) {
 	gwmux := runtime.NewServeMux()
 
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
 	err := desc.RegisterCardReceiverHandlerFromEndpoint(
-		context.Background(),
+		ctx,
 		gwmux,
-		cfg.Gateway.GRPC.Host+":"+cfg.Gateway.GRPC.Port,
+		net.JoinHostPort(cfg.Gateway.GRPC.Host, cfg.Gateway.GRPC.Port),
 		opts,
 	)
 	if err != nil {
@@ -60,12 +61,12 @@ func NewGatewayServer(ctx context.Context, cfg conf.Config, packageReceiver usec
 
 	gateway := &grpcGatewayServerImpl{
 		cfg:              cfg,
-		core:             packageReceiver,
+		core:             core,
 		metricsCollector: metricsCollector,
 		brokerConsumer:   broker,
 	}
 
-	router := newRouter(gwmux, cfg.Gateway, gateway.CardReceiveV1Handler, metricsCollector)
+	router := newRouter(gwmux, cfg.Gateway, gateway.OfferFeedV1Handler, metricsCollector)
 
 	interceptors := grpc.ChainUnaryInterceptor(
 		alogger.UnaryTraceIdInterceptor,

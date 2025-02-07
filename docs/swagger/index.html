@@ -1,36 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Swagger UI</title>
-  <link rel="stylesheet" type="text/css" href="/receiver/swagger/swagger-ui.css">
-  <link rel="icon" type="image/png" href="/receiver/swagger/favicon-32x32.png" sizes="32x32">
-  <script src="/receiver/swagger/swagger-ui-bundle.js"></script>
-  <script src="/receiver/swagger/swagger-ui-standalone-preset.js"></script>
+  <link rel="stylesheet" type="text/css" href="/swagger/swagger-ui.css">
+  <link rel="icon" type="image/png" href="/swagger/favicon-32x32.png" sizes="32x32">
+  <script src="/swagger/swagger-ui-bundle.js"></script>
+  <script src="/swagger/swagger-ui-standalone-preset.js"></script>
 </head>
-<body>
-<div id="swagger-ui"></div>
-<script>
-  window.onload = function() {
-    const ui = SwaggerUIBundle({
-      urls: [
-        { url: "/receiver/swagger/api.swagger.json", name: "User API V1" },
-        // Добавьте дополнительные файлы API здесь
-      ],
-      dom_id: "#swagger-ui",
-      deepLinking: true,
-      presets: [
-        SwaggerUIBundle.presets.apis,
-        SwaggerUIStandalonePreset
-      ],
-      plugins: [
-        SwaggerUIBundle.plugins.DownloadUrl
-      ],
-      layout: "StandaloneLayout"
-    });
 
-    window.ui = ui;
-  };
-</script>
+<body>
+  <div id="swagger-ui"></div>
+  <script>
+    window.onload = function () {
+      const ui = SwaggerUIBundle({
+        urls: [
+          {url: "/swagger/api.swagger.json", name: "User API V1"},
+          // Добавьте дополнительные файлы API здесь
+        ],
+        dom_id: "#swagger-ui",
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout"
+      });
+
+      window.ui = ui;
+    };
+  </script>
 </body>
+
 </html>

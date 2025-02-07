@@ -2,17 +2,29 @@ package controller
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/robfig/cron/v3"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/efremovich/data-receiver/internal/entity"
+	package_receiver "github.com/efremovich/data-receiver/pkg/data-receiver-service"
 	"github.com/efremovich/data-receiver/pkg/logger"
 )
 
+func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty) (*package_receiver.OfferFeedResponse, error) {
+	responce, err := gw.core.OfferFeed(ctx)
+
+	offerResp := package_receiver.OfferFeedResponse{
+		Body: string(responce),
+	}
+
+	return &offerResp, err
+}
+
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	gw.receiveCardsWB(ctx)
-	gw.receiveCardsOzon(ctx)
+	gw.generateOrderFeed(ctx)
 }
 
 type Task struct {
@@ -36,6 +48,8 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 		{"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
 
 		{"Загрузка продаж wildberries", "30 19 * * *", gw.receiveSalesWB},
+
+		{"Генерация фида предложений", "00 16 * * * ", gw.generateOrderFeed},
 	}
 
 	for _, task := range tasks {
@@ -53,6 +67,25 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 
 	c.Start()
 	select {} // Block forever
+}
+
+func (gw *grpcGatewayServerImpl) generateOrderFeed(ctx context.Context) error {
+	logger.GetLoggerFromContext(ctx).Infof("начинаем генерацию фида")
+
+	offers, err := gw.core.OfferFeed(ctx)
+	if err != nil {
+		return err
+	}
+
+	logger.GetLoggerFromContext(ctx).Infof("генерация фида окончена")
+	err = os.WriteFile("/tmp/offer_feed.xml", offers, 0o644)
+
+	if err != nil {
+		return err
+	}
+
+	logger.GetLoggerFromContext(ctx).Infof("фид cохранен")
+	return nil
 }
 
 func (gw *grpcGatewayServerImpl) receiveCardsWB(ctx context.Context) error {
