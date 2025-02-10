@@ -10,7 +10,10 @@ import (
 	"github.com/efremovich/data-receiver/pkg/metrics"
 )
 
-func newRouter(grpcGateway *runtime.ServeMux, cfg config.Gateway, cardHandler func(*fiber.Ctx) error, metricsCollector metrics.Collector) *fiber.App {
+func newRouter(grpcGateway *runtime.ServeMux, cfg config.Gateway,
+	offerHandler func(*fiber.Ctx) error,
+	stockHandler func(*fiber.Ctx) error,
+	metricsCollector metrics.Collector) *fiber.App {
 	server := fiber.New()
 
 	server.Use(cors.New(cors.Config{
@@ -19,7 +22,8 @@ func newRouter(grpcGateway *runtime.ServeMux, cfg config.Gateway, cardHandler fu
 		AllowMethods: "GET, POST, OPTIONS",
 	}))
 
-	server.All("/feed/v1/order", cardHandler)
+	server.All("/feed/v1/offer", offerHandler)
+	server.All("/feed/v1/stock", stockHandler)
 
 	server.Static("/swagger", cfg.PathToSwaggerDir)
 	server.Static("/data-receiver/swagger", cfg.PathToSwaggerDir) // Swagger для локальной сборки.

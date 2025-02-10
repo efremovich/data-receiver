@@ -45,6 +45,7 @@ func (gw *grpcGatewayServerImpl) OfferFeedV1Handler(req *fiber.Ctx) error {
 	filePath := "/tmp/offer_feed.xml"
 
 	logger.GetLoggerFromContext(req.Context()).Infof("начинаем чтение с диска")
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		req.Response().SetStatusCode(http.StatusInternalServerError)
@@ -52,6 +53,7 @@ func (gw *grpcGatewayServerImpl) OfferFeedV1Handler(req *fiber.Ctx) error {
 		return err
 	}
 
+	req.Set("Content-Type", "application/xml")
 	req.Response().SetStatusCode(http.StatusOK)
 	req.Response().AppendBody(data)
 	return nil
