@@ -35,6 +35,17 @@ type Queue struct {
 	MaxAckPending     int `env:"MAX_ACK_PENDING, default=10000"` // Максимальное количество сообщений, которые могут быть ожидающими подтверждения.
 }
 
+type Seller struct {
+	Name           string   `env:"NAME"`
+	URLMarketPlace string   `env:"URL_MP"`
+	URLContent     string   `env:"URL_CONTENT"`
+	Token          string   `env:"TOKEN"`
+	TokenStat      string   `env:"TOKEN_STAT"`
+	APIKey         string   `env:"APIKEY"`
+	ClientID       string   `env:"CLIENTID"`
+	Schedule       Schedule `env:", prefix=SCHEDULE_"`
+}
+
 // Конфигурация для создания api клиентов для получения данных.
 type Sellers struct {
 	WB    SellerWB    `env:", prefix=WB_"`

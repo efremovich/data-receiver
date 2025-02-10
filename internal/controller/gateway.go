@@ -66,7 +66,10 @@ func NewGatewayServer(ctx context.Context, cfg conf.Config, core usecases.Receiv
 		brokerConsumer:   broker,
 	}
 
-	router := newRouter(gwmux, cfg.Gateway, gateway.OfferFeedV1Handler, metricsCollector)
+	router := newRouter(gwmux, cfg.Gateway,
+		gateway.OfferFeedV1Handler,
+		gateway.OfferFeedV1Handler,
+		metricsCollector)
 
 	interceptors := grpc.ChainUnaryInterceptor(
 		alogger.UnaryTraceIdInterceptor,
