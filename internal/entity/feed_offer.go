@@ -9,11 +9,12 @@ type YMLCatalog struct {
 }
 
 type Shop struct {
-	Name       string         `xml:"name"`
-	Company    string         `xml:"company"`
-	URL        string         `xml:"url"`
-	Categories []FeedCategory `xml:"categories>category"`
-	Offers     []*Offer       `xml:"offers>offer"`
+	Name       string          `xml:"name"`
+	Company    string          `xml:"company"`
+	URL        string          `xml:"url"`
+	Categories []*FeedCategory `xml:"categories>category"`
+	Offers     []*Offer        `xml:"offers>offer"`
+	Inventory  Inventory       `xml:"Inventory"`
 }
 
 type FeedCategory struct {
@@ -56,37 +57,4 @@ type Badge struct {
 	BgColor   string `xml:"bgColor,attr"`
 	TextColor string `xml:"textColor,attr"`
 	Value     string `xml:",chardata"`
-}
-
-type Inventory struct {
-	XMLName  xml.Name `xml:"inventory"`
-	Text     string   `xml:",chardata"`
-	Storages struct {
-		Text    string `xml:",chardata"`
-		Storage []struct {
-			Text     string `xml:",chardata"`
-			ID       string `xml:"id,attr"`
-			Name     string `xml:"name"`
-			City     string `xml:"city"`
-			Type     string `xml:"type"`
-			Address  string `xml:"address"`
-			Lat      string `xml:"lat"`
-			Lon      string `xml:"lon"`
-			Region   string `xml:"region"`
-			WorkTime string `xml:"work_time"`
-			Phone    string `xml:"phone"`
-			Icon     string `xml:"icon"`
-		} `xml:"storage"`
-	} `xml:"storages"`
-	Availability struct {
-		Text  string `xml:",chardata"`
-		Offer []struct {
-			Text     string `xml:",chardata"`
-			ID       string `xml:"id,attr"`
-			Storage  string `xml:"storage,attr"`
-			Quantity string `xml:"quantity,attr"`
-			Price    string `xml:"price,attr"`
-			OldPrice string `xml:"old_price,attr"`
-		} `xml:"offer"`
-	} `xml:"availability"`
 }

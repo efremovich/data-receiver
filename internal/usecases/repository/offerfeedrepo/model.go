@@ -49,3 +49,14 @@ func (c offerDB) ConvertToEntityOffer(_ context.Context) *entity.Offer {
 		Badges: []entity.Badge{},
 	}
 }
+
+type stockDB struct {
+	ID             int64           `db:"id"`
+	Quantity       int64           `db:"quantity"`
+	Price          sql.NullFloat64 `db:"price"`
+	OldPrice       sql.NullFloat64 `db:"old_price"`
+	Storage        int64           `db:"storage"`
+	StorageName    string          `db:"storage_name"`
+	StorageAddress string          `db:"storage_address"`
+	StorageType    string          `db:"storage_type"`
+}

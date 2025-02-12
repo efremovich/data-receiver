@@ -14,6 +14,7 @@ var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type OfferRepo interface {
 	GetOffers(ctx context.Context) ([]*entity.Offer, error)
+	GetStocks(ctx context.Context) ([]*entity.Inventory, error)
 	Ping(ctx context.Context) error
 	BeginTX(ctx context.Context) (postgresdb.Transaction, error)
 	WithTx(*postgresdb.Transaction) OfferRepo
@@ -28,6 +29,8 @@ func NewOfferRepo(_ context.Context, db *postgresdb.DBConnection) (OfferRepo, er
 	return &offerRepoImpl{db: db}, nil
 }
 
+func (repo *offerRepoImpl) GetStocks(ctx context.Context) ([]*entity.Inventory, error) {
+}
 func (repo *offerRepoImpl) GetOffers(ctx context.Context) ([]*entity.Offer, error) {
 	var results []offerDB
 	query := `
