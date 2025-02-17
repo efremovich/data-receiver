@@ -18,10 +18,10 @@ type offerDB struct {
 	OldPrice    sql.NullFloat64 `db:"old_price"`
 	Barcode     sql.NullString  `db:"barcode"`
 	VendorCode  string          `db:"vendor_code"`
-	MarketIDs   []int64         `db:"market_id"`
+	MarketIDs   string          `db:"market_id"`
 	Vendor      string          `db:"vendor"`
-	Pictures    []string        `db:"picture"`
-	CategoryIDs []int64         `db:"category_id"`
+	Pictures    string          `db:"picture"`
+	CategoryIDs string          `db:"category_id"`
 	Description string          `db:"description"`
 }
 
@@ -60,19 +60,19 @@ type stockDB struct {
 }
 
 type storageDB struct {
-	ID         int64  `db:"id"`
-	Name       string `db:"name"`
-	City       string `db:"city"`
-	Type       string `db:"type"`
-	Address    string `db:"address"`
-	Lat        string `db:"lat"`
-	Lon        string `db:"lon"`
-	Region     string `db:"region"`
-	WorkTime   string `db:"work_time"`
-	Phone      string `db:"phone"`
-	Icon       string `db:"icon"`
-	SellerID   int64  `db:"seller_id"`
-	SellerName string `db:"seller_name"`
+	ID         int64          `db:"id"`
+	Name       string         `db:"name"`
+	City       string         `db:"city"`
+	Type       sql.NullString `db:"type"`
+	Address    string         `db:"address"`
+	Lat        string         `db:"lat"`
+	Lon        string         `db:"lon"`
+	Region     string         `db:"region"`
+	WorkTime   string         `db:"work_time"`
+	Phone      string         `db:"phone"`
+	Icon       string         `db:"icon"`
+	SellerID   int64          `db:"seller_id"`
+	SellerName string         `db:"seller_name"`
 }
 
 func (c stockDB) ConvertToEntityStock(_ context.Context) *entity.OfferStock {
@@ -91,7 +91,7 @@ func (c storageDB) ConvertToEntityStorage(_ context.Context) *entity.OfferStorag
 		ID:       c.ID,
 		Name:     c.Name,
 		City:     c.City,
-		Type:     c.Type,
+		Type:     repository.NullStringToString(c.Type),
 		Address:  c.Address,
 		Lat:      c.Lat,
 		Lon:      c.Lon,

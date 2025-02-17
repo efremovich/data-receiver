@@ -68,7 +68,7 @@ func NewGatewayServer(ctx context.Context, cfg conf.Config, core usecases.Receiv
 
 	router := newRouter(gwmux, cfg.Gateway,
 		gateway.OfferFeedV1Handler,
-		gateway.StockReceiverV1Handler,
+		gateway.StockFeedV1Handler,
 		metricsCollector)
 
 	interceptors := grpc.ChainUnaryInterceptor(

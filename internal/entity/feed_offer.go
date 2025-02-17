@@ -25,26 +25,26 @@ type FeedCategory struct {
 }
 
 type Offer struct {
-	ID           int64    `xml:"id,attr"`
-	Available    bool     `xml:"available,attr"`
-	GroupID      string   `xml:"group_id,attr"`
-	Name         string   `xml:"name"`
-	Similar      string   `xml:"similar"`
-	Price        float64  `xml:"price"`
-	Barcode      string   `xml:"barcode"`
-	URL          string   `xml:"url"`
-	VendorCode   string   `xml:"vendorCode"`
-	Sort         int      `xml:"sort"`
-	Vendor       string   `xml:"vendor"`
-	Rating       float32  `xml:"rating"`
-	ReviewsCount int      `xml:"reviews_count"`
-	Description  string   `xml:"description"`
-	OldPrice     float64  `xml:"oldprice"`
-	CategoryIDs  []int64  `xml:"category_ids"`
-	Pictures     []string `xml:"picture"`
-	MarketIDs    []int64  `xml:"market_ids"`
-	Params       []Param  `xml:"param"`
-	Badges       []Badge  `xml:"badge"`
+	ID           int64   `xml:"id,attr"`
+	Available    bool    `xml:"available,attr"`
+	GroupID      string  `xml:"group_id,attr"`
+	Name         string  `xml:"name"`
+	Similar      string  `xml:"similar"`
+	Price        float64 `xml:"price"`
+	Barcode      string  `xml:"barcode"`
+	URL          string  `xml:"url"`
+	VendorCode   string  `xml:"vendorCode"`
+	Sort         int     `xml:"sort"`
+	Vendor       string  `xml:"vendor"`
+	Rating       float32 `xml:"rating"`
+	ReviewsCount int     `xml:"reviews_count"`
+	Description  string  `xml:"description"`
+	OldPrice     float64 `xml:"oldprice"`
+	CategoryIDs  string  `xml:"category_ids"`
+	Pictures     string  `xml:"picture"`
+	MarketIDs    string  `xml:"market_ids"`
+	Params       []Param `xml:"param"`
+	Badges       []Badge `xml:"badge"`
 }
 
 type Param struct {
