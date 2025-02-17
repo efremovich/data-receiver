@@ -1,11 +1,11 @@
 package entity
 
 type Inventory struct {
-	Storages     []*Storage `xml:"storages>storage"`
-	Availability []*Offer   `xml:"availability>offer"`
+	Storages     []*OfferStorage `xml:"storages>storage"`
+	Availability []*OfferStock   `xml:"availability>offer"`
 }
 
-type Storage struct {
+type OfferStorage struct {
 	ID       int64       `xml:"id,attr"`
 	Name     string      `xml:"name"`
 	City     string      `xml:"city"`
@@ -26,9 +26,10 @@ type SellerStock struct {
 }
 
 type OfferStock struct {
-	ID       int64   `xml:"id,attr"`
-	Storage  int64   `xml:"storage,attr"`
-	Quantity float32 `xml:"quantity,attr"`
-	Price    float32 `xml:"price,attr"`
-	OldPrice float32 `xml:"old_price,attr"`
+	ID        int64   `xml:"id,attr"`
+	StorageID int64   `xml:"storage_id,attr"`
+	Quantity  float32 `xml:"quantity,attr"`
+	Price     float64 `xml:"price,attr"`
+	OldPrice  float64 `xml:"old_price,attr"`
+	SellerID  int64   `xml:"seller_id,attr"`
 }

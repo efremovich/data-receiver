@@ -58,3 +58,17 @@ func (gw *grpcGatewayServerImpl) OfferFeedV1Handler(req *fiber.Ctx) error {
 	req.Response().AppendBody(data)
 	return nil
 }
+
+func (gw *grpcGatewayServerImpl) StockFeedV1Handler(req *fiber.Ctx) error {
+	data, err := gw.core.StockFeed(req.Context())
+	if err != nil {
+		req.Response().SetStatusCode(http.StatusInternalServerError)
+		req.Response().AppendBodyString("файл с фидом каталога не обнаружен повторите попытку позже")
+		return err
+	}
+
+	req.Set("Content-Type", "application/xml")
+	req.Response().SetStatusCode(http.StatusOK)
+	req.Response().AppendBody(data)
+	return nil
+}

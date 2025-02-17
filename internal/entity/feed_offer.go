@@ -14,7 +14,7 @@ type Shop struct {
 	URL        string          `xml:"url"`
 	Categories []*FeedCategory `xml:"categories>category"`
 	Offers     []*Offer        `xml:"offers>offer"`
-	Inventory  Inventory       `xml:"Inventory"`
+	Inventory  *Inventory      `xml:"Inventory"`
 }
 
 type FeedCategory struct {

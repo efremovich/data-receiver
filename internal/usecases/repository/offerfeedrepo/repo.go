@@ -14,7 +14,7 @@ var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type OfferRepo interface {
 	GetOffers(ctx context.Context) ([]*entity.Offer, error)
-	GetStocks(ctx context.Context) ([]*entity.Inventory, error)
+	GetStocks(ctx context.Context) (*entity.Inventory, error)
 	Ping(ctx context.Context) error
 	BeginTX(ctx context.Context) (postgresdb.Transaction, error)
 	WithTx(*postgresdb.Transaction) OfferRepo
@@ -29,8 +29,92 @@ func NewOfferRepo(_ context.Context, db *postgresdb.DBConnection) (OfferRepo, er
 	return &offerRepoImpl{db: db}, nil
 }
 
-func (repo *offerRepoImpl) GetStocks(ctx context.Context) ([]*entity.Inventory, error) {
+func (repo *offerRepoImpl) GetStocks(ctx context.Context) (*entity.Inventory, error) {
+	var (
+		stockDB   []stockDB
+		storageDB []storageDB
+	)
+
+	result := entity.Inventory{}
+
+	stockQuery := `
+            with ranked_stocks as (
+              select
+                row_number() over (partition by s.card_id,	s.quantity,	w.seller_id order by created_at desc) as rn,
+                s.card_id as id,
+                s.quantity,
+                ps.price,
+                ps.special_price,
+                w.seller_id,
+                w.id as storage_id
+              from
+                shop.stocks s
+              left join shop.warehouses w on
+                w.id = s.warehouse_id
+              left join shop.price_sizes ps on
+                ps.id = s.barcode_id
+              where
+                created_at <= NOW()
+            )
+            select * from ranked_stocks rn
+            where rn.rn = 1
+limit 100
+  `
+
+	storageQuery := `
+            select
+              w.seller_id,
+              seller.title as seller_name,
+              -- Storage
+              w.id as storage_id,
+              w.name as storage_name,
+              '' as storage_city,
+              wt.name as storage_type,
+              w.address as storage_addres,
+              '' as storage_lat,
+              '' as storage_lon,
+              '' as storage_regiton,
+              '' as storage_work_time,
+              '' as storage_phone,
+              '' as storage_icon
+            from
+              shop.warehouses w
+            left join shop.sellers seller on
+              seller.id = w.seller_id
+            left join shop.warehouse_types wt on
+              wt.id = w.id
+  limit 100
+  `
+
+	err := repo.getReadConnection().Select(&stockDB, stockQuery)
+
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при получении данных фида предложений: %w", err)
+	}
+
+	for _, resStock := range stockDB {
+		stock := resStock.ConvertToEntityStock(ctx)
+		result.Availability = append(result.Availability, stock)
+	}
+
+	err = repo.getReadConnection().Select(&storageDB, storageQuery)
+
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при получении данных фида предложений: %w", err)
+	}
+
+	for _, resStorage := range storageDB {
+		storage := resStorage.ConvertToEntityStorage(ctx)
+		result.Storages = append(result.Storages, storage)
+	}
+
+	return &result, nil
 }
+
 func (repo *offerRepoImpl) GetOffers(ctx context.Context) ([]*entity.Offer, error) {
 	var results []offerDB
 	query := `
@@ -101,7 +185,9 @@ GROUP BY
     cc2.category_id,
     s.barcode,
     s.price,
-    s.special_price;`
+    s.special_price
+limit 100
+  ;`
 	err := repo.getReadConnection().Select(&results, query)
 
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
