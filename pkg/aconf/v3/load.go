@@ -39,6 +39,7 @@ func doLoadAndValidate(v interface{}) error {
 	if !isPtrToStruct(v) {
 		return ErrNotAPointer
 	}
+
 	if err := envconfig.Process(context.Background(), v); err != nil {
 		return fmt.Errorf("%w: %s", ErrFailedLoad, err.Error())
 	}

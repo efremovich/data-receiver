@@ -33,6 +33,8 @@ func main() {
 	if err := aconf.Load(&cfg); err != nil {
 		log.Fatalf("ошибка инициализации конфигурации: %s", err.Error())
 	}
+	// Подгрузим настройки маркетплейса в конфигурацию
+	cfg.FillMarketPlaceMap()
 
 	app, err := app.New(ctx, cfg)
 	if err != nil {
