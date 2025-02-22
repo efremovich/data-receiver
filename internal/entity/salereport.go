@@ -28,7 +28,7 @@ type SaleReport struct {
 	Card              Card
 	Order             Order
 	Barcode           Barcode
-	Seller            Seller
+	Seller            MarketPlace
 }
 
 // кВВ - коэффициент вознаграждения вайлдерис.

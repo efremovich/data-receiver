@@ -35,7 +35,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 	for _, in := range cards {
 		s.metricsCollector.IncServiceDocsTaskCounter()
 		// Seller
-		seller, err := s.getSeller(ctx, desc.Seller)
+		seller, err := s.getSeller(ctx, client.GetMarketPlace())
 		if err != nil {
 			return err
 		}

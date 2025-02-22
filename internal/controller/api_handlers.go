@@ -94,7 +94,7 @@ func (gw *grpcGatewayServerImpl) receiveCardsWB(ctx context.Context) error {
 		Limit:       limit,
 		Cursor:      "0",
 		PackageType: entity.PackageTypeCard,
-		Seller:      "wb",
+		Seller:      entity.Wildberries,
 	}
 
 	return gw.core.ReceiveCards(ctx, desc)

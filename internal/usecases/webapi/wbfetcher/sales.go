@@ -42,25 +42,25 @@ type SalesResponse struct {
 	Srid              string  `json:"srid"`
 }
 
-func (wb *wbAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
+func (mp *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
 	const methodName = "/api/v1/supplier/sales"
 
 	urlValue := url.Values{}
 	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02"))
 	urlValue.Set("flag", "1")
 
-	reqURL := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
+	reqURL := fmt.Sprintf("%s%s?%s", statisticApiURL, methodName, urlValue.Encode())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %s", methodName, err.Error())
 	}
 
-	req.Header.Set("Authorization", wb.tokenStat)
+	req.Header.Set("Authorization", mp.token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
-	resp, err := wb.client.Do(req)
+	resp, err := mp.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка отправки запроса: %s", methodName, err.Error())
 	}
@@ -127,7 +127,7 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 			SpecialPrice: elem.FinishedPrice,
 		}
 
-		seller := entity.Seller{
+		seller := entity.MarketPlace{
 			Title: "wb",
 		}
 

@@ -7,7 +7,7 @@ import (
 )
 
 // В Озон это пустой справочник пока пропустим его реализацию.
-func (ozon *ozonAPIclientImp) GetWarehouses(ctx context.Context) ([]entity.Warehouse, error) {
+func (ozon *apiClientImp) GetWarehouses(ctx context.Context) ([]entity.Warehouse, error) {
 	// _, _ = getWarehouses(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, ozon.metric)
 	return nil, nil
 }

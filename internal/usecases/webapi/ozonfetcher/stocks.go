@@ -19,18 +19,18 @@ type SupplyOrderList struct {
 	LastSupplyOrderID int   `json:"last_supply_order_id"`
 }
 
-func (ozon *ozonAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
-	supplyList, err := getSupplyList(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, ozon.metric)
+func (ozon *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
+	supplyList, err := getSupplyList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric)
 	if err != nil {
 		return nil, err
 	}
 
-	supplyData, err := getSupplyDataList(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyList)
+	supplyData, err := getSupplyDataList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyList)
 	if err != nil {
 		return nil, err
 	}
 
-	stockResponce, err := getSupplyBundle(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyData)
+	stockResponce, err := getSupplyBundle(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyData)
 	if err != nil {
 		return nil, err
 	}

@@ -68,7 +68,7 @@ func (c orderDB) convertToEntityOrder(_ context.Context) *entity.Order {
 		Warehouse: &entity.Warehouse{
 			ID: c.WarehouseID,
 		},
-		Seller: &entity.Seller{
+		Seller: &entity.MarketPlace{
 			ID: c.SellerID,
 		},
 		Card: &entity.Card{

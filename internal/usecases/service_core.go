@@ -77,7 +77,7 @@ type receiverCoreServiceImpl struct {
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo
 
 	brokerPublisher  brokerpublisher.BrokerPublisher
-	apiFetcher       map[string][]webapi.ExtAPIFetcher
+	apiFetcher       map[entity.MarketplaceType][]webapi.ExtAPIFetcher
 	metricsCollector metrics.Collector
 }
 
@@ -109,7 +109,7 @@ func NewPackageReceiverService(
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo,
 
 	brokerPublisher brokerpublisher.BrokerPublisher,
-	apiFetcher map[string][]webapi.ExtAPIFetcher,
+	apiFetcher map[entity.MarketplaceType][]webapi.ExtAPIFetcher,
 	metricsCollector metrics.Collector,
 ) ReceiverCoreService {
 	service := receiverCoreServiceImpl{

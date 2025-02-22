@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/efremovich/data-receiver/internal/entity"
- 	"github.com/efremovich/data-receiver/internal/usecases/repository"
+	"github.com/efremovich/data-receiver/internal/usecases/repository"
 )
 
 type sellerDB struct {
@@ -15,7 +15,7 @@ type sellerDB struct {
 	ExternalID sql.NullString `db:"external_id"`
 }
 
-func convertToDBSeller(_ context.Context, in entity.Seller) *sellerDB {
+func convertToDBSeller(_ context.Context, in entity.MarketPlace) *sellerDB {
 	return &sellerDB{
 		ID:        in.ID,
 		Title:     in.Title,
@@ -23,8 +23,8 @@ func convertToDBSeller(_ context.Context, in entity.Seller) *sellerDB {
 	}
 }
 
-func (c sellerDB) convertToEntitySeller(_ context.Context) *entity.Seller {
-	return &entity.Seller{
+func (c sellerDB) convertToEntitySeller(_ context.Context) *entity.MarketPlace {
+	return &entity.MarketPlace{
 		ID:         c.ID,
 		Title:      c.Title,
 		IsEnabled:  c.IsEnabled,

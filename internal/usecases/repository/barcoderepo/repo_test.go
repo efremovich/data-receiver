@@ -30,7 +30,7 @@ func TestBarcodeRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newSeller := entity.Seller{
+	newSeller := entity.MarketPlace{
 		Title:      uuid.NewString(),
 		IsEnabled:  true,
 		ExternalID: uuid.NewString(),

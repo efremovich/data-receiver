@@ -14,10 +14,10 @@ import (
 var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type SellerRepo interface {
-	SelectByID(ctx context.Context, id int64) (*entity.Seller, error)
-	SelectByTitle(ctx context.Context, title string) (*entity.Seller, error)
-	Insert(ctx context.Context, in entity.Seller) (*entity.Seller, error)
-	UpdateExecOne(ctx context.Context, in entity.Seller) error
+	SelectByID(ctx context.Context, id int64) (*entity.MarketPlace, error)
+	SelectByTitle(ctx context.Context, title string) (*entity.MarketPlace, error)
+	Insert(ctx context.Context, in entity.MarketPlace) (*entity.MarketPlace, error)
+	UpdateExecOne(ctx context.Context, in entity.MarketPlace) error
 
 	Ping(ctx context.Context) error
 	BeginTX(ctx context.Context) (postgresdb.Transaction, error)
@@ -33,7 +33,7 @@ func NewSellerRepo(_ context.Context, db *postgresdb.DBConnection) (SellerRepo, 
 	return &repoImpl{db: db}, nil
 }
 
-func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Seller, error) {
+func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.MarketPlace, error) {
 	var result sellerDB
 
 	query := "SELECT * FROM shop.sellers WHERE id = $1"
@@ -48,7 +48,7 @@ func (repo *repoImpl) SelectByID(ctx context.Context, id int64) (*entity.Seller,
 	return result.convertToEntitySeller(ctx), nil
 }
 
-func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.Seller, error) {
+func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.MarketPlace, error) {
 	var result sellerDB
 
 	query := "SELECT * FROM shop.sellers WHERE title = $1"
@@ -64,7 +64,7 @@ func (repo *repoImpl) SelectByTitle(ctx context.Context, title string) (*entity.
 	return result.convertToEntitySeller(ctx), nil
 }
 
-func (repo *repoImpl) Insert(_ context.Context, in entity.Seller) (*entity.Seller, error) {
+func (repo *repoImpl) Insert(_ context.Context, in entity.MarketPlace) (*entity.MarketPlace, error) {
 	charIDWrap := repository.IDWrapper{}
 	query := `INSERT INTO shop.sellers (title, is_enabled, external_id) 
             VALUES ($1, $2, $3) RETURNING id`
@@ -79,7 +79,7 @@ func (repo *repoImpl) Insert(_ context.Context, in entity.Seller) (*entity.Selle
 	return &in, nil
 }
 
-func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Seller) error {
+func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.MarketPlace) error {
 	dbModel := convertToDBSeller(ctx, in)
 
 	query := `UPDATE shop.sellers SET 

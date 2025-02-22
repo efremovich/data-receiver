@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"reflect"
 	"strconv"
@@ -12,16 +11,16 @@ import (
 )
 
 type Config struct {
-	ServiceName        string                 `env:"SERVICE_NAME, default=data-receiver"`
-	PGWriterConn       string                 `env:"POSTGRES_WRITER_CONN"`
-	PGReaderConn       string                 `env:"POSTGRES_READER_CONN"`
-	LogLevel           int                    `env:"LOG_LEVEL, default=-4"` // debug = -4, info = 0, warn = 4
-	BrokerConsumerURL  []string               `env:"BROKER_CONSUMER_URL" validate:"required"`
-	BrokerPublisherURL []string               `env:"BROKER_PUBLISHER_URL" validate:"required"`
-	Gateway            Gateway                `env:", prefix=GATEWAY_"`
-	Seller             Sellers                `env:", prefix=SELLER_"`
-	MarketPlaces       map[string]MarketPlace `env:"MARKETPLACE_"`
-	Queue              Queue                  `env:", prefix=QUEUE_"`
+	ServiceName           string                 `env:"SERVICE_NAME, default=data-receiver"`
+	PGWriterConn          string                 `env:"POSTGRES_WRITER_CONN"`
+	PGReaderConn          string                 `env:"POSTGRES_READER_CONN"`
+	LogLevel              int                    `env:"LOG_LEVEL, default=-4"` // debug = -4, info = 0, warn = 4
+	BrokerConsumerURL     []string               `env:"BROKER_CONSUMER_URL" validate:"required"`
+	BrokerPublisherURL    []string               `env:"BROKER_PUBLISHER_URL" validate:"required"`
+	Gateway               Gateway                `env:", prefix=GATEWAY_"`
+	MarketPlaces          map[string]MarketPlace `env:"MARKETPLACE_"`
+	Queue                 Queue                  `env:", prefix=QUEUE_"`
+	ProcessTimeoutSeconds int                    `env:"TIMEOUT, default=600"`
 }
 
 type Gateway struct {
@@ -46,43 +45,11 @@ type Queue struct {
 }
 
 type MarketPlace struct {
-	Id            string `env:"ID"`             // Для вставки в базу
-	Name          string `env:"NAME"`           // Наименование маркетплейса
-	Url           string `env:"URL"`            // Основной ендпоинт для получения запроса
-	UrlAdditional string `env:"URL_ADDITIONAL"` // Дополнительный ендпоинт (Статистика/Отчеты)
+	ID   string `env:"ID"`   // Для вставки в базу
+	Name string `env:"NAME"` // Наименование маркетплейса
 	// В случае если подключение к сервису требует пару логин:пароль, ключ:токен, то записываем через запятую.
 	Token string `env:"TOKEN"` // API ключ или id:token или логин:пароль
-}
-
-// Конфигурация для создания api клиентов для получения данных.
-type Sellers struct {
-	WB    SellerWB    `env:", prefix=WB_"`
-	OZON  SellerOZON  `env:", prefix=OZON_"`
-	OdinC SellerOdinC `env:", prefix=1C_"`
-}
-
-type SellerWB struct {
-	URLMarketPlace        string   `env:"URL_MP"`
-	URLContent            string   `env:"URL_CONTENT"`
-	URL                   string   `env:"URL"`
-	URLStat               string   `env:"URL_STAT"`
-	Token                 []string `env:"TOKEN"`
-	TokenStat             []string `env:"TOKEN_STAT"`
-	ProcessTimeoutSeconds int      `env:"TIMEOUT, default=15"`
-}
-
-type SellerOZON struct {
-	URL                   string   `env:"URL"`
-	APIKey                []string `env:"APIKEY"`
-	ClientID              []string `env:"CLIENTID"`
-	ProcessTimeoutSeconds int      `env:"TIMEOUT, default=15"`
-}
-
-type SellerOdinC struct {
-	URL                   string `env:"URL"`
-	Login                 string `env:"LOGIN"`
-	Password              string `env:"PASSWORD"`
-	ProcessTimeoutSeconds int    `env:"TIMEOUT, default=15"`
+	Type  string `env:"TYPE"`
 }
 
 func (c *Config) FillMarketPlaceMap() {
@@ -131,7 +98,7 @@ func setField(config *MarketPlace, fieldName, value string) {
 			f := reflect.ValueOf(config).Elem()
 			fieldName = fieldToVarName(fieldName)
 			ff := f.FieldByName(fieldName)
-			fmt.Printf("is valid %v : can set %v", ff.IsValid(), ff.CanSet())
+
 			if ff.IsValid() && ff.CanSet() {
 				switch ff.Kind() {
 				case reflect.String:
@@ -174,14 +141,11 @@ func setField(config *MarketPlace, fieldName, value string) {
 }
 
 func fieldToVarName(fieldName string) string {
-	fieldName = strings.ToLower(fieldName)
-	fieldName = strings.ReplaceAll(fieldName, "_", " ")
-
-	// Преобразуем каждое слово к заглавной букве
-	caser := cases.Title(language.English)
-	fieldName = caser.String(fieldName)
-
-	// Убираем пробелы
-	fieldName = strings.ReplaceAll(fieldName, " ", "")
-	return fieldName
+	parts := strings.Split(fieldName, "_")
+	for i, part := range parts {
+		if part != "ID" && part != "URL" {
+			parts[i] = cases.Title(language.English).String(strings.ToLower(part))
+		}
+	}
+	return strings.Join(parts, "")
 }

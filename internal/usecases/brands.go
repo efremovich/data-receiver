@@ -8,7 +8,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 )
 
-func (s *receiverCoreServiceImpl) getBrand(ctx context.Context, brandIn entity.Brand, seller *entity.Seller) (*entity.Brand, error) {
+func (s *receiverCoreServiceImpl) getBrand(ctx context.Context, brandIn entity.Brand, seller *entity.MarketPlace) (*entity.Brand, error) {
 	brand, err := s.brandRepo.SelectByTitleAndSeller(ctx, brandIn.Title, seller.ID)
 
 	if errors.Is(err, ErrObjectNotFound) {
