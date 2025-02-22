@@ -14,7 +14,7 @@ type PackageDescription struct {
 	Limit       int               `json:"limit"`        // Количество записей в запросе
 	UpdatedAt   time.Time         `json:"updated_at"`   // Дата обновления.
 	PackageType PackageType       `json:"package_type"` // Тип пакета.
-	Seller      string            `json:"seller"`       // Код продавца (wb, ozon, yandex, 1с)
+	Seller      MarketplaceType   `json:"seller"`       // Код продавца (wb, ozon, yandex, 1с)
 	Query       map[string]string `json:"query"`        // Параметры запроса
 	Delay       int               `json:"delay"`        // Задержка перед следующей загрузкой
 }

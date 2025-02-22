@@ -82,7 +82,7 @@ type SaleReportResponce struct {
 
 const LIMIT = "100000" // Максимальное количество строк отчета, возвращаемых методом. Не может быть более 100000.
 // https://openapi.wildberries.ru/statistics/api/ru/#tag/Statistika/paths/~1api~1v5~1supplier~1reportDetailByPeriod/get
-func (wb *wbAPIclientImp) GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
+func (wb *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
 	const methodName = "/api/v5/supplier/reportDetailByPeriod"
 
 	rrdid := desc.Cursor
@@ -93,14 +93,14 @@ func (wb *wbAPIclientImp) GetSaleReport(ctx context.Context, desc entity.Package
 	urlValue.Set("flag", "1")
 	urlValue.Set("rrdid", rrdid) // Начальное значение
 
-	reqURL := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
+	reqURL := fmt.Sprintf("%s%s?%s", statisticApiURL, methodName, urlValue.Encode())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %s", methodName, err.Error())
 	}
 
-	req.Header.Set("Authorization", wb.tokenStat)
+	req.Header.Set("Authorization", wb.token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 

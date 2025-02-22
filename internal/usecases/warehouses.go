@@ -27,7 +27,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveWarehouse(ctx context.Context, c
 	if err != nil {
 		return wrapErr(fmt.Errorf("ошибка при получении данных из источника %s : %w", desc.Seller, err))
 	}
-	seller, err := s.getSeller(ctx, desc.Seller)
+	seller, err := s.getSeller(ctx, client.GetMarketPlace())
 	if err != nil {
 		return err
 	}

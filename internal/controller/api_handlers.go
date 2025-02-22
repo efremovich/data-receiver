@@ -94,7 +94,7 @@ func (gw *grpcGatewayServerImpl) receiveCardsWB(ctx context.Context) error {
 		Limit:       limit,
 		Cursor:      "0",
 		PackageType: entity.PackageTypeCard,
-		Seller:      "wb",
+		Seller:      entity.Wildberries,
 	}
 
 	return gw.core.ReceiveCards(ctx, desc)
@@ -106,7 +106,7 @@ func (gw *grpcGatewayServerImpl) receiveCardsOzon(ctx context.Context) error {
 		Limit:       limit,
 		Cursor:      "0",
 		PackageType: entity.PackageTypeCard,
-		Seller:      "ozon",
+		Seller:      entity.Ozon,
 	}
 
 	return gw.core.ReceiveCards(ctx, desc)
@@ -118,7 +118,7 @@ func (gw *grpcGatewayServerImpl) receiveWarehousesWB(ctx context.Context) error 
 		Limit:       limit,
 		Cursor:      "0",
 		PackageType: entity.PackageTypeCard,
-		Seller:      "wb",
+		Seller:      entity.Wildberries,
 	}
 
 	return gw.core.ReceiveWarehouses(ctx, descWarehouse)
@@ -132,7 +132,7 @@ func (gw *grpcGatewayServerImpl) receiveStocksWB(ctx context.Context) error {
 		PackageType: entity.PackageTypeStock,
 		UpdatedAt:   time.Now(),
 		Limit:       daysToGet,
-		Seller:      "wb",
+		Seller:      entity.Wildberries,
 	}
 
 	return gw.core.ReceiveStocks(ctx, descStocks)
@@ -143,7 +143,7 @@ func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
 	descOzonStock := entity.PackageDescription{
 		PackageType: entity.PackageTypeStock,
 		UpdatedAt:   time.Now(),
-		Seller:      "ozon",
+		Seller:      entity.Ozon,
 	}
 
 	return gw.core.ReceiveStocks(ctx, descOzonStock)
@@ -157,7 +157,7 @@ func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),
-		Seller:      "ozon",
+		Seller:      entity.Ozon,
 		Limit:       daysToGet,
 		Delay:       delay,
 	}
@@ -172,7 +172,7 @@ func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),
-		Seller:      "wb",
+		Seller:      entity.Wildberries,
 		Limit:       daysToGet,
 		Delay:       delay,
 	}
@@ -188,7 +188,7 @@ func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
 	descDescription := entity.PackageDescription{
 		PackageType: entity.PackageTypeSale,
 		UpdatedAt:   time.Now(),
-		Seller:      "wb",
+		Seller:      entity.Wildberries,
 		Limit:       daysToGet,
 		Delay:       delay,
 	}

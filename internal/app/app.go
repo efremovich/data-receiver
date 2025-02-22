@@ -7,6 +7,7 @@ import (
 
 	"github.com/efremovich/data-receiver/config"
 	"github.com/efremovich/data-receiver/internal/controller"
+	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/barcoderepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/brandrepo"
@@ -80,11 +81,11 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, err
 	}
 
-	apiFetcher := make(map[string][]webapi.ExtAPIFetcher)
+	apiFetcher := make(map[entity.MarketplaceType][]webapi.ExtAPIFetcher)
 	// TODO Завернем клиентов всех маркетплейсов в мапу
-	apiFetcher["wb"] = wbfetcher.New(ctx, conf.Seller.WB)
-	apiFetcher["odinc"] = odincfetcer.New(ctx, conf.Seller.OdinC)
-	apiFetcher["ozon"] = ozonfetcher.New(ctx, conf.Seller.OZON, metricsCollector)
+	apiFetcher[entity.Wildberries] = wbfetcher.New(ctx, conf, metricsCollector)
+	apiFetcher[entity.OdinAss] = odincfetcer.New(ctx, conf, metricsCollector)
+	apiFetcher[entity.Ozon] = ozonfetcher.New(ctx, conf, metricsCollector)
 
 	// Репозиторий Cards.
 	cardRepo, err := cardrepo.NewCardRepo(ctx, conn)

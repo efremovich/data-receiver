@@ -31,12 +31,12 @@ type Card struct {
 	Size    string  `json:"size"`
 }
 
-func (odinc *odincAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
+func (odinc *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
 	const methodName = "hs/sender-api/getCardByBarcode"
 
 	queryString := mapToURLValues(desc.Query)
 
-	requestURL := fmt.Sprintf("%s%s?%s", odinc.addr, methodName, queryString.Encode())
+	requestURL := fmt.Sprintf("%s%s?%s", marketPlaceAPIURL, methodName, queryString.Encode())
 
 	alogger.InfoFromCtx(ctx, "Запрашиваем данные из 1с: %s", desc.Query)
 
@@ -111,26 +111,26 @@ func (odinc *odincAPIclientImp) GetCards(ctx context.Context, desc entity.Packag
 	return cardsList, nil
 }
 
-func (odinc *odincAPIclientImp) GetStocks(_ context.Context, _ entity.PackageDescription) ([]entity.StockMeta, error) {
+func (odinc *apiClientImp) GetStocks(_ context.Context, _ entity.PackageDescription) ([]entity.StockMeta, error) {
 	return nil, nil
 }
 
-func (odinc *odincAPIclientImp) GetWarehouses(ctx context.Context) ([]entity.Warehouse, error) {
+func (odinc *apiClientImp) GetWarehouses(_ context.Context) ([]entity.Warehouse, error) {
 	return nil, nil
 }
 
-func (odinc *odincAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.Order, error) {
+func (odinc *apiClientImp) GetOrders(_ context.Context, desc entity.PackageDescription) ([]entity.Order, error) {
 	return nil, nil
 }
 
-func (odinc *odincAPIclientImp) GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
+func (odinc *apiClientImp) GetSales(_ context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
 	return nil, nil
 }
 
-func (odinc *odincAPIclientImp) GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
+func (odinc *apiClientImp) GetSaleReport(_ context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
 	return nil, nil
 }
-func (odinc *odincAPIclientImp) Ping(ctx context.Context) error {
+func (odinc *apiClientImp) Ping(ctx context.Context) error {
 	return nil
 }
 
