@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	marketPlaceAPIURL = "https://marketplace-api.wildberries.ru"
-	contentAPIURL     = "https://content-api.wildberries.ru"
-	statisticAPIURL   = "https://statistics-api.wildberries.ru"
+	marketPlaceAPIURL string = "https://marketplace-api.wildberries.ru"
+	contentAPIURL     string = "https://content-api.wildberries.ru"
+	statisticAPIURL   string = "https://statistics-api.wildberries.ru"
 )
 
 func New(_ context.Context, cfg config.Config, metrics metrics.Collector) []webapi.ExtAPIFetcher {

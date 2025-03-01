@@ -24,8 +24,10 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	gw.receiveSaleReportWB(ctx)
-	// gw.generateOrderFeed(ctx)
+	err := gw.receiveSaleReportWB(ctx)
+	if err != nil {
+		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах")
+	}
 }
 
 type Task struct {
@@ -79,7 +81,11 @@ func (gw *grpcGatewayServerImpl) generateOrderFeed(ctx context.Context) error {
 	}
 
 	logger.GetLoggerFromContext(ctx).Infof("генерация фида окончена")
-	err = os.WriteFile("/tmp/offer_feed.xml", offers, 0o644)
+	tempFile, err := os.CreateTemp("", "offer_feed.xml")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(tempFile.Name(), offers, 0o600)
 	if err != nil {
 		return err
 	}
@@ -125,7 +131,6 @@ func (gw *grpcGatewayServerImpl) receiveWarehousesWB(ctx context.Context) error 
 }
 
 func (gw *grpcGatewayServerImpl) receiveStocksWB(ctx context.Context) error {
-	// TODO Перенести в конфиг
 	daysToGet := 5 // Количество дней для загрузки
 	descStocks := entity.PackageDescription{
 		PackageType: entity.PackageTypeStock,
@@ -148,7 +153,6 @@ func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
-	// TODO Перенести в конфиг
 	daysToGet := 5 // Количество дней для загрузки
 	delay := 61    // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
@@ -163,7 +167,6 @@ func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
-	// TODO Перенести в конфиг
 	daysToGet := 5 // Количество дней для загрузки
 	delay := 61    // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
@@ -178,7 +181,6 @@ func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
-	// TODO Перенести в конфиг
 	daysToGet := 5 // Количество дней для загрузки
 	delay := 61    // Количество секунд задержки перед следующим запросом
 
@@ -196,9 +198,10 @@ func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
 func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error {
 	daysToGet := 5 // Количество дней для загрузки
 	delay := 61    // Количество секунд задержки перед следующим запросом
+	startDate := time.Now().AddDate(0, 0, -7)
 	descDescription := entity.PackageDescription{
 		PackageType: entity.PackageTypeSaleReports,
-		UpdatedAt:   time.Now(),
+		UpdatedAt:   startDate,
 		Seller:      entity.Wildberries,
 		Limit:       daysToGet,
 		Delay:       delay,

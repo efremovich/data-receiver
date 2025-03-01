@@ -22,7 +22,7 @@ func (s *receiverCoreServiceImpl) ReceiveSaleReport(ctx context.Context, desc en
 func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context, client webapi.ExtAPIFetcher, desc entity.PackageDescription) error {
 	_, err := client.GetSaleReport(ctx, desc)
 	if err != nil {
-		return fmt.Errorf("ошибка получение данных о продажах из внешнего источника %s, %w", desc.Seller, err)
+		return fmt.Errorf("ошибка получение данных о продажах из внешнего источника %s, %s", desc.Seller, err.Error())
 	}
 	return nil
 }

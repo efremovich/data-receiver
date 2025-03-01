@@ -82,17 +82,17 @@ func (ozon *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 			if cardMeta.ID == elem.ProductID {
 				price, err := strconv.ParseFloat(cardMeta.Price, 32)
 				if err != nil {
-					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", &cardMeta.Price)
+					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", cardMeta.Price)
 				}
 
 				oldPrice, err := strconv.ParseFloat(cardMeta.OldPrice, 32)
 				if err != nil {
-					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", &cardMeta.Price)
+					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", cardMeta.Price)
 				}
 
 				marketingPrice, err := strconv.ParseFloat(cardMeta.MarketingPrice, 32)
 				if err != nil {
-					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", &cardMeta.Price)
+					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", cardMeta.Price)
 				}
 
 				stockMeta.PriceSize = entity.PriceSize{
