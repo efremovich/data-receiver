@@ -39,6 +39,7 @@ type ReceiverCoreService interface {
 	ReceiveStocks(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveOrders(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveSales(ctx context.Context, desc entity.PackageDescription) error
+	ReceiveSaleReport(ctx context.Context, desc entity.PackageDescription) error
 	OfferFeed(ctx context.Context) ([]byte, error)
 	StockFeed(ctx context.Context) ([]byte, error)
 

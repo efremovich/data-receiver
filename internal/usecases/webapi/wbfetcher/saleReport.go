@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -24,7 +25,7 @@ type SaleReportResponce struct {
 	NmID                     int         `json:"nm_id"`
 	BrandName                string      `json:"brand_name"`
 	SaName                   string      `json:"sa_name"`
-	TsName                   string      `json:"ts_name"`
+	TSName                   string      `json:"ts_name"`
 	Barcode                  string      `json:"barcode"`
 	DocTypeName              string      `json:"doc_type_name"`
 	Quantity                 int         `json:"quantity"`
@@ -85,15 +86,24 @@ const LIMIT = "100000" // Максимальное количество стро
 func (wb *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
 	const methodName = "/api/v5/supplier/reportDetailByPeriod"
 
-	rrdid := desc.Cursor
+	// Начало дня (00:00:00)
+	startOfDay := time.Date(desc.UpdatedAt.Year(), desc.UpdatedAt.Month(), desc.UpdatedAt.Day(), 0, 0, 0, 0, desc.UpdatedAt.Location())
+
+	// Конец дня (23:59:59.999999999)
+	endOfDay := startOfDay.AddDate(0, 0, 1).Add(-time.Nanosecond)
+
+	// Форматируем в RFC3339
+	startOfDayRFC3339 := startOfDay.Format(time.RFC3339)
+	endOfDayRFC3339 := endOfDay.Format(time.RFC3339)
+	rrdid := desc.GetCursor()
 	urlValue := url.Values{}
-	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02 00:00:00"))
-	urlValue.Set("dateTo", desc.UpdatedAt.Format("2006-01-02 23:59:59"))
+	urlValue.Set("dateFrom", startOfDayRFC3339)
+	urlValue.Set("dateTo", endOfDayRFC3339)
 	urlValue.Set("limit", LIMIT)
 	urlValue.Set("flag", "1")
 	urlValue.Set("rrdid", rrdid) // Начальное значение
 
-	reqURL := fmt.Sprintf("%s%s?%s", statisticApiURL, methodName, urlValue.Encode())
+	reqURL := fmt.Sprintf("%s%s?%s", statisticAPIURL, methodName, urlValue.Encode())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
@@ -108,7 +118,8 @@ func (wb *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDe
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка отправки запроса: %s", methodName, err.Error())
 	}
-
+	body, err := io.ReadAll(resp.Body)
+	fmt.Println(string(body))
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s: сервер ответил: %d", methodName, resp.StatusCode)
 	}

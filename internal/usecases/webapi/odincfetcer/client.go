@@ -26,7 +26,7 @@ func New(_ context.Context, cfg config.Config, metrics metrics.Collector) []weba
 	clients := []webapi.ExtAPIFetcher{}
 
 	for _, mpConfig := range cfg.MarketPlaces {
-		if mpConfig.Type == string(entity.Wildberries) {
+		if mpConfig.Type == string(entity.OdinAss) {
 			marketPlace := entity.MarketPlace{
 				ExternalID: mpConfig.ID,
 				Title:      mpConfig.Name,

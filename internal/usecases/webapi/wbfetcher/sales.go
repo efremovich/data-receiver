@@ -49,7 +49,7 @@ func (mp *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescrip
 	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02"))
 	urlValue.Set("flag", "1")
 
-	reqURL := fmt.Sprintf("%s%s?%s", statisticApiURL, methodName, urlValue.Encode())
+	reqURL := fmt.Sprintf("%s%s?%s", statisticAPIURL, methodName, urlValue.Encode())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {

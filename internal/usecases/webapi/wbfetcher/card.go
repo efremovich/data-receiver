@@ -112,7 +112,7 @@ func (wb *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescrip
 		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", contentApiURL, methodName), bytes.NewReader(requestData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", contentAPIURL, methodName), bytes.NewReader(requestData))
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}

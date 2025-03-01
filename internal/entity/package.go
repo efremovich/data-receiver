@@ -23,12 +23,19 @@ type PackageDescription struct {
 type PackageType string
 
 const (
-	PackageTypeCard  = PackageType("CARD")  // Пакет с товарным карточками.
-	PackageTypeOrder = PackageType("ORDER") // Пакет с заказами.
-	PackageTypeSale  = PackageType("SALE")  // Пакет с продажами.
-	PackageTypeStock = PackageType("STOCK") // Пакет с остатками.
+	PackageTypeCard        = PackageType("CARD")       // Пакет с товарным карточками.
+	PackageTypeOrder       = PackageType("ORDER")      // Пакет с заказами.
+	PackageTypeSale        = PackageType("SALE")       // Пакет с продажами.
+	PackageTypeStock       = PackageType("STOCK")      // Пакет с остатками.
+	PackageTypeSaleReports = PackageType("SALEREPORT") // Пакет с отчетом по продажами.
 )
 
+func (p PackageDescription) GetCursor() string {
+	if p.Cursor == "" {
+		return "0"
+	}
+	return p.Cursor
+}
 func StringToPackageType(s string) (PackageType, error) {
 	s = strings.ToUpper(s)
 
@@ -40,6 +47,8 @@ func StringToPackageType(s string) (PackageType, error) {
 	case "SALE":
 		return PackageTypeSale, nil
 	case "STOCK":
+		return PackageTypeStock, nil
+	case "SALEREPORT":
 		return PackageTypeStock, nil
 	default:
 		return "", fmt.Errorf("неизвестный тип пакета: %s", s)
