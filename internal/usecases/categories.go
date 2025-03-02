@@ -8,7 +8,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 )
 
-func (s *receiverCoreServiceImpl) setCategory(ctx context.Context, card *entity.Card, seller *entity.Seller) ([]*entity.Category, error) {
+func (s *receiverCoreServiceImpl) setCategory(ctx context.Context, card *entity.Card, seller *entity.MarketPlace) ([]*entity.Category, error) {
 	categories := []*entity.Category{}
 
 	for _, cat := range card.Categories {

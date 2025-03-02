@@ -18,7 +18,7 @@ type Order struct {
 	Status    *Status
 	Region    *Region
 	Warehouse *Warehouse
-	Seller    *Seller
+	Seller    *MarketPlace
 	Card      *Card
 	PriceSize *PriceSize
 	Barcode   *Barcode

@@ -8,13 +8,10 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 )
 
-func (s *receiverCoreServiceImpl) getSeller(ctx context.Context, sellerTitle string) (*entity.Seller, error) {
-	seller, err := s.sellerRepo.SelectByTitle(ctx, sellerTitle)
+func (s *receiverCoreServiceImpl) getSeller(ctx context.Context, marketPlace entity.MarketPlace) (*entity.MarketPlace, error) {
+	seller, err := s.sellerRepo.SelectByTitle(ctx, marketPlace.Title)
 	if errors.Is(err, ErrObjectNotFound) {
-		seller, err = s.sellerRepo.Insert(ctx, entity.Seller{
-			Title:     sellerTitle,
-			IsEnabled: true,
-		})
+		seller, err = s.sellerRepo.Insert(ctx, marketPlace)
 	}
 
 	if err != nil {

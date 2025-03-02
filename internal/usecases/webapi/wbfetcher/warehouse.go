@@ -27,10 +27,10 @@ type WarehouseResponce struct {
 	Selected     bool    `json:"selected"`
 }
 
-func (wb *wbAPIclientImp) GetWarehouses(ctx context.Context) ([]entity.Warehouse, error) {
+func (wb *apiClientImp) GetWarehouses(ctx context.Context) ([]entity.Warehouse, error) {
 	const methodName = "/api/v3/offices"
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s%s", wb.addr, methodName), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s%s", marketPlaceAPIURL, methodName), nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}

@@ -66,7 +66,7 @@ func (s saleDB) convertToEntitySale(_ context.Context) *entity.Sale {
 		UpdatedAt:  s.UpdatedAt.Time,
 
 		Order:     &entity.Order{ID: s.OrderID},
-		Seller:    &entity.Seller{ID: s.SellerID},
+		Seller:    &entity.MarketPlace{ID: s.SellerID},
 		Card:      &entity.Card{ID: s.CardID},
 		Warehouse: &entity.Warehouse{ID: s.WarehouseID},
 		Region:    &entity.Region{ID: s.RegionID},

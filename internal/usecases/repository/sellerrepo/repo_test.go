@@ -25,7 +25,7 @@ func TestSellerRepo(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	newSeller := entity.Seller{
+	newSeller := entity.MarketPlace{
 		Title:      uuid.NewString(),
 		ExternalID: uuid.NewString(),
 		IsEnabled:  true,
@@ -81,4 +81,3 @@ func TestSellerRepo(t *testing.T) {
 	assert.Equal(t, model.IsEnabled, newSeller.IsEnabled)
 	assert.Equal(t, model.ExternalID, newSeller.ExternalID)
 }
-

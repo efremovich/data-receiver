@@ -38,9 +38,9 @@ func NewWb2CardRepo(_ context.Context, db *postgresdb.DBConnection) (Seller2Card
 func (repo *seller2cardRepoImpl) SelectByExternalID(ctx context.Context, externalID, sellerID int64) (*entity.Seller2Card, error) {
 	var result seller2cardDB
 
-	query := "SELECT id, external_id, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE external_id = $1 and seller_id = $2"
+	query := "SELECT id, external_id, int, nmuuid, created_at, updated_at, card_id FROM shop.seller2cards WHERE external_id = $1"
 
-	err := repo.getReadConnection().Get(&result, query, externalID, sellerID)
+	err := repo.getReadConnection().Get(&result, query, externalID)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrObjectNotFound
 	} else if err != nil {

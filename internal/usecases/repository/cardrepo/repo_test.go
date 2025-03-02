@@ -27,7 +27,7 @@ func TestCardRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newSeller := entity.Seller{
+	newSeller := entity.MarketPlace{
 		Title:      uuid.NewString(),
 		IsEnabled:  true,
 		ExternalID: uuid.NewString(),
@@ -37,7 +37,7 @@ func TestCardRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-  // Создание Brand
+	// Создание Brand
 	sqlRepo, err := brandrepo.NewBrandRepo(ctx, conn)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -51,8 +51,8 @@ func TestCardRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
-  // Создание Card
+
+	// Создание Card
 	sqlCardRepo, err := cardrepo.NewCardRepo(ctx, conn)
 	if err != nil {
 		t.Fatalf(err.Error())

@@ -41,21 +41,21 @@ type OrdersResponce struct {
 	Srid            string  `json:"srid"`
 }
 
-func (wb *wbAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.Order, error) {
+func (wb *apiClientImp) GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.Order, error) {
 	const methodName = "/api/v1/supplier/orders"
 
 	urlValue := url.Values{}
 	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02"))
 	urlValue.Set("flag", "1")
 
-	reqURL := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
+	reqURL := fmt.Sprintf("%s%s?%s", statisticAPIURL, methodName, urlValue.Encode())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %s", methodName, err.Error())
 	}
 
-	req.Header.Set("Authorization", wb.tokenStat)
+	req.Header.Set("Authorization", wb.token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
@@ -115,7 +115,7 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 			},
 		}
 
-		seller := entity.Seller{
+		seller := entity.MarketPlace{
 			Title: "wb",
 		}
 

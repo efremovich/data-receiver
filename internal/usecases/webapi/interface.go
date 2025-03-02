@@ -15,4 +15,6 @@ type ExtAPIFetcher interface {
 	GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error)
 
 	Ping(ctx context.Context) error
+
+	GetMarketPlace() entity.MarketPlace
 }
