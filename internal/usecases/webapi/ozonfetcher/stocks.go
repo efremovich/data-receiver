@@ -19,18 +19,18 @@ type SupplyOrderList struct {
 	LastSupplyOrderID int   `json:"last_supply_order_id"`
 }
 
-func (ozon *ozonAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
-	supplyList, err := getSupplyList(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, ozon.metric)
+func (ozon *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
+	supplyList, err := getSupplyList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric)
 	if err != nil {
 		return nil, err
 	}
 
-	supplyData, err := getSupplyDataList(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyList)
+	supplyData, err := getSupplyDataList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyList)
 	if err != nil {
 		return nil, err
 	}
 
-	stockResponce, err := getSupplyBundle(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyData)
+	stockResponce, err := getSupplyBundle(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyData)
 	if err != nil {
 		return nil, err
 	}
@@ -82,17 +82,17 @@ func (ozon *ozonAPIclientImp) GetStocks(ctx context.Context, desc entity.Package
 			if cardMeta.ID == elem.ProductID {
 				price, err := strconv.ParseFloat(cardMeta.Price, 32)
 				if err != nil {
-					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", &cardMeta.Price)
+					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", cardMeta.Price)
 				}
 
 				oldPrice, err := strconv.ParseFloat(cardMeta.OldPrice, 32)
 				if err != nil {
-					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", &cardMeta.Price)
+					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", cardMeta.Price)
 				}
 
 				marketingPrice, err := strconv.ParseFloat(cardMeta.MarketingPrice, 32)
 				if err != nil {
-					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", &cardMeta.Price)
+					logger.GetLoggerFromContext(ctx).Warnf("не удалось преобразовать в число %s", cardMeta.Price)
 				}
 
 				stockMeta.PriceSize = entity.PriceSize{

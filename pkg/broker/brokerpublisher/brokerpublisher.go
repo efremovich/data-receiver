@@ -59,7 +59,7 @@ func (b brokerPublisherImpl) SendPackage(ctx context.Context, p *entity.PackageD
 		Cursor:      p.Cursor,
 		UpdatedAt:   &p.UpdatedAt,
 		Limit:       p.Limit,
-		Seller:      p.Seller,
+		Seller:      string(p.Seller),
 		PackageType: string(p.PackageType),
 		Delay:       p.Delay,
 	}

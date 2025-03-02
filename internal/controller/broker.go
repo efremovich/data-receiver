@@ -82,6 +82,17 @@ func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc 
 
 			return anats.MessageResultEnumTempError
 		}
+	case entity.PackageTypeSaleReports:
+		err := gw.core.ReceiveSaleReport(ctx, desc)
+		if err != nil {
+			alogger.ErrorFromCtx(ctx, "ошибка обработки пакета %s: %s", desc.Cursor, err.Error())
+
+			if errors.Is(err, entity.ErrPermanent) {
+				return anats.MessageResultEnumFatalError
+			}
+
+			return anats.MessageResultEnumTempError
+		}
 	}
 
 	if desc.Delay != 0 {

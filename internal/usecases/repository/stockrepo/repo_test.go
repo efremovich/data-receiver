@@ -32,7 +32,7 @@ func TestStockRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newSeller := entity.Seller{
+	newSeller := entity.MarketPlace{
 		Title:      uuid.NewString(),
 		IsEnabled:  true,
 		ExternalID: uuid.NewString(),
@@ -74,7 +74,7 @@ func TestStockRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-  // Создание Size
+	// Создание Size
 	sqlSizeRepo, err := sizerepo.NewSizeRepo(ctx, conn)
 	if err != nil {
 		t.Fatalf(err.Error())

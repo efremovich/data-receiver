@@ -31,20 +31,20 @@ type StrockResponce struct {
 	SCCode          string `json:"SCCode"`
 }
 
-func (wb *wbAPIclientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
+func (wb *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
 	const methodName = "/api/v1/supplier/stocks"
 
 	urlValue := url.Values{}
 	urlValue.Set("dateFrom", desc.UpdatedAt.Format("2006-01-02"))
 
-	reqURL := fmt.Sprintf("%s%s?%s", wb.addrStat, methodName, urlValue.Encode())
+	reqURL := fmt.Sprintf("%s%s?%s", statisticAPIURL, methodName, urlValue.Encode())
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}
 
-	req.Header.Set("Authorization", wb.tokenStat)
+	req.Header.Set("Authorization", wb.token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 

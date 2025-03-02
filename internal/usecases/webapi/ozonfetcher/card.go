@@ -14,13 +14,13 @@ import (
 	"github.com/efremovich/data-receiver/pkg/httputil"
 )
 
-func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
-	cardsIDs, err := getCardList(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
+func (ozon *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
+	cardsIDs, err := getCardList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
 	if err != nil {
 		return nil, err
 	}
 
-	cardsMeta, err := getCardsMeta(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric, cardsIDs)
+	cardsMeta, err := getCardsMeta(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric, cardsIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -31,17 +31,17 @@ func (ozon *ozonAPIclientImp) GetCards(ctx context.Context, desc entity.PackageD
 		categoryIDsMap[card.TypeID] = card.DescriptionCategoryID
 	}
 
-	categoriesMap, err := getCategory(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
+	categoriesMap, err := getCategory(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
 	if err != nil {
 		return nil, err
 	}
 
-	attributes, err := getAttributeList(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric, categoryIDsMap)
+	attributes, err := getAttributeList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric, categoryIDsMap)
 	if err != nil {
 		return nil, err
 	}
 
-	attibutesMeta, err := getAttributeMetaList(ctx, ozon.baseURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
+	attibutesMeta, err := getAttributeMetaList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func getMetaFromVendorID(offerID string) (string, string, string) {
 	return vendorID, vendorCode, vendorSize
 }
 
-func getAttributeMetaList(_ context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector) ([]AttributeMeta, error) {
+func getAttributeMetaList(_ context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, _ metrics.Collector) ([]AttributeMeta, error) {
 	items := []AttributeMeta{}
 
 	methodName := "/v3/products/info/attributes"

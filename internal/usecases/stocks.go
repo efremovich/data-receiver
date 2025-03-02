@@ -36,7 +36,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 	var notFoundElements int
 
 	for _, meta := range stockMetaList {
-		seller, err := s.getSeller(ctx, desc.Seller)
+		seller, err := s.getSeller(ctx, client.GetMarketPlace())
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль stocks: %w", desc.Seller, err))
 		}

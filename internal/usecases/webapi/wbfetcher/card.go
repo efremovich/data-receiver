@@ -93,7 +93,7 @@ type Setting struct {
 	Setting Settings `json:"settings"`
 }
 
-func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
+func (wb *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
 	const methodName = "/content/v2/get/cards/list?locale=ru"
 
 	lastID, err := strconv.Atoi(desc.Cursor)
@@ -112,7 +112,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", wb.addrContent, methodName), bytes.NewReader(requestData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", contentAPIURL, methodName), bytes.NewReader(requestData))
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
 	}
@@ -222,7 +222,7 @@ func (wb *wbAPIclientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 	return cardsList, nil
 }
 
-func (wb *wbAPIclientImp) Ping(_ context.Context) error {
+func (wb *apiClientImp) Ping(_ context.Context) error {
 	return nil
 }
 

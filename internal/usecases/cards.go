@@ -35,7 +35,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 	for _, in := range cards {
 		s.metricsCollector.IncServiceDocsTaskCounter()
 		// Seller
-		seller, err := s.getSeller(ctx, desc.Seller)
+		seller, err := s.getSeller(ctx, client.GetMarketPlace())
 		if err != nil {
 			return err
 		}
@@ -133,6 +133,24 @@ func (s *receiverCoreServiceImpl) setCard(ctx context.Context, in entity.Card) (
 		if err != nil {
 			return nil, wrapErr(fmt.Errorf("ошибка при сохранении карточки: %w", err))
 		}
+	}
+
+	return card, nil
+}
+
+func (s *receiverCoreServiceImpl) getCardByID(ctx context.Context, cardID int64) (*entity.Card, error) {
+	card, err := s.cardRepo.SelectByID(ctx, cardID)
+	if err != nil {
+		return nil, err
+	}
+
+	return card, nil
+}
+
+func (s *receiverCoreServiceImpl) getCardByExternalID(ctx context.Context, externalID int64) (*entity.Card, error) {
+	card, err := s.cardRepo.SelectByExternalID(ctx, externalID)
+	if err != nil {
+		return nil, err
 	}
 
 	return card, nil

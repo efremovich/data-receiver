@@ -41,7 +41,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	startTime = time.Now()
 
 	for _, meta := range ordersMetaList {
-		seller, err := s.getSeller(ctx, desc.Seller)
+		seller, err := s.getSeller(ctx, client.GetMarketPlace())
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль sales:%w", desc.Seller, err))
 		}
@@ -193,7 +193,9 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 func (s *receiverCoreServiceImpl) getOrderByExternalID(ctx context.Context, externalID string) (*entity.Order, error) {
 	order, err := s.orderrepo.SelectByExternalID(ctx, externalID)
-	if err != nil {
+	if err != nil && errors.Is(err, entity.ErrObjectNotFound) {
+		return &entity.Order{}, nil
+	} else if err != nil {
 		return nil, err
 	}
 	return order, nil

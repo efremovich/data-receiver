@@ -13,11 +13,11 @@ import (
 	"github.com/efremovich/data-receiver/pkg/metrics"
 )
 
-func (o *ozonAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.Order, error) {
+func (o *apiClientImp) GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.Order, error) {
 	const methodName = "/v2/posting/fbo/list"
 
 	timeout := time.Second * time.Duration(30)
-	url := fmt.Sprintf("%s%s", o.baseURL, methodName)
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, methodName)
 
 	filter := OrderFilter{}
 	filter.Dir = "desc"
@@ -60,7 +60,7 @@ func (o *ozonAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDes
 			skus = append(skus, product.Sku)
 		}
 	}
-	productInfo, err := getProductInfo(ctx, o.baseURL, o.clientID, o.apiKey, o.metric, skus)
+	productInfo, err := getProductInfo(ctx, marketPlaceAPIURL, o.clientID, o.apiKey, o.metric, skus)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получение подробной информации о товаре %w", err)
 	}
@@ -75,7 +75,7 @@ func (o *ozonAPIclientImp) GetOrders(ctx context.Context, desc entity.PackageDes
 			Name: elem.Status,
 		}
 
-		seller := entity.Seller{
+		seller := entity.MarketPlace{
 			Title:      "ozon",
 			ExternalID: o.clientID,
 		}
