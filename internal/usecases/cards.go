@@ -138,6 +138,24 @@ func (s *receiverCoreServiceImpl) setCard(ctx context.Context, in entity.Card) (
 	return card, nil
 }
 
+func (s *receiverCoreServiceImpl) getCardByID(ctx context.Context, cardID int64) (*entity.Card, error) {
+	card, err := s.cardRepo.SelectByID(ctx, cardID)
+	if err != nil {
+		return nil, err
+	}
+
+	return card, nil
+}
+
+func (s *receiverCoreServiceImpl) getCardByExternalID(ctx context.Context, externalID int64) (*entity.Card, error) {
+	card, err := s.cardRepo.SelectByExternalID(ctx, externalID)
+	if err != nil {
+		return nil, err
+	}
+
+	return card, nil
+}
+
 func (s *receiverCoreServiceImpl) getCardByVendorID(ctx context.Context, vendorID string) (*entity.Card, error) {
 	card, err := s.cardRepo.SelectByVendorID(ctx, vendorID)
 	if err != nil {

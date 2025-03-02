@@ -19,8 +19,10 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/offerfeedrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
+	pvzrepo "github.com/efremovich/data-receiver/internal/usecases/repository/pvz"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/salerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/salereportrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/seller2cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sellerrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/sizerepo"
@@ -70,6 +72,8 @@ type receiverCoreServiceImpl struct {
 	districtrepo     districtrepo.DistrictRepo
 	salerepo         salerepo.SaleRepo
 	offerfeedrepo    offerfeedrepo.OfferRepo
+	saleReportRepo   salereportrepo.SaleReportRepo
+	pvzrepo          pvzrepo.PvzRepo
 
 	seller2cardrepo seller2cardrepo.Seller2CardRepo
 
@@ -108,6 +112,8 @@ func NewPackageReceiverService(
 	offerfeedrepo offerfeedrepo.OfferRepo,
 	warehouserepo warehouserepo.WarehouseRepo,
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo,
+	saleReportRepo salereportrepo.SaleReportRepo,
+	pvzrepo pvzrepo.PvzRepo,
 
 	brokerPublisher brokerpublisher.BrokerPublisher,
 	apiFetcher map[entity.MarketplaceType][]webapi.ExtAPIFetcher,
@@ -137,6 +143,8 @@ func NewPackageReceiverService(
 		districtrepo:     districtrepo,
 		salerepo:         salerepo,
 		offerfeedrepo:    offerfeedrepo,
+		saleReportRepo:   saleReportRepo,
+		pvzrepo:          pvzrepo,
 
 		warehouserepo:     warehouserepo,
 		warehousetyperepo: warehousetyperepo,

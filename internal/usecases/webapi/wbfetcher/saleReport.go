@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
@@ -31,10 +32,10 @@ type SaleReportResponce struct {
 	Barcode                  string    `json:"barcode"`
 	DocTypeName              string    `json:"doc_type_name"`
 	Quantity                 int       `json:"quantity"`
-	RetailPrice              float64   `json:"retail_price"`
-	RetailAmount             float64   `json:"retail_amount"`
-	SalePercent              float64   `json:"sale_percent"`
-	CommissionPercent        float64   `json:"commission_percent"`
+	RetailPrice              float32   `json:"retail_price"`
+	RetailAmount             float32   `json:"retail_amount"`
+	SalePercent              float32   `json:"sale_percent"`
+	CommissionPercent        float32   `json:"commission_percent"`
 	OfficeName               string    `json:"office_name"`
 	SupplierOperName         string    `json:"supplier_oper_name"`
 	OrderDt                  time.Time `json:"order_dt"`
@@ -92,7 +93,6 @@ const LIMIT = "100000" // Максимальное количество стро
 
 func (wb *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
 	const methodName = "/api/v5/supplier/reportDetailByPeriod"
-
 	startOfDay := time.Date(desc.UpdatedAt.Year(), desc.UpdatedAt.Month(), desc.UpdatedAt.Day(), 0, 0, 0, 0, desc.UpdatedAt.Location())
 
 	endOfDay := startOfDay.AddDate(0, 0, 1).Add(-time.Nanosecond)
@@ -137,23 +137,96 @@ func (wb *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDe
 	var saleReports []entity.SaleReport
 
 	for _, elem := range saleReportResponces {
-		warehouse := entity.Warehouse{}
-		warehouse.Title = elem.OfficeName
+		saleReport := entity.SaleReport{}
+
+		saleReport.ExternalID = strconv.Itoa(elem.RrdID)
+		saleReport.Quantity = float32(elem.Quantity)
+		saleReport.RetailPrice = elem.RetailPrice
+		saleReport.SalePercent = int(elem.SalePercent)
+		saleReport.CommissionPercent = elem.CommissionPercent
+		saleReport.RetailPriceWithdiscRub = float32(elem.RetailPriceWithdiscRub)
+		saleReport.DeliveryAmount = float32(elem.DeliveryAmount)
+		saleReport.DeliveryCost = float32(elem.DeliveryRub)
+		saleReport.ReturnAmount = float32(elem.ReturnAmount)
+		saleReport.PvzReward = float32(elem.PpvzReward)
+		saleReport.SellerReward = float32(elem.PpvzVw)
+		saleReport.SellerRewardWithNds = float32(elem.PpvzVwNds)
+
+		saleReport.DateFrom = convertrepotDate(elem.DateFrom, "2006-01-02")
+		saleReport.DateTo = convertrepotDate(elem.DateTo, "2006-01-02T15:04:05Z07:00")
+		saleReport.CreateReportDate = convertrepotDate(elem.CreateDt, "2006-01-02T15:04:05Z07:00")
+		saleReport.OrderDate = elem.OrderDt
+		saleReport.SaleDate = elem.SaleDt
+		saleReport.TransactionDate = convertrepotDate(elem.RrDt, "2006-01-02T15:04:05Z07:00") //elem.RrDt
+
+		saleReport.SAName = elem.SaName
+		saleReport.BonusTypeName = elem.BonusTypeName
+		saleReport.Penalty = float32(elem.Penalty)
+		saleReport.AdditionalPayment = float32(elem.AdditionalPayment)
+		saleReport.AcquiringFee = float32(elem.AcquiringFee)
+		saleReport.AcquiringPercent = float32(elem.AcquiringPercent)
+		saleReport.AcquiringBank = elem.AcquiringBank
+		saleReport.DocType = elem.DocTypeName
+		saleReport.SupplierOperName = elem.SupplierOperName
+
+		saleReport.SiteCountry = elem.SiteCountry
+		saleReport.KIZ = elem.Kiz
+		saleReport.StorageFee = float32(elem.StorageFee)
+		saleReport.Deduction = float32(elem.Deduction)
+		saleReport.Acceptance = float32(elem.Acceptance)
+
+		pvz := entity.Pvz{}
+		pvz.OfficeID = elem.PpvzOfficeID
+		pvz.OfficeName = elem.PpvzOfficeName
+		pvz.SupplierName = elem.PpvzSupplierName
+		pvz.SupplierID = elem.PpvzSupplierID
+		pvz.SupplierINN = elem.PpvzInn
+
+		saleReport.Pvz = &pvz
+
+		seller := wb.marketPlace
+		saleReport.Seller = &seller
 
 		barcode := entity.Barcode{}
 		barcode.Barcode = elem.Barcode
+		barcode.ExternalID = int64(elem.ShkID)
+		barcode.SellerID = seller.ID
+
+		saleReport.Barcode = &barcode
+
+		size := entity.Size{}
+		size.Title = elem.TSName
+		size.TechSize = elem.TSName
+
+		saleReport.Size = &size
 
 		card := entity.Card{}
 		card.ExternalID = int64(elem.NmID)
-		card.VendorCode = elem.SaName
+		card.VendorID = elem.SaName
 
-		saleReport := entity.SaleReport{}
-		saleReport.Card = card
-		saleReport.Barcode = barcode
+		saleReport.Card = &card
+
+		order := entity.Order{}
+		order.ExternalID = elem.Srid
+
+		saleReport.Order = &order
+
+		warehouse := entity.Warehouse{}
+		warehouse.Title = elem.OfficeName
+		warehouse.SellerID = seller.ID
+
+		saleReport.Warehouse = &warehouse
 
 		saleReports = append(saleReports, saleReport)
-
 	}
 
 	return saleReports, nil
+}
+
+func convertrepotDate(date string, layout string) time.Time {
+	result, err := time.Parse(layout, date)
+	if err == nil {
+		return time.Time{}
+	}
+	return result
 }

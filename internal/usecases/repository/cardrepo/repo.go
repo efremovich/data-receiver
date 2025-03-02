@@ -15,6 +15,7 @@ var ErrObjectNotFound = entity.ErrObjectNotFound
 
 type CardRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Card, error)
+	SelectByExternalID(ctx context.Context, id int64) (*entity.Card, error)
 	SelectByVendorID(ctx context.Context, vendorID string) (*entity.Card, error)
 	SelectByVendorCode(ctx context.Context, vendorCode string) (*entity.Card, error)
 	SelectByTitle(ctx context.Context, title string) (*entity.Card, error)
@@ -46,6 +47,23 @@ func (repo *cardRepoImpl) SelectByID(ctx context.Context, id int64) (*entity.Car
 		return nil, ErrObjectNotFound
 	} else if err != nil {
 		return nil, fmt.Errorf("ошибка при поиске данных по id %d в таблице cards: %w", id, err)
+	}
+
+	card := result.ConvertToEntityCard(ctx)
+
+	return card, nil
+}
+
+func (repo *cardRepoImpl) SelectByExternalID(ctx context.Context, externalID int64) (*entity.Card, error) {
+	var result cardDB
+
+	query := "SELECT * FROM shop.cards WHERE external_id = $1"
+
+	err := repo.getReadConnection().Get(&result, query, externalID)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при поиске данных по external_id %d в таблице cards: %w", externalID, err)
 	}
 
 	card := result.ConvertToEntityCard(ctx)

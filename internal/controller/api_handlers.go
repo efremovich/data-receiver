@@ -24,9 +24,11 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
+	gw.receiveCardsWB(ctx)
+	gw.receiveOrdersWB(ctx)
 	err := gw.receiveSaleReportWB(ctx)
 	if err != nil {
-		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах")
+		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
 	}
 }
 
@@ -153,12 +155,12 @@ func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
-	daysToGet := 5 // Количество дней для загрузки
-	delay := 61    // Количество секунд задержки перед следующим запросом
+	daysToGet := 30 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),
-		Seller:      entity.Ozon,
+		Seller:      entity.Wildberries,
 		Limit:       daysToGet,
 		Delay:       delay,
 	}
@@ -172,7 +174,7 @@ func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),
-		Seller:      entity.Wildberries,
+		Seller:      entity.Ozon,
 		Limit:       daysToGet,
 		Delay:       delay,
 	}
@@ -181,8 +183,8 @@ func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
-	daysToGet := 5 // Количество дней для загрузки
-	delay := 61    // Количество секунд задержки перед следующим запросом
+	daysToGet := 30 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
 
 	descDescription := entity.PackageDescription{
 		PackageType: entity.PackageTypeSale,

@@ -193,7 +193,9 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 func (s *receiverCoreServiceImpl) getOrderByExternalID(ctx context.Context, externalID string) (*entity.Order, error) {
 	order, err := s.orderrepo.SelectByExternalID(ctx, externalID)
-	if err != nil {
+	if err != nil && errors.Is(err, entity.ErrObjectNotFound) {
+		return &entity.Order{}, nil
+	} else if err != nil {
 		return nil, err
 	}
 	return order, nil

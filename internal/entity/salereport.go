@@ -3,63 +3,61 @@ package entity
 import "time"
 
 type SaleReport struct {
-	ID                int64
-	ExternalID        string    // Уникальный идентификатор заказа.
-	UpdatedAt         time.Time // Дата обновления данных
-	ContractNumber    string    // Договор
-	PartID            int       // Номер поставки
-	DocType           string    // Тип документа
-	Quantity          float32   // Количество
-	RetailPrice       float32   // Цена розничная
-	FinisPrice        float32   //
-	RetailSum         float32   // Сумма продажи (возврата)
-	SalePercent       int       // Процент скидки
-	CommissionPercent float32   // Процент комиссии
-	WarehouseName     string    // Наименование склада
-	OrderDate         time.Time // Дата заказа
-	SaleDate          time.Time // Дата продажи
-	OperationName     string    // Наименование операции
-	DeliveryAmount    float32   // Количество доставок
-	ReturnAmoun       float32   // Количество возвратов
-	DeliveryCost      float32   // Стоимость доставки
-	PackageType       string    // Тип упаковки
-	ProductDiscount   float32   // Финальная скидка
-	Pvz               Pvz
-	Card              Card
-	Order             Order
-	Barcode           Barcode
-	Seller            MarketPlace
+	ID         int64
+	ExternalID string    // Уникальный идентификатор заказа.
+	UpdatedAt  time.Time // Дата обновления данных
+
+	Quantity               float32   // Количество
+	RetailPrice            float32   // Цена розничная
+	ReturnAmoun            float32   // Количество возвратов
+	SalePercent            int       // Процент скидки
+	CommissionPercent      float32   // Процент комиссии
+	RetailPriceWithdiscRub float32   // Цена розничная с учетом скидок в рублях.
+	DeliveryAmount         float32   // Количество доставок
+	ReturnAmount           float32   // Количество возвратов
+	DeliveryCost           float32   // Стоимость доставки
+	PvzReward              float32   // Возмещение за выдачу на ПВЗ
+	SellerReward           float32   // Возмещение марекетплейса без НДС
+	SellerRewardWithNds    float32   // Возмещение марекетплейса с НДС
+	DateFrom               time.Time // Дата начала отчета
+	DateTo                 time.Time // Дата окончания отчета
+	CreateReportDate       time.Time // Дата создания отчета
+	OrderDate              time.Time // Дата заказа
+	SaleDate               time.Time // Дата продажи
+	TransactionDate        time.Time // Дата транзакции
+
+	SAName            string  // Артикул продавца TODO Проверить нужен ли.
+	BonusTypeName     string  // Штрафы или доплаты
+	Penalty           float32 // Штрафы
+	AdditionalPayment float32 // Доплаты
+	AcquiringFee      float32 // Возмещение издержек по эквайрингу. Издержки WB за услуги эквайринга: вычитаются из вознаграждения WB и не влияют на доход продавца
+	AcquiringPercent  float32 // Размер комиссии за эквайринг без НДС, %
+	AcquiringBank     string  // Банк экварйрер
+	DocType           string  // Тип документа
+	SupplierOperName  string  // Обоснование оплаты
+
+	SiteCountry string  // Страна сайта
+	KIZ         string  // Код маркировки товара
+	StorageFee  float32 // Стоимость хранения
+	Deduction   float32 // Прочие удержания и выплаты
+	Acceptance  float32 // Стоимость платной приемки
+
+	Pvz       *Pvz
+	Barcode   *Barcode
+	Size      *Size
+	Card      *Card
+	Order     *Order
+	Warehouse *Warehouse
+	Seller    *MarketPlace
 }
 
-// кВВ - коэффициент вознаграждения вайлдерис.
+// Пункт выдачи заказов
 type Pvz struct {
-	BuyerDiscount           float32 // Скидка постоянного покупателя
-	BaseRatioDiscount       float32 // Размер кВВ без НДС, % базовый
-	TotalRatioDiscount      float32 // Итоговый кВВ без НДС, %
-	ReductionRatingRatio    float32 // Размер снижения кВВ из-за рейтинга
-	ReductionPromotionRatio float32 // Размер снижения кВВ из-за акции
-	RewardRatio             float32 // Вознаграждение с продаж до вычета услуг поверенного, без НДС
-	ForPay                  float32 // К перечислению продавцу за реализованный товар
-	Reward                  float32 // Возмещение за выдачу и возврат товаров на ПВЗ
-	AcquiringFee            float32 // Возмещение издержек по эквайрингу. Издержки WB за услуги эквайринга: вычитаются из вознаграждения WB и не влияют на доход продавца
-	AcquiringPercent        float32 // Размер комиссии за эквайринг без НДС, %
-	AcquiringBank           string  // Банк экварйрер
-	SellerReward            float32 // Вознаграждение маркетплейса без НДС
-	OfficeID                int     // ID офиса
-	OfficeName              string  // Наименование офиса
-	SupplierID              int     // ID поставщика
-	SupplierName            string  // Наименование поставщика
-	SupplierINN             string  // ИНН поставщика
-	DeclarationNumber       string  // Номер таможенной декларации
-	BonusTypeName           string  // Штрафы или доплаты
-	StickerID               string  // Цифровое значение стикера, который клеится на товар в процессе сборки заказа по схеме "Маркетплейс"
-	CountryOfSale           string  // Страна продажи
-	Penalty                 float32 // Штрафы
-	AdditionalPayment       float32 // Доплаты
-	RebillLogisticCost      float32 // Стоимость возмещения издержек перевозки
-	RebillLogisticOrg       string  // Организация перевозки
-	KIZ                     string  // Код маркировки товара
-	StorageFee              float32 // Стоимость хранения
-	Deduction               float32 // Прочие удержания и выплаты
-	Acceptance              float32 // Стоимость платной приемки
+	ID           int64
+	OfficeName   string // Наименование поставщика
+	OfficeID     int    // ID офиса
+	SupplierName string // Наименование поставщика
+	SupplierID   int    // ID поставщика
+	SupplierINN  string // ИНН поставщика
+
 }
