@@ -34,8 +34,6 @@ func (gw *grpcGatewayServerImpl) makeBrokerSubscribers(ctx context.Context) erro
 func (gw *grpcGatewayServerImpl) handlerForCreateCard(ctx context.Context, desc entity.PackageDescription, _ int, _ bool) anats.MessageResultEnum {
 	start := time.Now()
 
-	// alogger.DebugFromCtx(ctx, fmt.Sprintf("начало обработки сообщения %d", desc.Cursor), nil, nil, false)
-
 	switch desc.PackageType {
 	case entity.PackageTypeCard:
 		err := gw.core.ReceiveCards(ctx, desc)

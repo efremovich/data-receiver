@@ -43,8 +43,8 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context,
 		s2card, err := s.getSeller2Card(ctx, meta.Card.ExternalID, seller.ID)
 		if err != nil {
 			alogger.InfoFromCtx(ctx, "ошибка получения данных о продавце %s модуль sales reports: %s", desc.Seller, err.Error())
-			// return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль sales reports:%w", desc.Seller, err))
 			notFoundElements++
+
 			continue
 		}
 
@@ -53,14 +53,16 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context,
 			notFoundElements++
 			continue
 		} else if err != nil {
+			alogger.InfoFromCtx(ctx, "ошибка получения данных о карточки товара %s модуль sales reports: %s", desc.Seller, err.Error())
 			return err
 		}
 
 		meta.Card = card
 
 		// Size
-		size, err := s.getSizeByTitle(ctx, meta.Size.TechSize)
+		size, err := s.setSize(ctx, meta.Size)
 		if err != nil {
+			alogger.InfoFromCtx(ctx, "ошибка получения данных о размер %s модуль sales reports: %s", desc.Seller, err.Error())
 			return err
 		}
 
@@ -69,6 +71,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context,
 		meta.Warehouse.SellerID = seller.ID
 		warehouse, err := s.setWarehouse(ctx, meta.Warehouse)
 		if err != nil {
+			alogger.InfoFromCtx(ctx, "ошибка получения данных о складах %s модуль sales reports: %s", desc.Seller, err.Error())
 			return err
 		}
 
@@ -77,24 +80,27 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context,
 		if meta.Pvz != nil {
 			meta.Pvz, err = s.setPvz(ctx, meta.Pvz)
 			if err != nil {
+				alogger.InfoFromCtx(ctx, "ошибка получения данных о ПВЗ %s модуль sales reports: %s", desc.Seller, err.Error())
 				return err
 			}
 		}
 
-		barcode := meta.Barcode
-		_, err = s.setBarcode(ctx, *barcode)
-		if err != nil {
-			fmt.Println(err.Error())
-			// return err
-		}
+		// barcode := meta.Barcode
+		// _, err = s.setBarcode(ctx, *barcode)
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// 	// return err
+		// }
 
 		meta.Order, err = s.getOrderByExternalID(ctx, meta.Order.ExternalID)
 		if err != nil {
+			alogger.InfoFromCtx(ctx, "ошибка получения данных о заказе %s модуль sales reports: %s", desc.Seller, err.Error())
 			return err
 		}
 
 		err = s.setSaleReport(ctx, &meta)
 		if err != nil {
+			alogger.InfoFromCtx(ctx, "ошибка получения данных о отчетах по продажам %s модуль sales reports: %s", desc.Seller, err.Error())
 			return err
 		}
 	}
@@ -113,7 +119,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context,
 			// Cursor:      saleReport[len(saleReport)-1].ExternalID,
 			Limit: desc.Limit - 1,
 		}
-		err := s.ReceiveSaleReport(ctx, p)
+		err := s.brokerPublisher.SendPackage(ctx, &p)
 		if err != nil {
 			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
 		}

@@ -48,12 +48,11 @@ type SaleReportResponce struct {
 	DeliveryRub              float64   `json:"delivery_rub"`
 	GiBoxTypeName            string    `json:"gi_box_type_name"`
 	ProductDiscountForReport float64   `json:"product_discount_for_report"`
-	SupplierPromo            int       `json:"supplier_promo"`
+	SupplierPromo            float64   `json:"supplier_promo"`
 	Rid                      int64     `json:"rid"`
 	PpvzSppPrc               float64   `json:"ppvz_spp_prc"`
 	PpvzKvwPrcBase           float64   `json:"ppvz_kvw_prc_base"`
 	PpvzKvwPrc               float64   `json:"ppvz_kvw_prc"`
-	SupRatingPrcUp           int       `json:"sup_rating_prc_up"`
 	IsKgvpV2                 float64   `json:"is_kgvp_v2"`
 	PpvzSalesCommission      float64   `json:"ppvz_sales_commission"`
 	PpvzForPay               float64   `json:"ppvz_for_pay"`
@@ -75,12 +74,12 @@ type SaleReportResponce struct {
 	SiteCountry              string    `json:"site_country"`
 	SrvDbs                   bool      `json:"srv_dbs"`
 	Penalty                  float64   `json:"penalty"`
-	AdditionalPayment        int       `json:"additional_payment"`
+	AdditionalPayment        float64   `json:"additional_payment"`
 	RebillLogisticCost       float64   `json:"rebill_logistic_cost"`
 	RebillLogisticOrg        string    `json:"rebill_logistic_org"`
 	StorageFee               float64   `json:"storage_fee"`
-	Deduction                int       `json:"deduction"`
-	Acceptance               int       `json:"acceptance"`
+	Deduction                float64   `json:"deduction"`
+	Acceptance               float64   `json:"acceptance"`
 	AssemblyID               int64     `json:"assembly_id"`
 	Kiz                      string    `json:"kiz"`
 	Srid                     string    `json:"srid"`

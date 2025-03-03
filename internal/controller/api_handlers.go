@@ -196,9 +196,10 @@ func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error {
-	daysToGet := 30 // Количество дней для загрузки
-	delay := 61     // Количество секунд задержки перед следующим запросом
+	daysToGet := 365 // Количество дней для загрузки
+	delay := 61      // Количество секунд задержки перед следующим запросом
 	startDate := time.Now()
+	// startDate := time.Date(2024, 11, 29, 0, 0, 0, 0, time.Local)
 	descDescription := entity.PackageDescription{
 		PackageType: entity.PackageTypeSaleReports,
 		UpdatedAt:   startDate,
