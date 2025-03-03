@@ -81,12 +81,12 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context,
 			}
 		}
 
-		barcode := meta.Barcode
-		_, err = s.setBarcode(ctx, *barcode)
-		if err != nil {
-			fmt.Println(err.Error())
-			// return err
-		}
+		// barcode := meta.Barcode
+		// _, err = s.setBarcode(ctx, *barcode)
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// 	// return err
+		// }
 
 		meta.Order, err = s.getOrderByExternalID(ctx, meta.Order.ExternalID)
 		if err != nil {
