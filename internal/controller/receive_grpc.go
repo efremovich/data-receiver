@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -63,6 +64,32 @@ func (gw *grpcGatewayServerImpl) StockFeedV1Handler(req *fiber.Ctx) error {
 	}
 
 	req.Set("Content-Type", "application/xml")
+	req.Response().SetStatusCode(http.StatusOK)
+	req.Response().AppendBody(data)
+	return nil
+}
+
+func (gw *grpcGatewayServerImpl) VKCardsFeedV1Handler(req *fiber.Ctx) error {
+	// Извлечь параметры из запроса
+	limit := 0
+	queryLimit := req.Query("limit", "0")
+	limit, _ = strconv.Atoi(queryLimit)
+
+	cursor := req.Query("cursor", "")
+	filter := req.Query("filter", "")
+
+	params := entity.VkCardsFeedParams{
+		Limit:  limit,
+		Cursor: cursor,
+		Filter: filter,
+	}
+	data, err := gw.core.VkCardsFeed(req.Context(), params)
+	if err != nil {
+		req.Response().SetStatusCode(http.StatusInternalServerError)
+		req.Response().AppendBodyString("файл с фидом каталога не обнаружен повторите попытку позже")
+		return err
+	}
+	req.Set("Content-Type", "application/json")
 	req.Response().SetStatusCode(http.StatusOK)
 	req.Response().AppendBody(data)
 	return nil

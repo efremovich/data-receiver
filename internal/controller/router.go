@@ -13,6 +13,7 @@ import (
 func newRouter(grpcGateway *runtime.ServeMux, cfg config.Gateway,
 	offerHandler func(*fiber.Ctx) error,
 	stockHandler func(*fiber.Ctx) error,
+	vkCardsFeedHandler func(*fiber.Ctx) error,
 	metricsCollector metrics.Collector) *fiber.App {
 	server := fiber.New()
 
@@ -24,6 +25,7 @@ func newRouter(grpcGateway *runtime.ServeMux, cfg config.Gateway,
 
 	server.All("/feed/v1/offer", offerHandler)
 	server.All("/feed/v1/stock", stockHandler)
+	server.All("/feed/v1/vk", vkCardsFeedHandler)
 
 	server.Static("/swagger", cfg.PathToSwaggerDir)
 	server.Static("/data-receiver/swagger", cfg.PathToSwaggerDir) // Swagger для локальной сборки.

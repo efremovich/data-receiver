@@ -24,10 +24,10 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	err := gw.receiveSaleReportWB(ctx)
-	if err != nil {
-		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
-	}
+	// err := gw.receiveSaleReportWB(ctx)
+	// if err != nil {
+	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
+	// }
 }
 
 type Task struct {
