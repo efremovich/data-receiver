@@ -117,6 +117,8 @@ type vkFeedDB struct {
 	Gender      sql.NullString  `db:"gender"`
 	Price       sql.NullFloat64 `db:"price"`
 	Size        sql.NullString  `db:"size"`
+	ExternalID  sql.NullInt64   `db:"external_id"`
+	SellerName  string          `db:"seller_name"`
 }
 
 func (c vkFeedDB) ConvertToEntityVKCard(_ context.Context) *entity.VKCard {
@@ -137,5 +139,7 @@ func (c vkFeedDB) ConvertToEntityVKCard(_ context.Context) *entity.VKCard {
 		MediaLinks:  mediaLinks,
 		Price:       repository.NullFloatToFloat(c.Price),
 		MaxSize:     repository.NullStringToString(c.Size),
+		ExternalID:  repository.NullIntToInt(c.ExternalID),
+		SellerName:  c.SellerName,
 	}
 }

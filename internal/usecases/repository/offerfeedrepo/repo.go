@@ -258,7 +258,9 @@ func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkC
             card.description,
             array_agg(DISTINCT mf.link) AS media_links,
             MAX(ps.price) AS price, 
-            COALESCE(MIN(s."name")::text, '') || ' - ' || COALESCE(MAX(s."name")::text, '') AS size
+            COALESCE(MIN(s."name")::text, '') || ' - ' || COALESCE(MAX(s."name")::text, '') AS size,
+            sc.external_id as external_id,
+            sl.title as seller_name 
           FROM shop.cards card
           JOIN filtered_brands b ON b.id = card.brand_id
           LEFT JOIN shop.cards_characteristics char_color ON char_color.card_id = card.id AND char_color.characteristic_id = 11
@@ -268,8 +270,10 @@ func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkC
           LEFT JOIN shop.categories c ON c.id = cc.category_id
           LEFT JOIN shop.price_sizes ps ON ps.card_id = card.id
           LEFT JOIN shop.sizes s ON s.id = ps.size_id 
+          LEFT JOIN shop.seller2cards sc ON sc.card_id = card.id
+          LEFT JOIN shop.sellers sl on sl.id = sc.seller_id 
           %s
-          GROUP BY card.vendor_code, c.title, char_color.value, card.title, char_gender.value, card.description, b.title 
+          GROUP BY card.vendor_code, c.title, char_color.value, card.title, char_gender.value, card.description, b.title, sc.external_id, sc.seller_id, sl.title 
           ORDER BY code ASC 
           %s`, whereCondition, limitCondititon)
 

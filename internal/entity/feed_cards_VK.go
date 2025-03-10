@@ -10,6 +10,8 @@ type VKCard struct {
 	MediaLinks  []string `json:"media_links"`
 	Price       float64  `json:"price"`
 	MaxSize     string   `json:"size"`
+	ExternalID  int64    `json:"external_id"`
+	SellerName  string   `json:"seller_name"`
 }
 
 type ResponseVKCard struct {
