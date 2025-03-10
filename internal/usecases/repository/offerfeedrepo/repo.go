@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
@@ -15,6 +16,7 @@ var ErrObjectNotFound = entity.ErrObjectNotFound
 type OfferRepo interface {
 	GetOffers(ctx context.Context) ([]*entity.Offer, error)
 	GetStocks(ctx context.Context) (*entity.Inventory, error)
+	GetCardsVkFeed(ctx context.Context, params entity.VkCardsFeedParams) ([]*entity.VKCard, error)
 	Ping(ctx context.Context) error
 	BeginTX(ctx context.Context) (postgresdb.Transaction, error)
 	WithTx(*postgresdb.Transaction) OfferRepo
@@ -195,7 +197,7 @@ func (repo *offerRepoImpl) GetOffers(ctx context.Context) ([]*entity.Offer, erro
       s.barcode,
       s.price,
       s.special_price
-      Limit 100` // TODO Убрать лимит. Для теста
+      Limit 100` // TODO: Убрать лимит. Для теста
 	err := repo.getReadConnection().Select(&results, query)
 
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
@@ -212,6 +214,77 @@ func (repo *offerRepoImpl) GetOffers(ctx context.Context) ([]*entity.Offer, erro
 	}
 
 	return offers, nil
+}
+
+func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkCardsFeedParams) ([]*entity.VKCard, error) {
+	conditions := []string{}
+	whereCondition := ""
+	limitCondititon := ""
+
+	if params.Limit > 0 {
+		limitCondititon = fmt.Sprintf("LIMIT %d", params.Limit)
+	}
+
+	if params.Cursor != "" {
+		conditions = append(conditions, fmt.Sprintf("vendor_code > '%s'", params.Cursor))
+	}
+
+	if params.Filter != "" {
+		filters := strings.Split(params.Filter, ",")
+		if len(filters) > 0 {
+			conditions = append(conditions, fmt.Sprintf("vendor_code IN ('%s')", strings.Join(filters, "','")))
+		}
+	}
+
+	if len(conditions) > 0 {
+		whereCondition = " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	var results []vkFeedDB
+	query := fmt.Sprintf(`
+          WITH filtered_brands AS (
+            SELECT id, title
+            FROM shop.brands
+            WHERE title ~ 'LARETTO|LRTT'
+          )
+          SELECT 
+            card.vendor_code AS code,
+            c.title AS subject,
+            char_color.value AS color,
+            card.title,
+            char_gender.value AS gender,
+            card.description,
+            array_agg(DISTINCT mf.link) AS media_links,
+            MAX(ps.price) AS price, 
+            COALESCE(MIN(s."name")::text, '') || ' - ' || COALESCE(MAX(s."name")::text, '') AS size
+          FROM shop.cards card
+          JOIN filtered_brands b ON b.id = card.brand_id
+          LEFT JOIN shop.cards_characteristics char_color ON char_color.card_id = card.id AND char_color.characteristic_id = 11
+          LEFT JOIN shop.cards_characteristics char_gender ON char_gender.card_id = card.id AND char_gender.characteristic_id = 8
+          LEFT JOIN shop.media_files mf ON mf.card_id = card.id AND mf.type_id = 1
+          LEFT JOIN shop.card_categories cc ON cc.card_id = card.id 
+          LEFT JOIN shop.categories c ON c.id = cc.category_id
+          LEFT JOIN shop.price_sizes ps ON ps.card_id = card.id
+          LEFT JOIN shop.sizes s ON s.id = ps.size_id 
+          %s
+          GROUP BY card.vendor_code, c.title, char_color.value, card.title, char_gender.value, card.description, b.title 
+          ORDER BY code ASC 
+          %s`, whereCondition, limitCondititon)
+
+	err := repo.getReadConnection().Select(&results, query)
+
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrObjectNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("ошибка при получении данных фида предложений: %w", err)
+	}
+
+	var vkCards []*entity.VKCard
+	for _, result := range results {
+		vkCard := result.ConvertToEntityVKCard(ctx)
+		vkCards = append(vkCards, vkCard)
+	}
+	return vkCards, nil
 }
 
 func (repo *offerRepoImpl) Ping(_ context.Context) error {

@@ -42,8 +42,10 @@ type ReceiverCoreService interface {
 	ReceiveOrders(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveSales(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveSaleReport(ctx context.Context, desc entity.PackageDescription) error
+
 	OfferFeed(ctx context.Context) ([]byte, error)
 	StockFeed(ctx context.Context) ([]byte, error)
+	VkCardsFeed(ctx context.Context, params entity.VkCardsFeedParams) ([]byte, error)
 
 	PingDB(ctx context.Context) error
 	PingNATS(_ context.Context) error

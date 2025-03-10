@@ -3,6 +3,7 @@ package offerfeedrepo
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/repository"
@@ -103,5 +104,38 @@ func (c storageDB) ConvertToEntityStorage(_ context.Context) *entity.OfferStorag
 			SellerID:   c.SellerID,
 			SellerName: c.Name,
 		},
+	}
+}
+
+type vkFeedDB struct {
+	Title       string          `db:"title"`
+	VendorCode  string          `db:"code"`
+	Description string          `db:"description"`
+	MediaLinks  string          `db:"media_links"`
+	Subject     sql.NullString  `db:"subject"`
+	Color       sql.NullString  `db:"color"`
+	Gender      sql.NullString  `db:"gender"`
+	Price       sql.NullFloat64 `db:"price"`
+	Size        sql.NullString  `db:"size"`
+}
+
+func (c vkFeedDB) ConvertToEntityVKCard(_ context.Context) *entity.VKCard {
+	trimBraces := strings.Trim(c.MediaLinks, "{}")
+	mediaLinks := strings.Split(trimBraces, ",")
+
+	// Опционально: удаление пробелов вокруг ссылок
+	for i, link := range mediaLinks {
+		mediaLinks[i] = strings.TrimSpace(link)
+	}
+	return &entity.VKCard{
+		VendorCode:  c.VendorCode,
+		Subject:     repository.NullStringToString(c.Subject),
+		Color:       repository.NullStringToString(c.Color),
+		Title:       c.Title,
+		Gender:      repository.NullStringToString(c.Gender),
+		Description: c.Description,
+		MediaLinks:  mediaLinks,
+		Price:       repository.NullFloatToFloat(c.Price),
+		MaxSize:     repository.NullStringToString(c.Size),
 	}
 }
