@@ -217,13 +217,15 @@ func (repo *offerRepoImpl) GetOffers(ctx context.Context) ([]*entity.Offer, erro
 }
 
 func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkCardsFeedParams) ([]*entity.VKCard, error) {
+	const limit = 1000
 	conditions := []string{}
 	whereCondition := ""
-	limitCondititon := ""
 
-	if params.Limit > 0 {
-		limitCondititon = fmt.Sprintf("LIMIT %d", params.Limit)
+	if params.Limit == 0 {
+		params.Limit = limit
 	}
+
+	limitCondititon := fmt.Sprintf("LIMIT %d", params.Limit)
 
 	if params.Cursor != "" {
 		conditions = append(conditions, fmt.Sprintf("vendor_code > '%s'", params.Cursor))

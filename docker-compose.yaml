@@ -89,3 +89,9 @@ services:
       - --path.procfs=/host/proc
       - --path.sysfs=/host/sys
       # - --collector.filesystem.ignored-mount-points="^(/dev|/proc|/sys|/var/lib/docker|/run/docker|/var/lib/containers)($|/)"
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    ports:
+      - "3030:3000"
