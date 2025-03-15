@@ -147,7 +147,7 @@ type CatMeta struct {
 	CategoryID string
 	TypeID     string
 }
-type AttibutesMeta struct {
+type RespAttributeMeta struct {
 	Result []AttributeMeta `json:"result"`
 	Total  int             `json:"total"`
 	LastID string          `json:"last_id"`

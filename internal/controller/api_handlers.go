@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -24,7 +23,7 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	err := gw.receiveSaleReportWB(ctx)
+	err := gw.receiveCardsWB(ctx)
 	if err != nil {
 		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
 	}
@@ -52,7 +51,7 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 
 		{"Загрузка продаж wildberries", "30 19 * * *", gw.receiveSalesWB},
 
-		{"Генерация фида предложений", "00 16 * * * ", gw.generateOrderFeed},
+		{"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
 	}
 
 	for _, task := range tasks {
@@ -70,28 +69,6 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 
 	c.Start()
 	select {} // Block forever
-}
-
-func (gw *grpcGatewayServerImpl) generateOrderFeed(ctx context.Context) error {
-	logger.GetLoggerFromContext(ctx).Infof("начинаем генерацию фида")
-
-	offers, err := gw.core.OfferFeed(ctx)
-	if err != nil {
-		return err
-	}
-
-	logger.GetLoggerFromContext(ctx).Infof("генерация фида окончена")
-	tempFile, err := os.CreateTemp("", "offer_feed.xml")
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(tempFile.Name(), offers, 0o600)
-	if err != nil {
-		return err
-	}
-
-	logger.GetLoggerFromContext(ctx).Infof("фид cохранен")
-	return nil
 }
 
 func (gw *grpcGatewayServerImpl) receiveCardsWB(ctx context.Context) error {
@@ -207,5 +184,6 @@ func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error 
 		Limit:       daysToGet,
 		Delay:       delay,
 	}
+
 	return gw.core.ReceiveSaleReport(ctx, descDescription)
 }

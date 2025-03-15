@@ -25,7 +25,7 @@ services:
       - "5445:5432"
   nats:
     container_name: nats
-    image: nats:2.9.21
+    image: nats:2.10.26
     command: -js
     restart: unless-stopped
     ports:

@@ -20,6 +20,12 @@ type SupplyOrderList struct {
 }
 
 func (ozon *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
+	// TODO: Исправить. Нужно вызывать в одном месте
+	ozonHeaders := make(map[string]string)
+	ozonHeaders["Client-Id"] = ozon.clientID
+	ozonHeaders["Api-Key"] = ozon.apiKey
+	ozonHeaders["Content-Type"] = "application/json"
+
 	supplyList, err := getSupplyList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric)
 	if err != nil {
 		return nil, err
@@ -109,7 +115,7 @@ func (ozon *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 	return stockMetaList, nil
 }
 
-func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metric metrics.Collector, supplyData *SupplyData) (*StocksMeta, error) {
+func (ozon *apiClientImp) getSupplyBundle(ctx context.Context, supplyData *SupplyData) (*StocksMeta, error) {
 	timeout := time.Second * time.Duration(30)
 
 	methodName := "/v1/supply-order/bundle"
@@ -191,7 +197,7 @@ func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metr
 		}
 	}
 
-	cardsMeta, err := getCardsMeta(ctx, baseURL, clientID, apiKey, 1000, timeout, metric, productIDList)
+	cardsMeta, err := ozon.getCardsMeta(ctx, productIDList)
 	if err != nil {
 		return nil, err
 	}
