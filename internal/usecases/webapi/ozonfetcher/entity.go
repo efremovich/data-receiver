@@ -12,13 +12,13 @@ type OzonFilter struct {
 	Limit  int    `json:"limit"`
 }
 
-type ProductIdList struct {
+type ProductIDList struct {
 	ProductID int    `json:"product_id"`
 	OfferID   string `json:"offer_id"`
 }
 type ProductList struct {
 	Result struct {
-		Items  []ProductIdList `json:"items"`
+		Items  []ProductIDList `json:"items"`
 		Total  int             `json:"total"`
 		LastID string          `json:"last_id"`
 	} `json:"result"`
@@ -147,33 +147,29 @@ type CatMeta struct {
 	CategoryID string
 	TypeID     string
 }
-type AttibutesMeta struct {
+type RespAttributeMeta struct {
 	Result []AttributeMeta `json:"result"`
 	Total  int             `json:"total"`
 	LastID string          `json:"last_id"`
 }
 
 type AttributeMeta struct {
-	ID            int    `json:"id"`
-	Barcode       string `json:"barcode"`
-	CategoryID    int    `json:"category_id"`
-	Name          string `json:"name"`
-	OfferID       string `json:"offer_id"`
-	Height        int    `json:"height"`
-	Depth         int    `json:"depth"`
-	Width         int    `json:"width"`
-	DimensionUnit string `json:"dimension_unit"`
-	Weight        int    `json:"weight"`
-	WeightUnit    string `json:"weight_unit"`
-	Images        []struct {
-		FileName string `json:"file_name"`
-		Default  bool   `json:"default"`
-		Index    int    `json:"index"`
-	} `json:"images"`
-	ImageGroupID string `json:"image_group_id"`
-	Images360    []any  `json:"images360"`
-	PdfList      []any  `json:"pdf_list"`
-	Attributes   []struct {
+	ID            int      `json:"id"`
+	Barcode       string   `json:"barcode"`
+	CategoryID    int      `json:"category_id"`
+	Name          string   `json:"name"`
+	OfferID       string   `json:"offer_id"`
+	Height        int      `json:"height"`
+	Depth         int      `json:"depth"`
+	Width         int      `json:"width"`
+	DimensionUnit string   `json:"dimension_unit"`
+	Weight        int      `json:"weight"`
+	WeightUnit    string   `json:"weight_unit"`
+	Images        []string `json:"images"`
+	ImageGroupID  string   `json:"image_group_id"`
+	Images360     []any    `json:"images360"`
+	PdfList       []any    `json:"pdf_list"`
+	Attributes    []struct {
 		AttributeID int `json:"attribute_id"`
 		ComplexID   int `json:"complex_id"`
 		Values      []struct {
@@ -311,6 +307,19 @@ type OrderRespose struct {
 				Picking              any      `json:"picking"`
 				Quantity             int      `json:"quantity"`
 				ClientPrice          string   `json:"client_price"`
+				ItemServices         struct {
+					MarketplaceServiceItemFulfillment                int `json:"marketplace_service_item_fulfillment"`
+					MarketplaceServiceItemPickup                     int `json:"marketplace_service_item_pickup"`
+					MarketplaceServiceItemDropoffPvz                 int `json:"marketplace_service_item_dropoff_pvz"`
+					MarketplaceServiceItemDropoffSc                  int `json:"marketplace_service_item_dropoff_sc"`
+					MarketplaceServiceItemDropoffFf                  int `json:"marketplace_service_item_dropoff_ff"`
+					MarketplaceServiceItemDirectFlowTrans            int `json:"marketplace_service_item_direct_flow_trans"`
+					MarketplaceServiceItemReturnFlowTrans            int `json:"marketplace_service_item_return_flow_trans"`
+					MarketplaceServiceItemDelivToCustomer            int `json:"marketplace_service_item_deliv_to_customer"`
+					MarketplaceServiceItemReturnNotDelivToCustomer   int `json:"marketplace_service_item_return_not_deliv_to_customer"`
+					MarketplaceServiceItemReturnPartGoodsCustomer    int `json:"marketplace_service_item_return_part_goods_customer"`
+					MarketplaceServiceItemReturnAfterDelivToCustomer int `json:"marketplace_service_item_return_after_deliv_to_customer"`
+				} `json:"item_services"`
 			} `json:"products"`
 		} `json:"financial_data"`
 		AdditionalData []any `json:"additional_data"`

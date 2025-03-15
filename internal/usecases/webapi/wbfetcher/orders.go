@@ -92,14 +92,15 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 		barcode := entity.Barcode{}
 		barcode.Barcode = elem.Barcode
 
-		vendorID := elem.SupplierArticle
+		vendorCode := elem.SupplierArticle
 		if reVendorCode.MatchString(elem.SupplierArticle) {
-			vendorID = reVendorCode.FindString(elem.SupplierArticle)
+			vendorCode = reVendorCode.FindString(elem.SupplierArticle)
 		}
 
 		card := entity.Card{}
 		card.ExternalID = int64(elem.NmID)
-		card.VendorID = vendorID
+		card.VendorCode = vendorCode
+		card.VendorID = vendorCode
 
 		status := entity.Status{
 			Name: elem.OrderType,
@@ -115,19 +116,15 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 			},
 		}
 
-		seller := entity.MarketPlace{
-			Title: "wb",
+		size := entity.Size{
+			TechSize: elem.TechSize,
+			Title:    elem.TechSize,
 		}
 
 		priceSize := entity.PriceSize{
 			Price:        elem.FinishedPrice,
 			Discount:     elem.DiscountPercent,
 			SpecialPrice: elem.TotalPrice,
-		}
-
-		size := entity.Size{
-			TechSize: elem.TechSize,
-			Title:    elem.TechSize,
 		}
 
 		order := entity.Order{}
@@ -143,7 +140,6 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 		order.Status = &status
 		order.Region = &region
 		order.Warehouse = &warehouse
-		order.Seller = &seller
 		order.Card = &card
 		order.Barcode = &barcode
 

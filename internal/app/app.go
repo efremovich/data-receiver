@@ -84,7 +84,6 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	}
 
 	apiFetcher := make(map[entity.MarketplaceType][]webapi.ExtAPIFetcher)
-	// TODO Завернем клиентов всех маркетплейсов в мапу
 	apiFetcher[entity.Wildberries] = wbfetcher.New(ctx, conf, metricsCollector)
 	apiFetcher[entity.OdinAss] = odincfetcer.New(ctx, conf, metricsCollector)
 	apiFetcher[entity.Ozon] = ozonfetcher.New(ctx, conf, metricsCollector)

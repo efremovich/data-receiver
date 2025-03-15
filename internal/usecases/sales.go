@@ -9,21 +9,57 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/alogger"
+	"golang.org/x/sync/errgroup"
 )
 
 func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.PackageDescription) error {
 	clients := s.apiFetcher[desc.Seller]
-	for _, client := range clients {
-		err := s.receiveAndSaveSales(ctx, client, desc)
-		if err != nil {
-			return err
+
+	g, gCtx := errgroup.WithContext(ctx)
+
+	for _, c := range clients {
+		client := c
+
+		g.Go(func() error {
+			return s.receiveAndSaveSales(gCtx, client, desc)
+		})
+	}
+
+	// Ждем завершения всех горутин и проверяем наличие ошибок
+	if err := g.Wait(); err != nil {
+		if errors.Is(err, context.Canceled) {
+			alogger.WarnFromCtx(ctx, "Операция была отменена: %v", err)
+			return nil
 		}
+		return fmt.Errorf("ошибка при обработке клиентов: %w", err)
+	}
+	if desc.Limit > 0 {
+		p := entity.PackageDescription{
+			PackageType: entity.PackageTypeSale,
+
+			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
+			Limit:     desc.Limit - 1,
+			Seller:    desc.Seller,
+			Delay:     desc.Delay,
+		}
+
+		alogger.InfoFromCtx(ctx, "постановка задачи в очередь %d", desc.Limit)
+
+		err := s.brokerPublisher.SendPackage(ctx, &p)
+		if err != nil {
+			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
+		}
+
+		alogger.InfoFromCtx(ctx, "Создана очередь для получения продаж на %s", p.UpdatedAt.Format("02.01.2006"))
+	} else {
+		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
 	}
 
 	return nil
 }
 
 func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, client webapi.ExtAPIFetcher, desc entity.PackageDescription) error {
+	var notFoundElements int
 
 	salesMetaList, err := client.GetSales(ctx, desc)
 	if err != nil {
@@ -32,13 +68,12 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 
 	alogger.InfoFromCtx(ctx, "Получение данных об продажах за %s", desc.UpdatedAt.Format("02.01.2006"))
 
-	var notFoundElements int
+	seller, err := s.getSeller(ctx, client.GetMarketPlace())
+	if err != nil {
+		return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль sales:%w", desc.Seller, err))
+	}
 
 	for _, meta := range salesMetaList {
-		seller, err := s.getSeller(ctx, client.GetMarketPlace())
-		if err != nil {
-			return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль sales:%w", desc.Seller, err))
-		}
 
 		meta.Seller = seller
 		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
@@ -162,26 +197,6 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 	}
 
 	alogger.InfoFromCtx(ctx, "Загружена информация о продажах всего: %d из них не найдено %d", len(salesMetaList), notFoundElements)
-
-	if desc.Limit > 0 {
-		p := entity.PackageDescription{
-			PackageType: entity.PackageTypeSale,
-
-			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
-			Limit:     desc.Limit - 1,
-			Seller:    desc.Seller,
-			Delay:     desc.Delay,
-		}
-
-		err = s.brokerPublisher.SendPackage(ctx, &p)
-		if err != nil {
-			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
-		}
-
-		alogger.InfoFromCtx(ctx, "Создана очередь для получения продаж на %s", p.UpdatedAt.Format("02.01.2006"))
-	} else {
-		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
-	}
 
 	return nil
 }

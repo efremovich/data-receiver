@@ -59,6 +59,6 @@ type apiClientImp struct {
 	metric metrics.Collector
 }
 
-func (c *apiClientImp) GetMarketPlace() entity.MarketPlace {
-	return c.marketPlace
+func (odinc *apiClientImp) GetMarketPlace() entity.MarketPlace {
+	return odinc.marketPlace
 }

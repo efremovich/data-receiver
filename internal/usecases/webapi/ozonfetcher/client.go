@@ -13,10 +13,29 @@ import (
 )
 
 const (
-	marketPlaceAPIURL = "https://api-seller.ozon.ru"
+	marketPlaceAPIURL string = "https://api-seller.ozon.ru"
+
+	// products.
+	descriptionCategoryAttrMethod string = "/v1/description-category/attribute"
+	productInfoListMethod         string = "/v3/product/info/list"
+	productInfoAttrMetod          string = "/v4/product/info/attributes"
+	descriptionCategoryMethod     string = "/v1/description-category/tree"
+	productListMethod             string = "/v3/product/list"
+	// orders and sales
+	fboPostingListMethod string = "/v2/posting/fbo/list"
+	// stocks
+	supplyOrderListMethod    string = "/v2/supply-order/list"
+	supplyOrderGetMethod     string = "/v2/supply-order/get"
+	suppolyOrderBundleMethod string = "/v1/supply-order/bundle"
+
+	requestItemLimit int = 1000
 )
 
+var ozonHeaders map[string]map[string]string
+
 func New(_ context.Context, cfg config.Config, metrics metrics.Collector) []webapi.ExtAPIFetcher {
+	ozonHeaders = make(map[string]map[string]string)
+
 	timeout := time.Second * time.Duration(cfg.ProcessTimeoutSeconds)
 
 	c := &http.Client{
@@ -44,6 +63,14 @@ func New(_ context.Context, cfg config.Config, metrics metrics.Collector) []weba
 
 				metric: metrics,
 			}
+
+			headers := make(map[string]string)
+			headers["Client-Id"] = client.clientID
+			headers["Api-Key"] = client.apiKey
+			headers["Content-Type"] = "application/json"
+
+			ozonHeaders[marketPlace.ExternalID] = headers
+
 			clients = append(clients, client)
 		}
 	}
@@ -62,10 +89,10 @@ type apiClientImp struct {
 	metric metrics.Collector
 }
 
-func (c *apiClientImp) GetMarketPlace() entity.MarketPlace {
-	return c.marketPlace
+func (ozon *apiClientImp) GetMarketPlace() entity.MarketPlace {
+	return ozon.marketPlace
 }
 
-func (odinc *apiClientImp) Ping(ctx context.Context) error {
+func (ozon *apiClientImp) Ping(_ context.Context) error {
 	return nil
 }

@@ -1,6 +1,7 @@
 package ozonfetcher
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -8,19 +9,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/efremovich/data-receiver/pkg/metrics"
-
 	"github.com/efremovich/data-receiver/internal/entity"
-	"github.com/efremovich/data-receiver/pkg/httputil"
 )
 
-func (ozon *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
-	cardsIDs, err := getCardList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
+//nolint:funlen // TODO: Разбить метод на более мелкие части
+func (ozon *apiClientImp) GetCards(ctx context.Context, _ entity.PackageDescription) ([]entity.Card, error) {
+	cardsID, err := ozon.getCardList(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	cardsMeta, err := getCardsMeta(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric, cardsIDs)
+	cardsMeta, err := ozon.getCardMetaOnProductID(ctx, cardsID)
 	if err != nil {
 		return nil, err
 	}
@@ -31,17 +30,17 @@ func (ozon *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 		categoryIDsMap[card.TypeID] = card.DescriptionCategoryID
 	}
 
-	categoriesMap, err := getCategory(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
+	attributes, err := ozon.getDescriptionCategoryAttr(ctx, categoryIDsMap)
 	if err != nil {
 		return nil, err
 	}
 
-	attributes, err := getAttributeList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric, categoryIDsMap)
+	attibutesMeta, err := ozon.getProductsInfoAttrs(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	attibutesMeta, err := getAttributeMetaList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, desc.Limit, ozon.timeout, ozon.metric)
+	categoriesMap, err := ozon.getCardCategory(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +116,7 @@ func (ozon *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 
 		for _, media := range in.Images {
 			mediaFile = append(mediaFile, &entity.MediaFile{
-				Link:   media.FileName,
+				Link:   media,
 				TypeID: 1,
 			})
 		}
@@ -143,6 +142,320 @@ func (ozon *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescr
 	return cardsList, nil
 }
 
+func (ozon *apiClientImp) getDescriptionCategoryAttr(ctx context.Context, categoryIDsMap map[int]int) ([]Attribute, error) {
+	items := []Attribute{}
+
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, descriptionCategoryAttrMethod)
+
+	type Filter struct {
+		CategoryID int    `json:"description_category_id"`
+		Language   string `json:"language"`
+		TypeID     int    `json:"type_id"`
+	}
+
+	filter := Filter{}
+
+	for key, value := range categoryIDsMap {
+		filter.CategoryID = value
+		filter.Language = "DEFAULT"
+		filter.TypeID = key
+
+		bodyData, err := json.Marshal(filter)
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", descriptionCategoryAttrMethod, err)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyData))
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка создания запроса: %w", descriptionCategoryAttrMethod, err)
+		}
+
+		for k, v := range ozonHeaders[ozon.marketPlace.ExternalID] {
+			req.Header.Set(k, v)
+		}
+
+		resp, err := ozon.client.Do(req)
+
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", descriptionCategoryAttrMethod, err)
+		}
+
+		defer resp.Body.Close()
+
+		var response Attributes
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", descriptionCategoryAttrMethod, err)
+		}
+
+		items = append(items, response.Result...)
+	}
+
+	return items, nil
+}
+
+func (ozon *apiClientImp) getProductsInfoAttrs(ctx context.Context) ([]AttributeMeta, error) {
+	items := []AttributeMeta{}
+
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, productInfoAttrMetod)
+
+	type Filter struct {
+		Filter struct {
+			ProductID  []string `json:"product_id"`
+			Visibility string   `json:"visibility"`
+		} `json:"filter"`
+		Limit   int    `json:"limit"`
+		LastID  string `json:"last_id"`
+		SortDir string `json:"sort_dir"`
+	}
+
+	filter := Filter{
+		Limit: requestItemLimit,
+	}
+
+	total := 0
+	run := true
+
+	for run {
+		bodyData, err := json.Marshal(filter)
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", productInfoAttrMetod, err)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyData))
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка создания запроса: %w", productInfoAttrMetod, err)
+		}
+
+		for k, v := range ozonHeaders[ozon.marketPlace.ExternalID] {
+			req.Header.Set(k, v)
+		}
+
+		resp, err := ozon.client.Do(req)
+
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %d", productInfoAttrMetod, resp.StatusCode)
+		}
+
+		defer resp.Body.Close()
+
+		var response RespAttributeMeta
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", productInfoAttrMetod, err)
+		}
+
+		filter.LastID = response.LastID
+		total += len(response.Result)
+
+		items = append(items, response.Result...)
+
+		if total == response.Total {
+			run = false
+		}
+	}
+
+	return items, nil
+}
+
+func (ozon *apiClientImp) getCardList(ctx context.Context) ([]int, error) {
+	offerIDs := []ProductIDList{}
+
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, productListMethod)
+	filter := OzonFilter{
+		LastID: "",
+		Limit:  requestItemLimit,
+	}
+
+	bodyData, err := json.Marshal(filter)
+	if err != nil {
+		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", productListMethod, err)
+	}
+
+	total := 0
+	run := true
+
+	productIDs := []int{}
+
+	for run {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyData))
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка создания запроса: %w", productListMethod, err)
+		}
+
+		for k, v := range ozonHeaders[ozon.marketPlace.ExternalID] {
+			req.Header.Set(k, v)
+		}
+
+		resp, err := ozon.client.Do(req)
+
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %d", productListMethod, resp.StatusCode)
+		}
+
+		defer resp.Body.Close()
+
+		var response ProductList
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", productListMethod, err)
+		}
+
+		filter.LastID = response.Result.LastID
+		total += len(response.Result.Items)
+
+		offerIDs = append(offerIDs, response.Result.Items...)
+
+		if total >= response.Result.Total {
+			run = false
+		}
+	}
+
+	for _, elem := range offerIDs {
+		productIDs = append(productIDs, elem.ProductID)
+	}
+
+	return productIDs, nil
+}
+
+func (ozon *apiClientImp) getCardMetaOnProductID(ctx context.Context, productIDList []int) ([]Items, error) {
+	items := []Items{}
+
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, productInfoListMethod)
+
+	type Filter struct {
+		OfferID   []string `json:"offer_id"`
+		ProductID []int    `json:"product_id"`
+		Sku       []string `json:"sku"`
+	}
+
+	filter := Filter{}
+
+	chunks := chunkIntSlice(productIDList, requestItemLimit)
+
+	for _, chunk := range chunks {
+		filter.ProductID = chunk
+
+		bodyData, err := json.Marshal(filter)
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", productInfoListMethod, err)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyData))
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка создания запроса: %w", productInfoListMethod, err)
+		}
+
+		for k, v := range ozonHeaders[ozon.marketPlace.ExternalID] {
+			req.Header.Set(k, v)
+		}
+
+		resp, err := ozon.client.Do(req)
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %d", productInfoListMethod, resp.StatusCode)
+		}
+		defer resp.Body.Close()
+
+		var response CardResponse
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", productInfoListMethod, err)
+		}
+
+		items = append(items, response.Result.Items...)
+	}
+
+	return items, nil
+}
+
+func (ozon *apiClientImp) getProductInfoOnSKU(ctx context.Context, skus []int) (map[int]ItemsResponse, error) {
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, productInfoListMethod)
+
+	type f struct {
+		Sku []int `json:"sku"`
+	}
+
+	filter := f{
+		Sku: skus,
+	}
+
+	bodyData, err := json.Marshal(filter)
+	if err != nil {
+		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", productInfoListMethod, err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyData))
+	if err != nil {
+		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", productInfoListMethod, err)
+	}
+
+	for k, v := range ozonHeaders[ozon.marketPlace.ExternalID] {
+		req.Header.Set(k, v)
+	}
+	resp, err := ozon.client.Do(req)
+
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %d", productInfoListMethod, resp.StatusCode)
+	}
+
+	defer resp.Body.Close()
+
+	var response ProductInfoResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", productInfoListMethod, err)
+	}
+
+	result := make(map[int]ItemsResponse, len(response.Items))
+
+	for _, elem := range response.Items {
+		for _, sku := range elem.Sources {
+			result[sku.Sku] = elem
+		}
+	}
+
+	return result, nil
+}
+
+func (ozon *apiClientImp) getCardCategory(ctx context.Context) (map[int]Category, error) {
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, descriptionCategoryMethod)
+
+	type Filter struct {
+		Language string `json:"language"`
+	}
+
+	filter := Filter{
+		Language: "DEFAULT",
+	}
+
+	bodyData, err := json.Marshal(filter)
+	if err != nil {
+		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", descriptionCategoryMethod, err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyData))
+	if err != nil {
+		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", descriptionCategoryMethod, err)
+	}
+
+	for k, v := range ozonHeaders[ozon.marketPlace.ExternalID] {
+		req.Header.Set(k, v)
+	}
+	resp, err := ozon.client.Do(req)
+
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %d", descriptionCategoryMethod, resp.StatusCode)
+	}
+	defer resp.Body.Close()
+
+	var response Categories
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", descriptionCategoryMethod, err)
+	}
+
+	categories := make(map[int]Category)
+	for _, topCat := range response.TopCategories {
+		flattenCategories(topCat, 0, categories)
+	}
+
+	return categories, nil
+}
+
 func getMetaFromVendorID(offerID string) (string, string, string) {
 	var vendorID, vendorCode, vendorSize string
 	// Артикул, код, размер "RBB-061/00-0014881/58"
@@ -165,271 +478,6 @@ func getMetaFromVendorID(offerID string) (string, string, string) {
 	}
 
 	return vendorID, vendorCode, vendorSize
-}
-
-func getAttributeMetaList(_ context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, _ metrics.Collector) ([]AttributeMeta, error) {
-	items := []AttributeMeta{}
-
-	methodName := "/v3/products/info/attributes"
-
-	url := fmt.Sprintf("%s%s", baseURL, methodName)
-
-	type Filter struct {
-		Filter struct {
-			ProductID  []string `json:"product_id"`
-			Visibility string   `json:"visibility"`
-		} `json:"filter"`
-		Limit   int    `json:"limit"`
-		LastID  string `json:"last_id"`
-		SortDir string `json:"sort_dir"`
-	}
-
-	// TODO подумать на счет лимита. Озон позволяет брать по 1000
-	limit *= 10
-	filter := Filter{
-		Limit: limit,
-	}
-
-	headers := make(map[string]string)
-	headers["Client-Id"] = clientID
-	headers["Api-Key"] = apiKey
-	headers["Content-Type"] = "application/json"
-
-	total := 0
-	run := true
-
-	for run {
-		bodyData, err := json.Marshal(filter)
-		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-		}
-
-		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
-		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
-		}
-
-		if code != http.StatusOK {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
-		}
-
-		var response AttibutesMeta
-		if err := json.Unmarshal(resp, &response); err != nil {
-			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
-		}
-
-		filter.LastID = response.LastID
-		total += len(response.Result)
-
-		items = append(items, response.Result...)
-
-		if limit != response.Total {
-			run = false
-		}
-	}
-
-	return items, nil
-}
-
-func getAttributeList(ctx context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector, categoryIDsMap map[int]int) ([]Attribute, error) {
-	items := []Attribute{}
-
-	methodName := "/v1/description-category/attribute"
-
-	url := fmt.Sprintf("%s%s", baseURL, methodName)
-
-	type Filter struct {
-		CategoryID int    `json:"description_category_id"`
-		Language   string `json:"language"`
-		TypeID     int    `json:"type_id"`
-	}
-
-	filter := Filter{}
-
-	headers := make(map[string]string)
-	headers["Client-Id"] = clientID
-	headers["Api-Key"] = apiKey
-	headers["Content-Type"] = "application/json"
-
-	for key, value := range categoryIDsMap {
-		filter.CategoryID = value
-		filter.Language = "DEFAULT"
-		filter.TypeID = key
-
-		bodyData, err := json.Marshal(filter)
-		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-		}
-
-		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
-		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
-		}
-
-		if code != http.StatusOK {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
-		}
-
-		var response Attributes
-		if err := json.Unmarshal(resp, &response); err != nil {
-			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
-		}
-
-		items = append(items, response.Result...)
-	}
-
-	return items, nil
-}
-
-func getCardList(ctx context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector) ([]int, error) {
-	offerIDs := []ProductIdList{}
-
-	methodName := "/v2/product/list"
-
-	url := fmt.Sprintf("%s%s", baseURL, methodName)
-	filter := OzonFilter{
-		LastID: "",
-		Limit:  limit,
-	}
-
-	bodyData, err := json.Marshal(filter)
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-	}
-
-	headers := make(map[string]string)
-	headers["Client-Id"] = clientID
-	headers["Api-Key"] = apiKey
-	headers["Content-Type"] = "application/json"
-
-	total := 0
-	run := true
-
-	productIDs := []int{}
-
-	for run {
-		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
-		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
-		}
-
-		if code != http.StatusOK {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
-		}
-
-		var productListResponse ProductList
-		if err := json.Unmarshal(resp, &productListResponse); err != nil {
-			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
-		}
-
-		filter.LastID = productListResponse.Result.LastID
-		total += len(productListResponse.Result.Items)
-
-		offerIDs = append(offerIDs, productListResponse.Result.Items...)
-
-		if total >= productListResponse.Result.Total {
-			run = false
-		}
-	}
-	for _, elem := range offerIDs {
-		productIDs = append(productIDs, elem.ProductID)
-	}
-	return productIDs, nil
-}
-
-func getCardsMeta(ctx context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector, productIDList []int) ([]Items, error) {
-	items := []Items{}
-
-	methodName := "/v2/product/info/list"
-
-	url := fmt.Sprintf("%s%s", baseURL, methodName)
-
-	type Filter struct {
-		OfferID   []string `json:"offer_id"`
-		ProductID []int    `json:"product_id"`
-		Sku       []string `json:"sku"`
-	}
-
-	filter := Filter{}
-
-	headers := make(map[string]string)
-	headers["Client-Id"] = clientID
-	headers["Api-Key"] = apiKey
-	headers["Content-Type"] = "application/json"
-
-	chunkSize := 50
-	chunks := chunkIntSlice(productIDList, chunkSize)
-
-	for _, chunk := range chunks {
-		filter.ProductID = chunk
-		bodyData, err := json.Marshal(filter)
-		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-		}
-
-		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
-		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
-		}
-
-		if code != http.StatusOK {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
-		}
-
-		var productListResponse CardResponse
-		if err := json.Unmarshal(resp, &productListResponse); err != nil {
-			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
-		}
-
-		items = append(items, productListResponse.Result.Items...)
-	}
-
-	return items, nil
-}
-
-func getCategory(ctx context.Context, baseURL, clientID, apiKey string, limit int, timeout time.Duration, metric metrics.Collector) (map[int]Category, error) {
-	methodName := "/v1/description-category/tree"
-
-	url := fmt.Sprintf("%s%s", baseURL, methodName)
-
-	type Filter struct {
-		Language string `json:"language"`
-	}
-
-	filter := Filter{
-		Language: "DEFAULT",
-	}
-
-	headers := make(map[string]string)
-	headers["Client-Id"] = clientID
-	headers["Api-Key"] = apiKey
-	headers["Content-Type"] = "application/json"
-
-	bodyData, err := json.Marshal(filter)
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-	}
-
-	code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
-	}
-
-	if code != http.StatusOK {
-		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
-	}
-
-	var response Categories
-	if err := json.Unmarshal(resp, &response); err != nil {
-		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
-	}
-
-	categories := make(map[int]Category)
-	for _, topCat := range response.TopCategories {
-		flattenCategories(topCat, 0, categories)
-	}
-
-	return categories, nil
 }
 
 func flattenCategories(cat Category, parentID int, categories map[int]Category) {
