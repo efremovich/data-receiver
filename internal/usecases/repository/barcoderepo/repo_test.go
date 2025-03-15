@@ -35,6 +35,7 @@ func TestBarcodeRepo(t *testing.T) {
 		IsEnabled:  true,
 		ExternalID: uuid.NewString(),
 	}
+
 	modelSeller, err := sqlSellerRepo.Insert(ctx, newSeller)
 	if err != nil {
 		t.Fatal(err)

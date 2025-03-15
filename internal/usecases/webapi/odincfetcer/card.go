@@ -119,18 +119,18 @@ func (odinc *apiClientImp) GetWarehouses(_ context.Context) ([]entity.Warehouse,
 	return nil, nil
 }
 
-func (odinc *apiClientImp) GetOrders(_ context.Context, desc entity.PackageDescription) ([]entity.Order, error) {
+func (odinc *apiClientImp) GetOrders(_ context.Context, _ entity.PackageDescription) ([]entity.Order, error) {
 	return nil, nil
 }
 
-func (odinc *apiClientImp) GetSales(_ context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
+func (odinc *apiClientImp) GetSales(_ context.Context, _ entity.PackageDescription) ([]entity.Sale, error) {
 	return nil, nil
 }
 
-func (odinc *apiClientImp) GetSaleReport(_ context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
+func (odinc *apiClientImp) GetSaleReport(_ context.Context, _ entity.PackageDescription) ([]entity.SaleReport, error) {
 	return nil, nil
 }
-func (odinc *apiClientImp) Ping(ctx context.Context) error {
+func (odinc *apiClientImp) Ping(_ context.Context) error {
 	return nil
 }
 

@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
@@ -14,11 +15,22 @@ import (
 func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.PackageDescription) error {
 	clients := s.apiFetcher[desc.Seller]
 
-	for _, client := range clients {
-		err := s.receiveAndSaveCard(ctx, client, desc)
-		if err != nil {
-			return err
+	g, gCtx := errgroup.WithContext(ctx)
+
+	for _, c := range clients {
+		client := c
+
+		g.Go(func() error {
+			return s.receiveAndSaveCard(gCtx, client, desc)
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		if errors.Is(err, context.Canceled) {
+			alogger.WarnFromCtx(ctx, "Операция была отменена: %v", err)
+			return nil
 		}
+		return fmt.Errorf("ошибка при обработке клиентов: %w", err)
 	}
 
 	return nil
@@ -30,15 +42,16 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 		return fmt.Errorf("ошибка получение данные из внешнего источника %s, %w", desc.Seller, err)
 	}
 
-	alogger.InfoFromCtx(ctx, "Начали загрузку карточек товара %d от %s", len(cards), desc.Seller)
+	// Seller
+	seller, err := s.getSeller(ctx, client.GetMarketPlace())
+	if err != nil {
+		return err
+	}
+
+	alogger.InfoFromCtx(ctx, "Начали загрузку карточек товара %d от %s", len(cards), seller.Title)
 
 	for _, in := range cards {
 		s.metricsCollector.IncServiceDocsTaskCounter()
-		// Seller
-		seller, err := s.getSeller(ctx, client.GetMarketPlace())
-		if err != nil {
-			return err
-		}
 
 		// Brands
 		brand, err := s.getBrand(ctx, in.Brand, seller)
@@ -105,23 +118,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 		}
 	}
 
-	if len(cards) != desc.Limit {
-		alogger.InfoFromCtx(ctx, "Задание успешно завершено")
-	} else if len(cards) > 0 {
-		lastID := strconv.Itoa(int(cards[len(cards)-1].ExternalID))
-		p := entity.PackageDescription{
-			PackageType: entity.PackageTypeCard,
-			Cursor:      lastID,
-			UpdatedAt:   cards[len(cards)-1].UpdatedAt,
-			Limit:       desc.Limit,
-			Seller:      desc.Seller,
-		}
-
-		err = s.brokerPublisher.SendPackage(ctx, &p)
-		if err != nil {
-			return fmt.Errorf("ошибка постановки задачи в очередь %s: %w", desc.Seller, err)
-		}
-	}
+	alogger.InfoFromCtx(ctx, "Задание загрузка карточек товаров успешно завешена количество: %d, маркетплейс %s", len(cards), seller.Title)
 
 	return nil
 }
@@ -140,15 +137,6 @@ func (s *receiverCoreServiceImpl) setCard(ctx context.Context, in entity.Card) (
 
 func (s *receiverCoreServiceImpl) getCardByID(ctx context.Context, cardID int64) (*entity.Card, error) {
 	card, err := s.cardRepo.SelectByID(ctx, cardID)
-	if err != nil {
-		return nil, err
-	}
-
-	return card, nil
-}
-
-func (s *receiverCoreServiceImpl) getCardByExternalID(ctx context.Context, externalID int64) (*entity.Card, error) {
-	card, err := s.cardRepo.SelectByExternalID(ctx, externalID)
 	if err != nil {
 		return nil, err
 	}

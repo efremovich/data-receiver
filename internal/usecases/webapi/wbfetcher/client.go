@@ -15,6 +15,12 @@ const (
 	marketPlaceAPIURL string = "https://marketplace-api.wildberries.ru"
 	contentAPIURL     string = "https://content-api.wildberries.ru"
 	statisticAPIURL   string = "https://statistics-api.wildberries.ru"
+	cardListMethod    string = "/content/v2/get/cards/list?locale=ru"
+
+	reportDetaioByPeriodMethod string = "/api/v5/supplier/reportDetailByPeriod"
+
+	saleReportResponseLimit int = 100000 // Максимальное количество строк отчета, возвращаемых методом. Не может быть более 100000.
+	cardRequestLimit        int = 100
 )
 
 func New(_ context.Context, cfg config.Config, metrics metrics.Collector) []webapi.ExtAPIFetcher {
@@ -56,6 +62,6 @@ type apiClientImp struct {
 	metric metrics.Collector
 }
 
-func (c *apiClientImp) GetMarketPlace() entity.MarketPlace {
-	return c.marketPlace
+func (wb *apiClientImp) GetMarketPlace() entity.MarketPlace {
+	return wb.marketPlace
 }

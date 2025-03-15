@@ -71,9 +71,11 @@ func (gw *grpcGatewayServerImpl) StockFeedV1Handler(req *fiber.Ctx) error {
 
 func (gw *grpcGatewayServerImpl) VKCardsFeedV1Handler(req *fiber.Ctx) error {
 	// Извлечь параметры из запроса
-	limit := 0
 	queryLimit := req.Query("limit", "0")
-	limit, _ = strconv.Atoi(queryLimit)
+	limit, err := strconv.Atoi(queryLimit)
+	if err != nil {
+		limit = 0
+	}
 
 	cursor := req.Query("cursor", "")
 	filter := req.Query("filter", "")

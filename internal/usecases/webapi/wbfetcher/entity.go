@@ -1,0 +1,157 @@
+package wbfetcher
+
+import "time"
+
+type WbResponse struct {
+	Cards  []Cards `json:"cards"`
+	Cursor Cursor  `json:"cursor"`
+}
+type Photos struct {
+	Big      string `json:"big"`
+	C246X328 string `json:"c246x328"`
+	C516X688 string `json:"c516x688"`
+	Square   string `json:"square"`
+	Tm       string `json:"tm"`
+}
+type Dimensions struct {
+	Length  int  `json:"length"`
+	Width   int  `json:"width"`
+	Height  int  `json:"height"`
+	IsValid bool `json:"isValid"`
+}
+type Characteristics struct {
+	ID    int         `json:"id"`
+	Name  string      `json:"name"`
+	Value interface{} `json:"value,omitempty"`
+}
+type Sizes struct {
+	ChrtID   int      `json:"chrtID"`
+	TechSize string   `json:"techSize"`
+	WbSize   string   `json:"wbSize"`
+	Skus     []string `json:"skus"`
+}
+type Tags struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Color string `json:"color"`
+}
+type Cards struct {
+	NmID            int               `json:"nmID"`
+	ImtID           int               `json:"imtID"`
+	NmUUID          string            `json:"nmUUID"`
+	SubjectID       int               `json:"subjectID"`
+	SubjectName     string            `json:"subjectName"`
+	VendorCode      string            `json:"vendorCode"`
+	Brand           string            `json:"brand"`
+	Title           string            `json:"title"`
+	Description     string            `json:"description"`
+	Photos          []Photos          `json:"photos"`
+	Video           string            `json:"video"`
+	Dimensions      Dimensions        `json:"dimensions"`
+	Characteristics []Characteristics `json:"characteristics"`
+	Sizes           []Sizes           `json:"sizes"`
+	Tags            []Tags            `json:"tags"`
+	CreatedAt       time.Time         `json:"createdAt"`
+	UpdatedAt       time.Time         `json:"updatedAt"`
+}
+
+type Cursor struct {
+	NmID      int       `json:"nmID,omitempty"`
+	Total     int       `json:"total,omitempty"`
+	Limit     int       `json:"limit,omitempty"`
+	UpdatedAt time.Time `json:"updatedAt,omitempty"`
+}
+
+type Filter struct {
+	WithPhoto int `json:"withPhoto"`
+}
+
+type Sort struct {
+	Ascending bool `json:"ascending"` // true - asc sort, false - desc sort
+}
+
+type Settings struct {
+	Sort   Sort   `json:"sort"`
+	Cursor Cursor `json:"cursor"`
+	Filter Filter `json:"filter"`
+}
+
+type Setting struct {
+	Setting Settings `json:"settings"`
+}
+
+type SaleReportResponce struct {
+	RealizationreportID      int       `json:"realizationreport_id"`
+	DateFrom                 string    `json:"date_from"`
+	DateTo                   string    `json:"date_to"`
+	CreateDt                 string    `json:"create_dt"`
+	CurrencyName             string    `json:"currency_name"`
+	SuppliercontractCode     any       `json:"suppliercontract_code"`
+	RrdID                    int       `json:"rrd_id"`
+	GiID                     int       `json:"gi_id"`
+	DlvPrc                   float64   `json:"dlv_prc"`
+	FixTariffDateFrom        string    `json:"fix_tariff_date_from"`
+	FixTariffDateTo          string    `json:"fix_tariff_date_to"`
+	SubjectName              string    `json:"subject_name"`
+	NmID                     int       `json:"nm_id"`
+	BrandName                string    `json:"brand_name"`
+	SaName                   string    `json:"sa_name"`
+	TSName                   string    `json:"ts_name"`
+	Barcode                  string    `json:"barcode"`
+	DocTypeName              string    `json:"doc_type_name"`
+	Quantity                 int       `json:"quantity"`
+	RetailPrice              float32   `json:"retail_price"`
+	RetailAmount             float32   `json:"retail_amount"`
+	SalePercent              float32   `json:"sale_percent"`
+	CommissionPercent        float32   `json:"commission_percent"`
+	OfficeName               string    `json:"office_name"`
+	SupplierOperName         string    `json:"supplier_oper_name"`
+	OrderDt                  time.Time `json:"order_dt"`
+	SaleDt                   time.Time `json:"sale_dt"`
+	RrDt                     string    `json:"rr_dt"`
+	ShkID                    int       `json:"shk_id"`
+	RetailPriceWithdiscRub   float64   `json:"retail_price_withdisc_rub"`
+	DeliveryAmount           int       `json:"delivery_amount"`
+	ReturnAmount             int       `json:"return_amount"`
+	DeliveryRub              float64   `json:"delivery_rub"`
+	GiBoxTypeName            string    `json:"gi_box_type_name"`
+	ProductDiscountForReport float64   `json:"product_discount_for_report"`
+	SupplierPromo            float64   `json:"supplier_promo"`
+	Rid                      int64     `json:"rid"`
+	PpvzSppPrc               float64   `json:"ppvz_spp_prc"`
+	PpvzKvwPrcBase           float64   `json:"ppvz_kvw_prc_base"`
+	PpvzKvwPrc               float64   `json:"ppvz_kvw_prc"`
+	IsKgvpV2                 float64   `json:"is_kgvp_v2"`
+	PpvzSalesCommission      float64   `json:"ppvz_sales_commission"`
+	PpvzForPay               float64   `json:"ppvz_for_pay"`
+	PpvzReward               float64   `json:"ppvz_reward"`
+	AcquiringFee             float64   `json:"acquiring_fee"`
+	AcquiringPercent         float64   `json:"acquiring_percent"`
+	PaymentProcessing        string    `json:"payment_processing"`
+	AcquiringBank            string    `json:"acquiring_bank"`
+	PpvzVw                   float64   `json:"ppvz_vw"`
+	PpvzVwNds                float64   `json:"ppvz_vw_nds"`
+	PpvzOfficeName           string    `json:"ppvz_office_name"`
+	PpvzOfficeID             int       `json:"ppvz_office_id"`
+	PpvzSupplierID           int       `json:"ppvz_supplier_id"`
+	PpvzSupplierName         string    `json:"ppvz_supplier_name"`
+	PpvzInn                  string    `json:"ppvz_inn"`
+	DeclarationNumber        string    `json:"declaration_number"`
+	BonusTypeName            string    `json:"bonus_type_name"`
+	StickerID                string    `json:"sticker_id"`
+	SiteCountry              string    `json:"site_country"`
+	SrvDbs                   bool      `json:"srv_dbs"`
+	Penalty                  float64   `json:"penalty"`
+	AdditionalPayment        float64   `json:"additional_payment"`
+	RebillLogisticCost       float64   `json:"rebill_logistic_cost"`
+	RebillLogisticOrg        string    `json:"rebill_logistic_org"`
+	StorageFee               float64   `json:"storage_fee"`
+	Deduction                float64   `json:"deduction"`
+	Acceptance               float64   `json:"acceptance"`
+	AssemblyID               int64     `json:"assembly_id"`
+	Kiz                      string    `json:"kiz"`
+	Srid                     string    `json:"srid"`
+	ReportType               int       `json:"report_type"`
+	IsLegalEntity            bool      `json:"is_legal_entity"`
+	TrbxID                   string    `json:"trbx_id"`
+}
