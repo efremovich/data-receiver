@@ -42,7 +42,7 @@ type SalesResponse struct {
 	Srid              string  `json:"srid"`
 }
 
-func (mp *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
+func (wb *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
 	const methodName = "/api/v1/supplier/sales"
 
 	urlValue := url.Values{}
@@ -56,11 +56,11 @@ func (mp *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescrip
 		return nil, fmt.Errorf("%s: ошибка создания запроса: %s", methodName, err.Error())
 	}
 
-	req.Header.Set("Authorization", mp.token)
+	req.Header.Set("Authorization", wb.token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
-	resp, err := mp.client.Do(req)
+	resp, err := wb.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%s: ошибка отправки запроса: %s", methodName, err.Error())
 	}
@@ -127,19 +127,12 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 			SpecialPrice: elem.FinishedPrice,
 		}
 
-		seller := entity.MarketPlace{
-			Title: "wb",
-		}
-
-		sale := entity.Sale{}
-		sale.ExternalID = elem.SaleID
-
 		order := &entity.Order{
 			ExternalID: elem.Srid,
 		}
-
+		sale := entity.Sale{}
+		sale.ExternalID = elem.SaleID
 		sale.Order = order
-
 		sale.Price = elem.TotalPrice
 		sale.Type = elem.OrderType
 		sale.DiscountP = elem.DiscountPercent
@@ -151,7 +144,6 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		sale.Status = &status
 		sale.Region = &region
 		sale.Warehouse = &warehouse
-		sale.Seller = &seller
 		sale.Card = &card
 		sale.Barcode = &barcode
 		sale.Size = &size

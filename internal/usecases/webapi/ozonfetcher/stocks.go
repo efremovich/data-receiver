@@ -1,6 +1,7 @@
 package ozonfetcher
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,9 +10,7 @@ import (
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
-	"github.com/efremovich/data-receiver/pkg/httputil"
 	"github.com/efremovich/data-receiver/pkg/logger"
-	"github.com/efremovich/data-receiver/pkg/metrics"
 )
 
 type SupplyOrderList struct {
@@ -19,18 +18,18 @@ type SupplyOrderList struct {
 	LastSupplyOrderID int   `json:"last_supply_order_id"`
 }
 
-func (ozon *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDescription) ([]entity.StockMeta, error) {
-	supplyList, err := getSupplyList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric)
+func (ozon *apiClientImp) GetStocks(ctx context.Context, _ entity.PackageDescription) ([]entity.StockMeta, error) {
+	supplyList, err := ozon.getSupplyList(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	supplyData, err := getSupplyDataList(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyList)
+	supplyData, err := ozon.getSupplyDataList(ctx, supplyList)
 	if err != nil {
 		return nil, err
 	}
 
-	stockResponce, err := getSupplyBundle(ctx, marketPlaceAPIURL, ozon.clientID, ozon.apiKey, ozon.metric, supplyData)
+	stockResponce, err := ozon.getSupplyBundle(ctx, supplyData)
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +108,8 @@ func (ozon *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDesc
 	return stockMetaList, nil
 }
 
-func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metric metrics.Collector, supplyData *SupplyData) (*StocksMeta, error) {
-	timeout := time.Second * time.Duration(30)
-
-	methodName := "/v1/supply-order/bundle"
-
-	url := fmt.Sprintf("%s%s", baseURL, methodName)
+func (ozon *apiClientImp) getSupplyBundle(ctx context.Context, supplyData *SupplyData) (*StocksMeta, error) {
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, suppolyOrderBundleMethod)
 
 	type BundleFiter struct {
 		BundleIDs []string `json:"bundle_ids"`
@@ -128,11 +123,6 @@ func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metr
 		IsAsc:     false,
 		Limit:     100,
 	}
-
-	headers := make(map[string]string)
-	headers["Client-Id"] = clientID
-	headers["Api-Key"] = apiKey
-	headers["Content-Type"] = "application/json"
 
 	stockMeta := []BundleItems{}
 	productIDList := []int{}
@@ -150,21 +140,27 @@ func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metr
 		for !endOfList {
 			bodyData, err := json.Marshal(filter)
 			if err != nil {
-				return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
+				return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", suppolyOrderBundleMethod, err)
 			}
 
-			code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
+			req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyData))
 			if err != nil {
-				return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
+				return nil, fmt.Errorf("%s: ошибка создания запроса: %w", supplyOrderListMethod, err)
 			}
 
-			if code != http.StatusOK {
-				return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
+			for k, v := range ozonHeaders[ozon.marketPlace.ExternalID] {
+				req.Header.Set(k, v)
 			}
+			resp, err := ozon.client.Do(req)
+
+			if err != nil || resp.StatusCode != http.StatusOK {
+				return nil, fmt.Errorf("%s: ошибка выполнения запроса: %d", suppolyOrderBundleMethod, resp.StatusCode)
+			}
+			defer resp.Body.Close()
 
 			var response SupplyBundleData
-			if err := json.Unmarshal(resp, &response); err != nil {
-				return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
+			if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+				return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", suppolyOrderBundleMethod, err)
 			}
 
 			if response.HasNext {
@@ -175,23 +171,11 @@ func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metr
 
 			endOfList = !response.HasNext
 
-			for _, item := range response.Items {
-				for _, warehouse := range supplyData.Warehouses {
-					if warehouse.WarehouseID == order.DropoffWarehouseID {
-						item.Warehouse = warehouse
-					}
-				}
-
-				item.CreationDate = order.CreationDate
-				stockMeta = append(stockMeta, item)
-				productIDList = append(productIDList, item.ProductID)
-			}
-
-			time.Sleep(3 * time.Second)
+			stockMeta, productIDList = collectStocks(response, supplyData, order, stockMeta, productIDList)
 		}
 	}
 
-	cardsMeta, err := getCardsMeta(ctx, baseURL, clientID, apiKey, 1000, timeout, metric, productIDList)
+	cardsMeta, err := ozon.getCardMetaOnProductID(ctx, productIDList)
 	if err != nil {
 		return nil, err
 	}
@@ -202,24 +186,31 @@ func getSupplyBundle(ctx context.Context, baseURL, clientID, apiKey string, metr
 	return &stocksMeta, nil
 }
 
-func getSupplyDataList(ctx context.Context, baseURL, clientID, apiKey string, metric metrics.Collector, supplyList []int) (*SupplyData, error) {
-	timeout := time.Second * time.Duration(30)
+func collectStocks(response SupplyBundleData, supplyData *SupplyData, order Orders, stockMeta []BundleItems, productIDList []int) ([]BundleItems, []int) {
+	for _, item := range response.Items {
+		for _, warehouse := range supplyData.Warehouses {
+			if warehouse.WarehouseID == order.DropoffWarehouseID {
+				item.Warehouse = warehouse
+			}
+		}
 
-	methodName := "/v2/supply-order/get"
+		item.CreationDate = order.CreationDate
+		stockMeta = append(stockMeta, item)
+		productIDList = append(productIDList, item.ProductID)
+	}
 
-	url := fmt.Sprintf("%s%s", baseURL, methodName)
+	time.Sleep(3 * time.Second)
+	return stockMeta, productIDList
+}
+
+func (ozon *apiClientImp) getSupplyDataList(ctx context.Context, supplyList []int) (*SupplyData, error) {
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, supplyOrderGetMethod)
 
 	type SupplyFilterList struct {
 		OrderIDs []int `json:"order_ids"`
 	}
 
-	headers := make(map[string]string)
-	headers["Client-Id"] = clientID
-	headers["Api-Key"] = apiKey
-	headers["Content-Type"] = "application/json"
-
 	chunkSize := 50
-	// TODO Срез из 100 для теста. В бою удалть.
 	chunks := chunkIntSlice(supplyList, chunkSize)
 
 	var response SupplyData
@@ -231,25 +222,29 @@ func getSupplyDataList(ctx context.Context, baseURL, clientID, apiKey string, me
 
 		bodyData, err := json.Marshal(filter)
 		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
+			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", supplyOrderGetMethod, err)
 		}
-
-		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyData))
 		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
+			return nil, fmt.Errorf("%s: ошибка создания запроса: %w", supplyOrderGetMethod, err)
 		}
 
-		if code != http.StatusOK {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
+		for k, v := range ozonHeaders[ozon.marketPlace.ExternalID] {
+			req.Header.Set(k, v)
+		}
+		resp, err := ozon.client.Do(req)
+
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %d", supplyOrderGetMethod, resp.StatusCode)
+		}
+		defer resp.Body.Close()
+
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", supplyOrderGetMethod, err)
 		}
 
-		var sd SupplyData
-		if err := json.Unmarshal(resp, &sd); err != nil {
-			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
-		}
-
-		response.Orders = append(response.Orders, sd.Orders...)
-		response.Warehouses = append(response.Warehouses, sd.Warehouses...)
+		response.Orders = append(response.Orders, response.Orders...)
+		response.Warehouses = append(response.Warehouses, response.Warehouses...)
 	}
 
 	return &response, nil
@@ -270,12 +265,9 @@ func chunkIntSlice(slice []int, chunkSize int) [][]int {
 	return chunks
 }
 
-func getSupplyList(ctx context.Context, baseURL, clientID, apiKey string, metric metrics.Collector) ([]int, error) {
-	timeout := time.Second * time.Duration(30)
+func (ozon *apiClientImp) getSupplyList(ctx context.Context) ([]int, error) {
 
-	methodName := "/v2/supply-order/list"
-
-	url := fmt.Sprintf("%s%s", baseURL, methodName)
+	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, supplyOrderListMethod)
 
 	type Filter struct {
 		States []string `json:"states"`
@@ -294,12 +286,7 @@ func getSupplyList(ctx context.Context, baseURL, clientID, apiKey string, metric
 	filter := SupplyFilter{}
 
 	filter.Filter.States = []string{"ORDER_STATE_COMPLETED"}
-	filter.Paging.Limit = 100
-
-	headers := make(map[string]string)
-	headers["Client-Id"] = clientID
-	headers["Api-Key"] = apiKey
-	headers["Content-Type"] = "application/json"
+	filter.Paging.Limit = requestItemLimit
 
 	supplyOrderID := []int{}
 	endOfList := false
@@ -307,21 +294,28 @@ func getSupplyList(ctx context.Context, baseURL, clientID, apiKey string, metric
 	for !endOfList {
 		bodyData, err := json.Marshal(filter)
 		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
+			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", supplyOrderListMethod, err)
 		}
 
-		code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyData))
 		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
+			return nil, fmt.Errorf("%s: ошибка создания запроса: %w", supplyOrderListMethod, err)
 		}
 
-		if code != http.StatusOK {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
+		for k, v := range ozonHeaders[ozon.marketPlace.ExternalID] {
+			req.Header.Set(k, v)
 		}
+		resp, err := ozon.client.Do(req)
+
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", supplyOrderListMethod, err.Error())
+		}
+		defer resp.Body.Close()
 
 		var response SupplyOrderList
-		if err := json.Unmarshal(resp, &response); err != nil {
-			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
+
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", supplyOrderListMethod, err)
 		}
 
 		supplyOrderID = append(supplyOrderID, response.SupplyOrderID...)

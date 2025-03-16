@@ -2,81 +2,47 @@ package ozonfetcher
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
-	"github.com/efremovich/data-receiver/pkg/httputil"
 )
 
-func (o *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
-	const methodName = "/v2/posting/fbo/list"
-
-	timeout := time.Second * time.Duration(30)
-	url := fmt.Sprintf("%s%s", marketPlaceAPIURL, methodName)
-
-	filter := OrderFilter{}
-	filter.Dir = "desc"
-	filter.Limit = 1000
-	filter.With.AnalyticsData = true
-	filter.With.FinancialData = true
-
-	startDate := desc.UpdatedAt.Truncate(24 * time.Hour)
-	filter.Filter.Since = startDate
-	filter.Filter.To = startDate.Add(24 * time.Hour)
-
-	headers := make(map[string]string)
-	headers["Client-Id"] = o.clientID
-	headers["Api-Key"] = o.apiKey
-	headers["Content-Type"] = "application/json"
-
-	bodyData, err := json.Marshal(filter)
+//nolint:dupl // похожий метод есть и в order.go но они задублированны не случайно
+func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
+	// Загружаем только только продажи со статусом delivered
+	// Возможные статусы:
+	//    awaiting_packaging — ожидает упаковки,
+	//    awaiting_deliver — ожидает отгрузки,
+	//    delivering — доставляется,
+	//    delivered — доставлено,
+	//    cancelled — отменено.
+	saleResponse, err := ozon.getOrersList(ctx, desc, "delivered")
 	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-	}
-
-	code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
-	}
-
-	if code != http.StatusOK {
-		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
-	}
-
-	var response OrderRespose
-	if err := json.Unmarshal(resp, &response); err != nil {
-		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
+		return nil, err
 	}
 
 	skus := []int{}
 
-	for _, elem := range response.Result {
+	for _, elem := range saleResponse.Result {
 		for _, product := range elem.Products {
 			skus = append(skus, product.Sku)
 		}
 	}
-	productInfo, err := getProductInfo(ctx, marketPlaceAPIURL, o.clientID, o.apiKey, o.metric, skus)
+
+	productInfo, err := ozon.getProductInfoOnSKU(ctx, skus)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получение подробной информации о товаре %w", err)
 	}
 
 	var sales []entity.Sale
-	for _, elem := range response.Result {
+	for _, elem := range saleResponse.Result {
 		warehouse := entity.Warehouse{}
 		warehouse.Title = elem.AnalyticsData.WarehouseName
 		warehouse.ExternalID = elem.AnalyticsData.WarehouseID
 
 		status := entity.Status{
 			Name: elem.Status,
-		}
-
-		seller := entity.MarketPlace{
-			Title:      "ozon",
-			ExternalID: o.clientID,
 		}
 
 		region := entity.Region{
@@ -131,7 +97,6 @@ func (o *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescript
 			sale.PriceSize = &priceSize
 			sale.Status = &status
 			sale.Warehouse = &warehouse
-			sale.Seller = &seller
 			sale.Card = &card
 			sale.Barcode = &barcode
 			sale.Region = &region
@@ -142,54 +107,3 @@ func (o *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescript
 	}
 	return sales, nil
 }
-
-// func getProductInfo(ctx context.Context, baseURL, clientID, apiKey string, metric metrics.Collector, skus []int) (map[int]ItemsResponse, error) {
-// 	const methodName = "/v3/product/info/list"
-
-// 	timeout := time.Second * time.Duration(30)
-// 	url := fmt.Sprintf("%s%s", baseURL, methodName)
-
-// 	type f struct {
-// 		Sku []int `json:"sku"`
-// 	}
-
-// 	filter := f{
-// 		Sku: skus,
-// 	}
-
-// 	headers := make(map[string]string)
-// 	headers["Client-Id"] = clientID
-// 	headers["Api-Key"] = apiKey
-// 	headers["Content-Type"] = "application/json"
-
-// 	bodyData, err := json.Marshal(filter)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-// 	}
-
-// 	code, resp, err := httputil.SendHTTPRequest(http.MethodPost, url, bodyData, headers, "", "", timeout)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %w", methodName, err)
-// 	}
-
-// 	if code != http.StatusOK {
-// 		return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", methodName, resp)
-// 	}
-
-// 	var response ProductInfoResponse
-// 	if err := json.Unmarshal(resp, &response); err != nil {
-// 		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
-// 	}
-
-// 	result := make(map[int]ItemsResponse, len(response.Items))
-// 	for _, elem := range response.Items {
-// 		for _, sku := range elem.Sources {
-// 			result[sku.Sku] = elem
-// 		}
-
-// 		if len(elem.Sources) > 1 {
-// 			fmt.Println("ZZZ Не должно быть более 1")
-// 		}
-// 	}
-// 	return result, nil
-// }

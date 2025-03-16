@@ -10,22 +10,55 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/logger"
+	"golang.org/x/sync/errgroup"
 )
 
 func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity.PackageDescription) error {
 	clients := s.apiFetcher[desc.Seller]
 
-	for _, client := range clients {
-		err := s.receiveAndSaveStocks(ctx, client, desc)
-		if err != nil {
-			return err
-		}
+	g, gCtx := errgroup.WithContext(ctx)
+
+	for _, c := range clients {
+		client := c
+
+		g.Go(func() error {
+			return s.receiveAndSaveStocks(gCtx, client, desc)
+		})
 	}
 
+	// Ждем завершения всех горутин и проверяем наличие ошибок
+	if err := g.Wait(); err != nil {
+		if errors.Is(err, context.Canceled) {
+			alogger.WarnFromCtx(ctx, "Операция была отменена: %v", err)
+			return nil
+		}
+		return fmt.Errorf("ошибка при обработке клиентов: %w", err)
+	}
+
+	alogger.InfoFromCtx(ctx, "постановка задачи в очередь %d", desc.Limit)
+	if desc.Limit > 0 {
+		p := entity.PackageDescription{
+			PackageType: entity.PackageTypeStock,
+			UpdatedAt:   desc.UpdatedAt.Add(-24 * time.Hour),
+			Limit:       desc.Limit - 1,
+			Seller:      desc.Seller,
+		}
+
+		err := s.brokerPublisher.SendPackage(ctx, &p)
+		if err != nil {
+			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
+		}
+
+		alogger.InfoFromCtx(ctx, "Создана очередь на получение остатков на дату: %s", p.UpdatedAt.Format("02.01.2006"))
+	} else {
+		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
+	}
 	return nil
 }
 
 func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, client webapi.ExtAPIFetcher, desc entity.PackageDescription) error {
+	var notFoundElements int
+
 	stockMetaList, err := client.GetStocks(ctx, desc)
 	if err != nil {
 		return fmt.Errorf("ошибка получение данные из внешнего источника %s, %w", desc.Seller, err)
@@ -33,14 +66,12 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 
 	alogger.InfoFromCtx(ctx, "Получение данных об остатках за %s", desc.UpdatedAt.Format("02.01.2006"))
 
-	var notFoundElements int
+	seller, err := s.getSeller(ctx, client.GetMarketPlace())
+	if err != nil {
+		return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль stocks: %w", desc.Seller, err))
+	}
 
 	for _, meta := range stockMetaList {
-		seller, err := s.getSeller(ctx, client.GetMarketPlace())
-		if err != nil {
-			return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль stocks: %w", desc.Seller, err))
-		}
-
 		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
 		_, err = s.getSeller2Card(ctx, meta.Seller2Card.ExternalID, seller.ID)
 		// Получаем ошибку что такой записи нет, поищем карточку товара в 1с
@@ -128,25 +159,6 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 	}
 
 	alogger.InfoFromCtx(ctx, "Загружена информация о остатке всего: %d из них не найдено %d", len(stockMetaList), notFoundElements)
-
-	if desc.Limit > 0 {
-		p := entity.PackageDescription{
-			PackageType: entity.PackageTypeStock,
-
-			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
-			Limit:     desc.Limit - 1,
-			Seller:    desc.Seller,
-		}
-
-		err = s.brokerPublisher.SendPackage(ctx, &p)
-		if err != nil {
-			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
-		}
-
-		alogger.InfoFromCtx(ctx, "Создана очередь на получение остатков на дату: %s", p.UpdatedAt.Format("02.01.2006"))
-	} else {
-		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
-	}
 
 	return nil
 }

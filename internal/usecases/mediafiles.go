@@ -24,6 +24,7 @@ func (s *receiverCoreServiceImpl) setMediaFile(ctx context.Context, card *entity
 			if err != nil {
 				return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
 			}
+
 			mediaFiles = append(mediaFiles, mediaFile)
 		} else {
 			mediaFiles = append(mediaFiles, mfList...)

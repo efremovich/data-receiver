@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -24,10 +23,10 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	err := gw.receiveSaleReportWB(ctx)
-	if err != nil {
-		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
-	}
+	// err := gw.receiveSaleReportWB(ctx)
+	// if err != nil {
+	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
+	// }
 }
 
 type Task struct {
@@ -44,15 +43,17 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 
 		{"Загрузка складов wildberries", "15 12 * * *", gw.receiveWarehousesWB},
 
-		{"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
 		{"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
+		{"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
 
 		{"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
 		{"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
 
 		{"Загрузка продаж wildberries", "30 19 * * *", gw.receiveSalesWB},
+		{"Загрузка продаж ozon", "30 19 * * *", gw.receiveSalesOzon},
 
-		{"Генерация фида предложений", "00 16 * * * ", gw.generateOrderFeed},
+		{"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
+		{"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
 	}
 
 	for _, task := range tasks {
@@ -70,28 +71,6 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 
 	c.Start()
 	select {} // Block forever
-}
-
-func (gw *grpcGatewayServerImpl) generateOrderFeed(ctx context.Context) error {
-	logger.GetLoggerFromContext(ctx).Infof("начинаем генерацию фида")
-
-	offers, err := gw.core.OfferFeed(ctx)
-	if err != nil {
-		return err
-	}
-
-	logger.GetLoggerFromContext(ctx).Infof("генерация фида окончена")
-	tempFile, err := os.CreateTemp("", "offer_feed.xml")
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(tempFile.Name(), offers, 0o600)
-	if err != nil {
-		return err
-	}
-
-	logger.GetLoggerFromContext(ctx).Infof("фид cохранен")
-	return nil
 }
 
 func (gw *grpcGatewayServerImpl) receiveCardsWB(ctx context.Context) error {
@@ -195,11 +174,26 @@ func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
 	return gw.core.ReceiveSales(ctx, descDescription)
 }
 
+func (gw *grpcGatewayServerImpl) receiveSalesOzon(ctx context.Context) error {
+	daysToGet := 30 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
+
+	descDescription := entity.PackageDescription{
+		PackageType: entity.PackageTypeSale,
+		UpdatedAt:   time.Now(),
+		Seller:      entity.Ozon,
+		Limit:       daysToGet,
+		Delay:       delay,
+	}
+
+	return gw.core.ReceiveSales(ctx, descDescription)
+}
+
 func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error {
 	daysToGet := 60 // Количество дней для загрузки
 	delay := 61     // Количество секунд задержки перед следующим запросом
 	startDate := time.Now()
-	// startDate := time.Date(2024, 11, 29, 0, 0, 0, 0, time.Local)
+	// startDate := time.Date(2025, 03, 01, 0, 0, 0, 0, time.Local)
 	descDescription := entity.PackageDescription{
 		PackageType: entity.PackageTypeSaleReports,
 		UpdatedAt:   startDate,
@@ -207,5 +201,22 @@ func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error 
 		Limit:       daysToGet,
 		Delay:       delay,
 	}
+
+	return gw.core.ReceiveSaleReport(ctx, descDescription)
+}
+
+func (gw *grpcGatewayServerImpl) receiveSaleReportOzon(ctx context.Context) error {
+	daysToGet := 60 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
+	startDate := time.Now()
+	// startDate := time.Date(2025, 03, 01, 0, 0, 0, 0, time.Local)
+	descDescription := entity.PackageDescription{
+		PackageType: entity.PackageTypeSaleReports,
+		UpdatedAt:   startDate,
+		Seller:      entity.Ozon,
+		Limit:       daysToGet,
+		Delay:       delay,
+	}
+
 	return gw.core.ReceiveSaleReport(ctx, descDescription)
 }

@@ -8,134 +8,21 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
-	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
 )
 
 var reVendorCode = regexp.MustCompile(`\d{2}-\d{5,8}`)
 
-type WbResponse struct {
-	Cards  []Cards `json:"cards"`
-	Cursor Cursor  `json:"cursor"`
-}
-type Photos struct {
-	Big      string `json:"big"`
-	C246X328 string `json:"c246x328"`
-	C516X688 string `json:"c516x688"`
-	Square   string `json:"square"`
-	Tm       string `json:"tm"`
-}
-type Dimensions struct {
-	Length  int  `json:"length"`
-	Width   int  `json:"width"`
-	Height  int  `json:"height"`
-	IsValid bool `json:"isValid"`
-}
-type Characteristics struct {
-	ID    int         `json:"id"`
-	Name  string      `json:"name"`
-	Value interface{} `json:"value,omitempty"`
-}
-type Sizes struct {
-	ChrtID   int      `json:"chrtID"`
-	TechSize string   `json:"techSize"`
-	WbSize   string   `json:"wbSize"`
-	Skus     []string `json:"skus"`
-}
-type Tags struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Color string `json:"color"`
-}
-type Cards struct {
-	NmID            int               `json:"nmID"`
-	ImtID           int               `json:"imtID"`
-	NmUUID          string            `json:"nmUUID"`
-	SubjectID       int               `json:"subjectID"`
-	SubjectName     string            `json:"subjectName"`
-	VendorCode      string            `json:"vendorCode"`
-	Brand           string            `json:"brand"`
-	Title           string            `json:"title"`
-	Description     string            `json:"description"`
-	Photos          []Photos          `json:"photos"`
-	Video           string            `json:"video"`
-	Dimensions      Dimensions        `json:"dimensions"`
-	Characteristics []Characteristics `json:"characteristics"`
-	Sizes           []Sizes           `json:"sizes"`
-	Tags            []Tags            `json:"tags"`
-	CreatedAt       time.Time         `json:"createdAt"`
-	UpdatedAt       time.Time         `json:"updatedAt"`
-}
-
-type Cursor struct {
-	NmID      int        `json:"external_id,omitempty"`
-	Total     int        `json:"total,omitempty"`
-	Limit     int        `json:"limit,omitempty"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-}
-
-type Filter struct {
-	WithPhoto int `json:"withPhoto"`
-}
-
-type Sort struct {
-	Ascending bool `json:"ascending"` // true - asc sort, false - desc sort
-}
-
-type Settings struct {
-	Sort   Sort   `json:"sort"`
-	Cursor Cursor `json:"cursor"`
-	Filter Filter `json:"filter"`
-}
-
-type Setting struct {
-	Setting Settings `json:"settings"`
-}
-
-func (wb *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
-	const methodName = "/content/v2/get/cards/list?locale=ru"
-
-	lastID, err := strconv.Atoi(desc.Cursor)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка конвертации lastID: %s,  %w", desc.Cursor, err)
-	}
-
-	requestSettings := Settings{
-		Sort:   Sort{Ascending: true},
-		Filter: Filter{WithPhoto: -1},
-		Cursor: Cursor{Limit: desc.Limit, NmID: lastID, UpdatedAt: &desc.UpdatedAt},
-	}
-
-	requestData, err := json.Marshal(Setting{Setting: requestSettings})
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", methodName, err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", contentAPIURL, methodName), bytes.NewReader(requestData))
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", methodName, err)
-	}
-
-	req.Header.Set("Authorization", wb.token)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("accept", "application/json")
-
-	resp, err := wb.client.Do(req)
-
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", methodName, err)
-	}
-	defer resp.Body.Close()
-
-	var wbResponse WbResponse
-	if err := json.NewDecoder(resp.Body).Decode(&wbResponse); err != nil {
-		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
-	}
-
+func (wb *apiClientImp) GetCards(ctx context.Context, _ entity.PackageDescription) ([]entity.Card, error) {
 	var cardsList []entity.Card
 
-	for _, v := range wbResponse.Cards {
+	cards, err := wb.getCardsFromWB(ctx)
+	if err != nil {
+		return cardsList, err
+	}
+
+	for _, v := range cards {
 		brand := entity.Brand{
 			Title: v.Brand,
 		}
@@ -220,6 +107,59 @@ func (wb *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescrip
 	}
 
 	return cardsList, nil
+}
+
+func (wb *apiClientImp) getCardsFromWB(ctx context.Context) ([]*Cards, error) {
+	requestSettings := Settings{
+		Sort:   Sort{Ascending: true},
+		Filter: Filter{WithPhoto: -1},
+		Cursor: Cursor{Limit: cardRequestLimit},
+	}
+
+	cards := []*Cards{}
+
+	run := true
+
+	for run {
+		requestData, err := json.Marshal(Setting{Setting: requestSettings})
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", cardListMethod, err)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", contentAPIURL, cardListMethod), bytes.NewReader(requestData))
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка создания запроса: %w", cardListMethod, err)
+		}
+
+		req.Header.Set("Authorization", wb.token)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("accept", "application/json")
+
+		resp, err := wb.client.Do(req)
+
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%s: ошибка отправки запроса: %w", cardListMethod, err)
+		}
+		defer resp.Body.Close()
+
+		var wbResponse WbResponse
+		if err := json.NewDecoder(resp.Body).Decode(&wbResponse); err != nil {
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", cardListMethod, err)
+		}
+
+		for _, card := range wbResponse.Cards {
+			cards = append(cards, &card)
+		}
+
+		if wbResponse.Cursor.Total < cardRequestLimit {
+			run = false
+		}
+
+		requestSettings.Cursor.NmID = wbResponse.Cursor.NmID
+		requestSettings.Cursor.UpdatedAt = wbResponse.Cursor.UpdatedAt
+	}
+
+	return cards, nil
 }
 
 func (wb *apiClientImp) Ping(_ context.Context) error {
