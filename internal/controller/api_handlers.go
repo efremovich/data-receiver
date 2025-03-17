@@ -23,10 +23,10 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	err := gw.receiveSaleReportWB(ctx)
-	if err != nil {
-		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
-	}
+	// err := gw.receiveSaleReportOzon(ctx)
+	// if err != nil {
+	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
+	// }
 }
 
 type Task struct {
@@ -206,8 +206,8 @@ func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error 
 }
 
 func (gw *grpcGatewayServerImpl) receiveSaleReportOzon(ctx context.Context) error {
-	daysToGet := 60 // Количество дней для загрузки
-	delay := 61     // Количество секунд задержки перед следующим запросом
+	daysToGet := 360 // Количество дней для загрузки
+	delay := 61      // Количество секунд задержки перед следующим запросом
 	startDate := time.Now()
 	// startDate := time.Date(2025, 03, 01, 0, 0, 0, 0, time.Local)
 	descDescription := entity.PackageDescription{

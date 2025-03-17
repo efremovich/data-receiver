@@ -323,7 +323,7 @@ func (ozon *apiClientImp) getCardMetaOnProductID(ctx context.Context, productIDL
 	type Filter struct {
 		OfferID   []string `json:"offer_id"`
 		ProductID []int    `json:"product_id"`
-		Sku       []string `json:"sku"`
+		Sku       []int    `json:"sku"`
 	}
 
 	filter := Filter{}

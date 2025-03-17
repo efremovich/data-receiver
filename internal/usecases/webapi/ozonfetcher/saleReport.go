@@ -11,6 +11,7 @@ import (
 const noInfo string = "нет информации"
 
 func (ozon *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
+	var saleReports []entity.SaleReport
 	// Загружаем только только продажи со статусом delivered
 	// Возможные статусы:
 	//    awaiting_packaging — ожидает упаковки,
@@ -23,6 +24,9 @@ func (ozon *apiClientImp) GetSaleReport(ctx context.Context, desc entity.Package
 		return nil, err
 	}
 
+	if len(saleResponse.Result) == 0 {
+		return nil, nil
+	}
 	skus := []int{}
 
 	for _, elem := range saleResponse.Result {
@@ -31,12 +35,11 @@ func (ozon *apiClientImp) GetSaleReport(ctx context.Context, desc entity.Package
 		}
 	}
 
-	productInfo, err := ozon.getCardMetaOnProductID(ctx, skus)
+	productInfo, err := ozon.getProductInfoOnSKU(ctx, skus)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получение подробной информации о товаре %w", err)
 	}
 
-	var saleReports []entity.SaleReport
 	for _, elem := range saleResponse.Result {
 		for _, product := range elem.FinancialData.Products {
 			saleReport := entity.SaleReport{}
