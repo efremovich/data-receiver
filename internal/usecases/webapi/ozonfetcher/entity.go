@@ -308,17 +308,17 @@ type OrderRespose struct {
 				Quantity             int      `json:"quantity"`
 				ClientPrice          string   `json:"client_price"`
 				ItemServices         struct {
-					MarketplaceServiceItemFulfillment                int `json:"marketplace_service_item_fulfillment"`
-					MarketplaceServiceItemPickup                     int `json:"marketplace_service_item_pickup"`
-					MarketplaceServiceItemDropoffPvz                 int `json:"marketplace_service_item_dropoff_pvz"`
-					MarketplaceServiceItemDropoffSc                  int `json:"marketplace_service_item_dropoff_sc"`
-					MarketplaceServiceItemDropoffFf                  int `json:"marketplace_service_item_dropoff_ff"`
-					MarketplaceServiceItemDirectFlowTrans            int `json:"marketplace_service_item_direct_flow_trans"`
-					MarketplaceServiceItemReturnFlowTrans            int `json:"marketplace_service_item_return_flow_trans"`
-					MarketplaceServiceItemDelivToCustomer            int `json:"marketplace_service_item_deliv_to_customer"`
-					MarketplaceServiceItemReturnNotDelivToCustomer   int `json:"marketplace_service_item_return_not_deliv_to_customer"`
-					MarketplaceServiceItemReturnPartGoodsCustomer    int `json:"marketplace_service_item_return_part_goods_customer"`
-					MarketplaceServiceItemReturnAfterDelivToCustomer int `json:"marketplace_service_item_return_after_deliv_to_customer"`
+					MarketplaceServiceItemFulfillment                float64 `json:"marketplace_service_item_fulfillment"`
+					MarketplaceServiceItemPickup                     float64 `json:"marketplace_service_item_pickup"`
+					MarketplaceServiceItemDropoffPvz                 float64 `json:"marketplace_service_item_dropoff_pvz"`
+					MarketplaceServiceItemDropoffSc                  float64 `json:"marketplace_service_item_dropoff_sc"`
+					MarketplaceServiceItemDropoffFf                  float64 `json:"marketplace_service_item_dropoff_ff"`
+					MarketplaceServiceItemDirectFlowTrans            float64 `json:"marketplace_service_item_direct_flow_trans"`
+					MarketplaceServiceItemReturnFlowTrans            float64 `json:"marketplace_service_item_return_flow_trans"`
+					MarketplaceServiceItemDelivToCustomer            float64 `json:"marketplace_service_item_deliv_to_customer"`
+					MarketplaceServiceItemReturnNotDelivToCustomer   float64 `json:"marketplace_service_item_return_not_deliv_to_customer"`
+					MarketplaceServiceItemReturnPartGoodsCustomer    float64 `json:"marketplace_service_item_return_part_goods_customer"`
+					MarketplaceServiceItemReturnAfterDelivToCustomer float64 `json:"marketplace_service_item_return_after_deliv_to_customer"`
 				} `json:"item_services"`
 			} `json:"products"`
 		} `json:"financial_data"`
