@@ -121,7 +121,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Sale) (*entity.Sale,
               
               quantity,
               created_at,
-              
+              updated_at,
               order_id,
               seller_id,
               card_id, 
@@ -144,6 +144,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Sale) (*entity.Sale,
 
 		dbModel.Quantity,
 		dbModel.CreatedAt,
+		time.Now(),
 
 		dbModel.OrderID,
 		dbModel.SellerID,
