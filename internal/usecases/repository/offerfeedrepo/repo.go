@@ -62,7 +62,6 @@ func (repo *offerRepoImpl) GetStocks(ctx context.Context) (*entity.Inventory, er
             where rn.rn = 1
 limit 100
   `
-
 	storageQuery := `
             select
               w.seller_id,

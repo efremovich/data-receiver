@@ -108,7 +108,6 @@ func (wb *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDe
 }
 
 func (wb *apiClientImp) getSaleReportResoponse(ctx context.Context, desc entity.PackageDescription) ([]SaleReportResponce, error) {
-
 	var saleReportResponces []SaleReportResponce
 
 	startOfDay := time.Date(desc.UpdatedAt.Year(), desc.UpdatedAt.Month(), desc.UpdatedAt.Day(), 0, 0, 0, 0, desc.UpdatedAt.Location())
@@ -125,11 +124,11 @@ func (wb *apiClientImp) getSaleReportResoponse(ctx context.Context, desc entity.
 
 	run := true
 	for run {
-		reqURL := fmt.Sprintf("%s%s?%s", statisticAPIURL, reportDetaioByPeriodMethod, urlValue.Encode())
+		reqURL := fmt.Sprintf("%s%s?%s", statisticAPIURL, reportDetailByPeriodMethod, urlValue.Encode())
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка создания запроса: %s", reportDetaioByPeriodMethod, err.Error())
+			return nil, fmt.Errorf("%s: ошибка создания запроса: %s", reportDetailByPeriodMethod, err.Error())
 		}
 
 		req.Header.Set("Authorization", wb.token)
@@ -138,18 +137,18 @@ func (wb *apiClientImp) getSaleReportResoponse(ctx context.Context, desc entity.
 
 		resp, err := wb.client.Do(req)
 		if err != nil {
-			return nil, fmt.Errorf("%s: ошибка отправки запроса: %s", reportDetaioByPeriodMethod, err.Error())
+			return nil, fmt.Errorf("%s: ошибка отправки запроса: %s", reportDetailByPeriodMethod, err.Error())
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("%s: сервер ответил: %d", reportDetaioByPeriodMethod, resp.StatusCode)
+			return nil, fmt.Errorf("%s: сервер ответил: %d", reportDetailByPeriodMethod, resp.StatusCode)
 		}
 
 		defer resp.Body.Close()
 
 		var response []SaleReportResponce
 		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %s", reportDetaioByPeriodMethod, err.Error())
+			return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %s", reportDetailByPeriodMethod, err.Error())
 		}
 
 		saleReportResponces = append(saleReportResponces, response...)

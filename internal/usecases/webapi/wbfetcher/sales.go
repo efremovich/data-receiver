@@ -124,7 +124,7 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		priceSize := entity.PriceSize{
 			Price:        elem.TotalPrice,
 			Discount:     elem.DiscountPercent,
-			SpecialPrice: elem.FinishedPrice,
+			SpecialPrice: elem.PriceWithDisc,
 		}
 
 		order := &entity.Order{

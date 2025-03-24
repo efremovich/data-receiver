@@ -17,7 +17,7 @@ const (
 	statisticAPIURL   string = "https://statistics-api.wildberries.ru"
 	cardListMethod    string = "/content/v2/get/cards/list?locale=ru"
 
-	reportDetaioByPeriodMethod string = "/api/v5/supplier/reportDetailByPeriod"
+	reportDetailByPeriodMethod string = "/api/v5/supplier/reportDetailByPeriod"
 
 	saleReportResponseLimit int = 100000 // Максимальное количество строк отчета, возвращаемых методом. Не может быть более 100000.
 	cardRequestLimit        int = 100
