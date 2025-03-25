@@ -26,6 +26,7 @@ func (wb *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDe
 		saleReport.ExternalID = strconv.Itoa(elem.RrdID)
 		saleReport.Quantity = float32(elem.Quantity)
 		saleReport.RetailPrice = elem.RetailPrice
+		saleReport.RetailAmount = elem.RetailAmount
 		saleReport.SalePercent = int(elem.SalePercent)
 		saleReport.CommissionPercent = elem.CommissionPercent
 		saleReport.RetailPriceWithdiscRub = float32(elem.RetailPriceWithdiscRub)
@@ -36,12 +37,12 @@ func (wb *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDe
 		saleReport.SellerReward = float32(elem.PpvzVw)
 		saleReport.SellerRewardWithNds = float32(elem.PpvzVwNds)
 
-		saleReport.DateFrom = convertrepotDate(elem.DateFrom, "2006-01-02")
-		saleReport.DateTo = convertrepotDate(elem.DateTo, "2006-01-02")
-		saleReport.CreateReportDate = convertrepotDate(elem.CreateDt, "2006-01-02")
+		saleReport.DateFrom = convertrepotDate(elem.DateFrom)
+		saleReport.DateTo = convertrepotDate(elem.DateTo)
+		saleReport.CreateReportDate = convertrepotDate(elem.CreateDt)
 		saleReport.OrderDate = elem.OrderDt
 		saleReport.SaleDate = elem.SaleDt
-		saleReport.TransactionDate = convertrepotDate(elem.RrDt, "2006-01-02")
+		saleReport.TransactionDate = convertrepotDate(elem.RrDt)
 
 		saleReport.SAName = elem.SaName
 		saleReport.BonusTypeName = elem.BonusTypeName
@@ -165,10 +166,11 @@ func (wb *apiClientImp) getSaleReportResoponse(ctx context.Context, desc entity.
 	return saleReportResponces, nil
 }
 
-func convertrepotDate(date string, layout string) time.Time {
-	result, err := time.Parse(layout, date)
+func convertrepotDate(date string) time.Time {
+	result, err := time.Parse("2006-01-02", date)
 	if err != nil {
 		return time.Time{}
 	}
+
 	return result
 }

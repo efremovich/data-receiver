@@ -23,11 +23,7 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	err := gw.receiveOrdersWB(ctx)
-	if err != nil {
-		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
-	}
-	err = gw.receiveSalesWB(ctx)
+	err := gw.receiveSaleReportWB(ctx)
 	if err != nil {
 		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
 	}
@@ -42,22 +38,22 @@ type Task struct {
 func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 	c := cron.New()
 	tasks := []Task{
-		{"Загрузка товарных позиций wildberries", "0 12 * * *", gw.receiveCardsWB}, // Каждый день в 12
-		{"Загрузка товарных позиций ozon", "05 12 * * *", gw.receiveCardsOzon},
-
-		{"Загрузка складов wildberries", "15 12 * * *", gw.receiveWarehousesWB},
-
-		{"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
-		{"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
-
-		{"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
-		{"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
-
-		{"Загрузка продаж wildberries", "30 19 * * *", gw.receiveSalesWB},
-		{"Загрузка продаж ozon", "30 19 * * *", gw.receiveSalesOzon},
-
-		{"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
-		{"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
+		// {"Загрузка товарных позиций wildberries", "0 12 * * *", gw.receiveCardsWB}, // Каждый день в 12
+		// {"Загрузка товарных позиций ozon", "05 12 * * *", gw.receiveCardsOzon},
+		//
+		// {"Загрузка складов wildberries", "15 12 * * *", gw.receiveWarehousesWB},
+		//
+		// {"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
+		// {"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
+		//
+		// {"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
+		// {"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
+		//
+		// {"Загрузка продаж wildberries", "30 19 * * *", gw.receiveSalesWB},
+		// {"Загрузка продаж ozon", "30 19 * * *", gw.receiveSalesOzon},
+		//
+		// {"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
+		// {"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
 	}
 
 	for _, task := range tasks {
@@ -136,8 +132,8 @@ func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
-	daysToGet := 365 // Количество дней для загрузки
-	delay := 61      // Количество секунд задержки перед следующим запросом
+	daysToGet := 30 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),
@@ -194,8 +190,9 @@ func (gw *grpcGatewayServerImpl) receiveSalesOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error {
-	daysToGet := 60 // Количество дней для загрузки
-	delay := 61     // Количество секунд задержки перед следующим запросом
+	daysToGet := 730
+	// Количество дней для загрузки
+	delay := 61 // Количество секунд задержки перед следующим запросом
 	startDate := time.Now()
 	// startDate := time.Date(2025, 03, 01, 0, 0, 0, 0, time.Local)
 	descDescription := entity.PackageDescription{
@@ -210,8 +207,8 @@ func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error 
 }
 
 func (gw *grpcGatewayServerImpl) receiveSaleReportOzon(ctx context.Context) error {
-	daysToGet := 360 // Количество дней для загрузки
-	delay := 61      // Количество секунд задержки перед следующим запросом
+	daysToGet := 60 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
 	startDate := time.Now()
 	// startDate := time.Date(2025, 03, 01, 0, 0, 0, 0, time.Local)
 	descDescription := entity.PackageDescription{

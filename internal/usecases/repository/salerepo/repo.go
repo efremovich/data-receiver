@@ -129,7 +129,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Sale) (*entity.Sale,
               region_id,
               price_size_id
   )
- VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`
+ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`
 
 	charIDWrap := repository.IDWrapper{}
 

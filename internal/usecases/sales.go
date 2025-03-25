@@ -119,7 +119,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 		}
 
 		// Size
-		size, err := s.getSizeByTitle(ctx, meta.Size.TechSize)
+		size, err := s.setSize(ctx, meta.Size)
 		if err != nil {
 			return err
 		}

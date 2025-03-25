@@ -43,7 +43,7 @@ func (repo *repoImpl) SelectByExternalID(ctx context.Context, externalID string,
               updated_at,
               quantity,
               retail_price,
-              return_amoun,
+              retail_amount,
               sale_percent,
               commission_percent,
               retail_price_withdisc_rub,
@@ -86,6 +86,7 @@ func (repo *repoImpl) SelectByExternalID(ctx context.Context, externalID string,
               external_id = $1
               and sale_date = $2
   `
+
 	err := repo.getReadConnection().Get(&result, query, externalID, date.Format("2006-01-02 15:04:05"))
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrObjectNotFound
@@ -105,7 +106,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.SaleReport) (*entity
         updated_at,
         quantity,
         retail_price,
-        return_amoun,
+        retail_amount,
         sale_percent,
         commission_percent,
         retail_price_withdisc_rub,
@@ -146,12 +147,13 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.SaleReport) (*entity
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41) RETURNING id;
   `
 	charIDWrap := repository.IDWrapper{}
+
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
 		dbModel.ExternalID,
 		dbModel.UpdatedAt,
 		dbModel.Quantity,
 		dbModel.RetailPrice,
-		dbModel.ReturnAmoun,
+		dbModel.RetailAmount,
 		dbModel.SalePercent,
 		dbModel.CommissionPercent,
 		dbModel.RetailPriceWithdiscRub,
@@ -208,7 +210,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in *entity.SaleReport) 
               updated_at = $3,
               quantity = $4,
               retail_price = $5,
-              return_amoun = $6,
+              retail_amount = $6,
               sale_percent = $7,
               commission_percent = $8,
               retail_price_withdisc_rub = $9,
@@ -255,7 +257,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in *entity.SaleReport) 
 		time.Now(),
 		dbModel.Quantity,
 		dbModel.RetailPrice,
-		dbModel.ReturnAmoun,
+		dbModel.RetailAmount,
 		dbModel.SalePercent,
 		dbModel.CommissionPercent,
 		dbModel.RetailPriceWithdiscRub,

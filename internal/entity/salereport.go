@@ -9,7 +9,7 @@ type SaleReport struct {
 
 	Quantity               float32   // Количество
 	RetailPrice            float32   // Цена розничная
-	ReturnAmoun            float32   // Количество возвратов
+	RetailAmount           float32   // Цена розничная
 	SalePercent            int       // Процент скидки
 	CommissionPercent      float32   // Процент комиссии
 	RetailPriceWithdiscRub float32   // Цена розничная с учетом скидок в рублях.
@@ -51,7 +51,7 @@ type SaleReport struct {
 	Seller    *MarketPlace
 }
 
-// Пункт выдачи заказов
+// Пункт выдачи заказов.
 type Pvz struct {
 	ID           int64
 	OfficeName   string // Наименование поставщика

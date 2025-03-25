@@ -119,6 +119,7 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		}
 		size := entity.Size{
 			TechSize: elem.TechSize,
+			Title:    elem.TechSize,
 		}
 
 		priceSize := entity.PriceSize{
