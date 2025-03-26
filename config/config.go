@@ -85,6 +85,7 @@ func getEnvMap(prefix string) map[string]string {
 			envMap[pair[0]] = pair[1]
 		}
 	}
+
 	return envMap
 }
 

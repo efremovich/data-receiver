@@ -14,6 +14,7 @@ func (s *receiverCoreServiceImpl) OfferFeed(ctx context.Context) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
+
 	yml := entity.YMLCatalog{
 		Date: time.Now().Format("2006-01-02 15:04:05"),
 		Shop: entity.Shop{
@@ -38,6 +39,7 @@ func (s *receiverCoreServiceImpl) StockFeed(ctx context.Context) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
+
 	yml := entity.YMLCatalog{
 		Date: time.Now().Format("2006-01-02 15:04:05"),
 		Shop: entity.Shop{

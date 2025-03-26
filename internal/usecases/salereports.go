@@ -46,6 +46,7 @@ func (s *receiverCoreServiceImpl) ReceiveSaleReport(ctx context.Context, desc en
 			Limit:       desc.Limit - 1,
 		}
 		err := s.brokerPublisher.SendPackage(ctx, &p)
+
 		if err != nil {
 			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
 		}
@@ -79,6 +80,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context,
 		s2card, err := s.getSeller2Card(ctx, meta.Card.ExternalID, seller.ID)
 		if err != nil {
 			alogger.InfoFromCtx(ctx, "ошибка получения данных о продавце %s модуль sales reports: %s", desc.Seller, err.Error())
+
 			notFoundElements++
 
 			continue
@@ -105,6 +107,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context,
 		meta.Size = size
 
 		meta.Warehouse.SellerID = seller.ID
+
 		warehouse, err := s.setWarehouse(ctx, meta.Warehouse)
 		if err != nil {
 			alogger.InfoFromCtx(ctx, "ошибка получения данных о складах %s модуль sales reports: %s", desc.Seller, err.Error())

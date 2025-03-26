@@ -83,21 +83,11 @@ func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, d
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Order, error) {
 	dbModel := convertToDBOrder(ctx, in)
 
-	query := `INSERT INTO shop.orders (
-              external_id,
-              price,
-              status_id,
-              direction,
-              type,
-              sale,
-              created_at,
-              seller_id, 
-              card_id, 
-              warehouse_id,
-              region_id,
-              price_size_id
-            ) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`
+	query := `INSERT INTO shop.orders (external_id, price, status_id, direction, type, sale, created_at, seller_id, card_id, warehouse_id, region_id, price_size_id)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING
+              id`
+
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
@@ -127,23 +117,25 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error {
 	dbModel := convertToDBOrder(ctx, in)
 
-	query := `UPDATE shop.orders SET
-              external_id= $1,
+	query := `UPDATE
+              shop.orders
+            SET
+              external_id = $1,
               price = $2,
               status_id = $3,
               direction = $4,
               type = $5,
               sale = $6,
-             
               quantity = $7,
               created_at = $8,
-              
-              seller_id = $9, 
-              card_id = $10, 
+              seller_id = $9,
+              card_id = $10,
               warehouse_id = $11,
               region_id = $12,
               price_size_id = $13,
-            WHERE id = $14`
+            WHERE
+              id = $14`
+
 	_, err := repo.getWriteConnection().ExecOne(query,
 		dbModel.ExternalID,
 		dbModel.Price,

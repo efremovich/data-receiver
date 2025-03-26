@@ -20,11 +20,3 @@ func (s *receiverCoreServiceImpl) setPvz(ctx context.Context, in *entity.Pvz) (*
 
 	return pvz, nil
 }
-
-func (s *receiverCoreServiceImpl) getPvz(ctx context.Context, officeID int) (*entity.Pvz, error) {
-	pvz, err := s.pvzrepo.SelectByOfficeID(ctx, officeID)
-	if err != nil {
-		return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
-	}
-	return pvz, nil
-}

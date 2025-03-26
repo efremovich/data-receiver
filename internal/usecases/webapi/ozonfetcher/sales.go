@@ -10,7 +10,7 @@ import (
 
 //nolint:dupl // похожий метод есть и в order.go но они задублированны не случайно
 func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
-	// Загружаем только только продажи со статусом delivered
+	// Загружаем только продажи со статусом delivered
 	// Возможные статусы:
 	//    awaiting_packaging — ожидает упаковки,
 	//    awaiting_deliver — ожидает отгрузки,
@@ -36,6 +36,7 @@ func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 	}
 
 	var sales []entity.Sale
+
 	for _, elem := range saleResponse.Result {
 		warehouse := entity.Warehouse{}
 		warehouse.Title = elem.AnalyticsData.WarehouseName
@@ -75,6 +76,7 @@ func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 			}
 
 			priceSize := entity.PriceSize{}
+
 			for _, fData := range elem.FinancialData.Products {
 				if fData.ProductID == product.Sku {
 					priceSize = entity.PriceSize{
@@ -103,7 +105,7 @@ func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 
 			sales = append(sales, sale)
 		}
-
 	}
+
 	return sales, nil
 }
