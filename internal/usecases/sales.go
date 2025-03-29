@@ -33,6 +33,7 @@ func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.
 		}
 		return fmt.Errorf("ошибка при обработке клиентов: %w", err)
 	}
+
 	if desc.Limit > 0 {
 		p := entity.PackageDescription{
 			PackageType: entity.PackageTypeSale,
@@ -74,7 +75,6 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 	}
 
 	for _, meta := range salesMetaList {
-
 		meta.Seller = seller
 		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
 		_, err = s.getSeller2Card(ctx, meta.Card.ExternalID, seller.ID)
@@ -113,6 +113,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 			SellerID: seller.ID,
 		}
 		meta.Card = card
+
 		_, err = s.setSeller2Card(ctx, seller2card)
 		if err != nil {
 			return err
