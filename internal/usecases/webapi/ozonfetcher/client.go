@@ -21,9 +21,9 @@ const (
 	productInfoAttrMetod          string = "/v4/product/info/attributes"
 	descriptionCategoryMethod     string = "/v1/description-category/tree"
 	productListMethod             string = "/v3/product/list"
-	// orders and sales
+	// orders and sales.
 	fboPostingListMethod string = "/v2/posting/fbo/list"
-	// stocks
+	// stocks.
 	supplyOrderListMethod    string = "/v2/supply-order/list"
 	supplyOrderGetMethod     string = "/v2/supply-order/get"
 	suppolyOrderBundleMethod string = "/v1/supply-order/bundle"

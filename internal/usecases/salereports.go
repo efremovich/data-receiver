@@ -105,6 +105,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSalesReport(ctx context.Context,
 		meta.Size = size
 
 		meta.Warehouse.SellerID = seller.ID
+
 		warehouse, err := s.setWarehouse(ctx, meta.Warehouse)
 		if err != nil {
 			alogger.InfoFromCtx(ctx, "ошибка получения данных о складах %s модуль sales reports: %s", desc.Seller, err.Error())
