@@ -71,14 +71,14 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 		{"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
 		{"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
 
-		// {"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
-		// {"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
-		//
-		// {"Загрузка продаж wildberries", "30 19 * * *", gw.receiveSalesWB},
-		// {"Загрузка продаж ozon", "30 19 * * *", gw.receiveSalesOzon},
-		//
-		// {"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
-		// {"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
+		{"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
+		{"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
+
+		{"Загрузка продаж wildberries", "30 19 * * *", gw.receiveSalesWB},
+		{"Загрузка продаж ozon", "30 19 * * *", gw.receiveSalesOzon},
+
+		{"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
+		{"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
 	}
 
 	for _, task := range tasks {

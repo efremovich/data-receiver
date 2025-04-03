@@ -34,12 +34,11 @@ services:
     image: postgres:15.4
     restart: "on-failure" # контейнер может не отработать с первого раза, если postgres медленно стартует
     entrypoint:
-      [
-        "psql",
-        "postgres://postgres:postgres@postgres:5432",
-        "-c",
-        'CREATE DATABASE "erp_db" WITH ENCODING = "UTF8"',
-      ]
+      - /bin/sh
+      - -c
+      - |
+        psql postgres://postgres:postgres@postgres:5432 -c 'CREATE DATABASE erp_db WITH ENCODING = "UTF8"';
+        psql postgres://postgres:postgres@postgres:5432 -c 'CREATE DATABASE superset_db WITH ENCODING = "UTF8"';
     depends_on:
       - postgres
   migrator-db:
@@ -105,6 +104,26 @@ services:
     environment:
       MB_DB_FILE: /metabase-data/metabase.db
 
+  superset:
+    image: apache/superset
+    container_name: superset
+    ports:
+      - "8088:8088" # Пробрасываем порт для доступа к Superset
+    volumes:
+      - ./superset:/app/superset_home # Указываем том для хранения данных
+      - ./config/superset_config.py:/app/pythonpath/superset_config.py #
+    environment:
+      SUPERSET_ENV: production
+      SUPERSET_SECRET_KEY: 5jao+D1msimAO3C3nUTEpM/j/stVyMM2LqD35Z9B/5AN8dHwxAqPBM8w
+      DATABASE_DIALECT: postgresql
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_HOST: postgres # Используем ваш существующий PostgreSQL
+      DATABASE_PORT: 5432
+      DATABASE_DB: superset_db
+      REDIS_HOST: redis # Для кеширования и асинхронных задач
+    restart: always
+
   redis:
     image: redis:7
     container_name: superset_redis
@@ -113,55 +132,14 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
-
-  # Модифицируем сервис Superset
-  superset:
-    image: apache/superset
-    container_name: superset
-    ports:
-      - "8088:8088"
-    volumes:
-      - ./superset:/app/superset_home
-      - ./config/superset_config.py:/app/pythonpath/superset_config.py # Конфиг для production
-    environment:
-      SUPERSET_ENV: production
-      SECRET_KEY: 5jao+D1msimAO3C3nUTEpM/j/stVyMM2LqD35Z9B/5AN8dHwxAqPBM8w
-      DATABASE_DIALECT: postgresql
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: postgres
-      DATABASE_HOST: postgres # Используем ваш существующий PostgreSQL
-      DATABASE_PORT: 5432
-      DATABASE_DB: superset_db
-      REDIS_HOST: redis # Для кеширования и асинхронных задач
-      SUPERSET_LOAD_EXAMPLES: "no"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: always
-    command: >
-      sh -c "
-      /app/docker/docker-bootstrap.sh &&
-      gunicorn --bind 0.0.0.0:8088 \
-          --workers 4 \
-          --timeout 60 \
-          --limit-request-line 0 \
-          superset.app:create_app()
-      "
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 volumes:
-  postgres_data: # Для вашего основного PostgreSQL
+  postgres_data:
     driver: local
-  redis_data: # Для Redis
+  redis_data:
     driver: local
-  superset: # Для файлов Superset
+  superset:
     driver: local
-  grafana_data: # Уже было в вашем конфиге
+  grafana_data:
     driver: local
   prometheus_data:
     driver: local

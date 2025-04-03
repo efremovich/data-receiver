@@ -1,4 +1,6 @@
 -- +goose Up
+-- +goose StatementBegin
+
 -- Создание таблицы sale_reports
 CREATE TABLE sale_reports (
     id serial NOT NULL,
@@ -161,12 +163,11 @@ COMMENT ON COLUMN shop.sale_reports.order_id IS 'ID заказа';
 COMMENT ON COLUMN shop.sale_reports.warehouse_id IS 'ID склада';
 
 COMMENT ON COLUMN shop.sale_reports.seller_id IS 'ID продавца';
-
 -- +goose StatementEnd
+
 -- +goose Down
 -- +goose StatementBegin
 DROP INDEX sales_card_id_idx;
 
 DROP TABLE shop.salereports;
-
 -- +goose StatementEnd
