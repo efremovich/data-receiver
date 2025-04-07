@@ -36,6 +36,7 @@ func (s *receiverCoreServiceImpl) ReceiveStocks(ctx context.Context, desc entity
 	}
 
 	alogger.InfoFromCtx(ctx, "постановка задачи в очередь %d", desc.Limit)
+
 	if desc.Limit > 0 {
 		p := entity.PackageDescription{
 			PackageType: entity.PackageTypeStock,

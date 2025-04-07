@@ -1,20 +1,20 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE shop.orders (
-	id serial NOT NULL,
-	external_id text NOT NULL,
-	price numeric(10, 2) NOT NULL,
-	warehouse_id integer NOT NULL,
-	status_id integer,
-	direction text,
-	type text,
-	sale numeric(10, 2),
-	card_id integer NOT NULL,
-	seller_id integer NOT NULL,
-	created_at timestamp without time zone DEFAULT NOW(),
-	updated_at timestamp without time zone DEFAULT NOW(),
-	region_id integer,
-	price_size_id integer NOT NULL
+    id serial NOT NULL,
+    external_id text NOT NULL,
+    price numeric(10, 2) NOT NULL,
+    warehouse_id integer NOT NULL,
+    status_id integer,
+    direction text,
+    type text,
+    sale numeric(10, 2),
+    card_id integer NOT NULL,
+    seller_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT NOW(),
+    updated_at timestamp without time zone DEFAULT NOW(),
+    region_id integer,
+    price_size_id integer NOT NULL
 );
 
 ALTER TABLE shop.orders OWNER TO erp_db_usr;

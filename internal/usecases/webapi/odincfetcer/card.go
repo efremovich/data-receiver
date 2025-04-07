@@ -13,24 +13,6 @@ import (
 	"github.com/efremovich/data-receiver/pkg/alogger"
 )
 
-type Card struct {
-	VendorID    string `json:"vendor_id"`
-	VendorCode  string `json:"vendor_code"`
-	Title       string `json:"title"`
-	ExternalID  int64  `json:"external_id"`
-	Description string `json:"description"`
-	Category    struct {
-		ID    string `json:"ID"`
-		Title string `json:"title"`
-	} `json:"category"`
-	Length  float32 `json:"length"`
-	Width   float32 `json:"width"`
-	Height  float32 `json:"height"`
-	Barcode string  `json:"barcode"`
-	Brand   string  `json:"brand"`
-	Size    string  `json:"size"`
-}
-
 func (odinc *apiClientImp) GetCards(ctx context.Context, desc entity.PackageDescription) ([]entity.Card, error) {
 	const methodName = "hs/sender-api/getCardByBarcode"
 

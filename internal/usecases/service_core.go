@@ -12,6 +12,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
+	costrepo "github.com/efremovich/data-receiver/internal/usecases/repository/cost"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/countryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/districtrepo"
@@ -42,6 +43,7 @@ type ReceiverCoreService interface {
 	ReceiveOrders(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveSales(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveSaleReport(ctx context.Context, desc entity.PackageDescription) error
+	ReceiveCostFrom1C(ctx context.Context, desc entity.PackageDescription) error
 
 	OfferFeed(ctx context.Context) ([]byte, error)
 	StockFeed(ctx context.Context) ([]byte, error)
@@ -76,6 +78,7 @@ type receiverCoreServiceImpl struct {
 	offerfeedrepo    offerfeedrepo.OfferRepo
 	saleReportRepo   salereportrepo.SaleReportRepo
 	pvzrepo          pvzrepo.PvzRepo
+	costrepo         costrepo.CostRepo
 
 	seller2cardrepo seller2cardrepo.Seller2CardRepo
 
@@ -116,6 +119,7 @@ func NewPackageReceiverService(
 	warehousetyperepo warehousetyperepo.WarehouseTypeRepo,
 	saleReportRepo salereportrepo.SaleReportRepo,
 	pvzrepo pvzrepo.PvzRepo,
+	costrepo costrepo.CostRepo,
 
 	brokerPublisher brokerpublisher.BrokerPublisher,
 	apiFetcher map[entity.MarketplaceType][]webapi.ExtAPIFetcher,
@@ -147,6 +151,7 @@ func NewPackageReceiverService(
 		offerfeedrepo:    offerfeedrepo,
 		saleReportRepo:   saleReportRepo,
 		pvzrepo:          pvzrepo,
+		costrepo:         costrepo,
 
 		warehouserepo:     warehouserepo,
 		warehousetyperepo: warehousetyperepo,

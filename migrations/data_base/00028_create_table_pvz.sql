@@ -1,4 +1,4 @@
-- + goose Up
+-- + goose Up
 -- +goose StatementBegin
 CREATE TABLE shop.pvzs (
 	id serial NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE shop.pvzs (
 	supplier_inn text -- ИНН поставщика
 );
 
-ALTER TABLE shop.pvzs OWNER TO erp_db_usr;
+ALTER TABLE shop.pvzs OWNER to erp_db_usr;
 
 ALTER TABLE ONLY shop.pvzs
 	ADD CONSTRAINT pvzs_pkey PRIMARY KEY (id);

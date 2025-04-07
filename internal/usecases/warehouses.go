@@ -27,6 +27,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveWarehouse(ctx context.Context, c
 	if err != nil {
 		return wrapErr(fmt.Errorf("ошибка при получении данных из источника %s : %w", desc.Seller, err))
 	}
+
 	seller, err := s.getSeller(ctx, client.GetMarketPlace())
 	if err != nil {
 		return err
@@ -34,6 +35,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveWarehouse(ctx context.Context, c
 
 	for _, in := range warehouses {
 		in.SellerID = seller.ID
+
 		_, err := s.setWarehouse(ctx, &in)
 		if err != nil {
 			return err
@@ -49,6 +51,7 @@ func (s *receiverCoreServiceImpl) setWarehouse(ctx context.Context, in *entity.W
 		if err != nil {
 			return nil, err
 		}
+
 		warehouse, err = s.warehouserepo.Insert(ctx, entity.Warehouse{
 			ExternalID: in.ExternalID,
 			Title:      in.Title,
@@ -56,6 +59,7 @@ func (s *receiverCoreServiceImpl) setWarehouse(ctx context.Context, in *entity.W
 			TypeID:     warehouseType.ID,
 			SellerID:   in.SellerID,
 		})
+
 		if err != nil {
 			return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
 		}
@@ -72,6 +76,7 @@ func (s *receiverCoreServiceImpl) getWarehouseType(ctx context.Context, typeTitl
 			Title: typeTitle,
 		})
 	}
+
 	if err != nil {
 		return nil, wrapErr(fmt.Errorf("ошибка при получении данных: %w", err))
 	}

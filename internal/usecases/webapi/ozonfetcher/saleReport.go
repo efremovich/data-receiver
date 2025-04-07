@@ -12,7 +12,7 @@ const noInfo string = "нет информации"
 
 func (ozon *apiClientImp) GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error) {
 	var saleReports []entity.SaleReport
-	// Загружаем только только продажи со статусом delivered
+	// Загружаем только продажи со статусом delivered
 	// Возможные статусы:
 	//    awaiting_packaging — ожидает упаковки,
 	//    awaiting_deliver — ожидает отгрузки,
@@ -27,6 +27,7 @@ func (ozon *apiClientImp) GetSaleReport(ctx context.Context, desc entity.Package
 	if len(saleResponse.Result) == 0 {
 		return nil, nil
 	}
+
 	skus := []int{}
 
 	for _, elem := range saleResponse.Result {

@@ -10,7 +10,7 @@ import (
 
 //nolint:dupl // похожий метод есть и в order.go но они задублированны не случайно
 func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error) {
-	// Загружаем только только продажи со статусом delivered
+	// Загружаем только продажи со статусом delivered
 	// Возможные статусы:
 	//    awaiting_packaging — ожидает упаковки,
 	//    awaiting_deliver — ожидает отгрузки,
