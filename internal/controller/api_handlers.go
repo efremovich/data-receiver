@@ -227,7 +227,7 @@ func (gw *grpcGatewayServerImpl) receiveCostFrom1C(ctx context.Context) error {
 	delay := 3
 	startDate := time.Now()
 	descDescription := entity.PackageDescription{
-		PackageType: entity.PackageTypeSaleReports,
+		PackageType: entity.PackageTypeCostFrom1C,
 		UpdatedAt:   startDate,
 		Seller:      entity.OdinAss,
 		Limit:       daysToGet,

@@ -28,6 +28,7 @@ const (
 	PackageTypeSale        = PackageType("SALE")       // Пакет с продажами.
 	PackageTypeStock       = PackageType("STOCK")      // Пакет с остатками.
 	PackageTypeSaleReports = PackageType("SALEREPORT") // Пакет с отчетом по продажами.
+	PackageTypeCostFrom1C  = PackageType("COSTFROM1C") // Пакет с себестоимость товаров
 )
 
 func (p PackageDescription) GetCursor() string {
@@ -50,6 +51,8 @@ func StringToPackageType(s string) (PackageType, error) {
 		return PackageTypeStock, nil
 	case "SALEREPORT":
 		return PackageTypeStock, nil
+	case "COSTFROM1C":
+		return PackageTypeCostFrom1C, nil
 	default:
 		return "", fmt.Errorf("неизвестный тип пакета: %s", s)
 	}
