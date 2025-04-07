@@ -23,10 +23,10 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	err := gw.receiveCostFrom1C(ctx)
-	if err != nil {
-		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
-	}
+	// err := gw.receiveCostFrom1C(ctx)
+	// if err != nil {
+	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
+	// }
 }
 
 type Task struct {
@@ -227,7 +227,7 @@ func (gw *grpcGatewayServerImpl) receiveCostFrom1C(ctx context.Context) error {
 	delay := 3
 	startDate := time.Now()
 	descDescription := entity.PackageDescription{
-		PackageType: entity.PackageTypeSaleReports,
+		PackageType: entity.PackageTypeCostFrom1C,
 		UpdatedAt:   startDate,
 		Seller:      entity.OdinAss,
 		Limit:       daysToGet,
