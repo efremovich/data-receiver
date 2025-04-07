@@ -1,48 +1,50 @@
 -- +goose Up
+-- +goose StatementBegin
+
 -- Создание таблицы sale_reports
 CREATE TABLE sale_reports (
-	id serial NOT NULL,
-	external_id text, -- Уникальный идентификатор заказа.
-	updated_at timestamp, -- Дата обновления данных
-	quantity numeric(10, 2), -- Количество
-	retail_price numeric(10, 2), -- Цена розничная
-	return_amoun numeric(10, 2), -- Количество возвратов
-	sale_percent integer, -- Процент скидки
-	commission_percent numeric(10, 2), -- Процент комиссии
-	retail_price_withdisc_rub numeric(10, 2), -- Цена розничная с учетом скидок в рублях.
-	delivery_amount numeric(10, 2), -- Количество доставок
-	return_amount numeric(10, 2), -- Количество возвратов
-	delivery_cost numeric(10, 2), -- Стоимость доставки
-	pvz_reward numeric(10, 2), -- Возмещение за выдачу на ПВЗ
-	seller_reward numeric(10, 2), -- Возмещение марекетплейса без НДС
-	seller_reward_with_nds numeric(10, 2), -- Возмещение марекетплейса с НДС
-	date_from timestamp, -- Дата начала отчета
-	date_to timestamp, -- Дата окончания отчета
-	create_report_date timestamp, -- Дата создания отчета
-	order_date timestamp, -- Дата заказа
-	sale_date timestamp, -- Дата продажи
-	transaction_date timestamp, -- Дата транзакции
-	sa_name text, -- Артикул продавца
-	bonus_type_name text, -- Штрафы или доплаты
-	penalty numeric(10, 2), -- Штрафы
-	additional_payment numeric(10, 2), -- Доплаты
-	acquiring_fee numeric(10, 2), -- Возмещение издержек по эквайрингу
-	acquiring_percent numeric(10, 2), -- Размер комиссии за эквайринг без НДС, %
-	acquiring_bank text, -- Банк экварйрер
-	doc_type text, -- Тип документа
-	supplier_oper_name text, -- Обоснование оплаты
-	site_country text, -- Страна сайта
-	kiz text, -- Код маркировки товара
-	storage_fee numeric(10, 2), -- Стоимость хранения
-	deduction numeric(10, 2), -- Прочие удержания и выплаты
-	acceptance numeric(10, 2), -- Стоимость платной приемки
-	pvz_id serial, -- ID пункта выдачи
-	barcode text, -- Штрихкод
-	size_id serial, -- ID размера
-	card_id serial, -- ID карты
-	order_id serial, -- ID заказа
-	warehouse_id serial, -- ID склада
-	seller_id serial -- ID продавца
+    id serial NOT NULL,
+    external_id text, -- Уникальный идентификатор заказа.
+    updated_at timestamp, -- Дата обновления данных
+    quantity numeric(10, 2), -- Количество
+    retail_price numeric(10, 2), -- Цена розничная
+    retail_amount numeric(10, 2), -- Цена продажи
+    sale_percent integer, -- Процент скидки
+    commission_percent numeric(10, 2), -- Процент комиссии
+    retail_price_withdisc_rub numeric(10, 2), -- Цена розничная с учетом скидок в рублях.
+    delivery_amount numeric(10, 2), -- Количество доставок
+    return_amount numeric(10, 2), -- Количество возвратов
+    delivery_cost numeric(10, 2), -- Стоимость доставки
+    pvz_reward numeric(10, 2), -- Возмещение за выдачу на ПВЗ
+    seller_reward numeric(10, 2), -- Возмещение марекетплейса без НДС
+    seller_reward_with_nds numeric(10, 2), -- Возмещение марекетплейса с НДС
+    date_from timestamp, -- Дата начала отчета
+    date_to timestamp, -- Дата окончания отчета
+    create_report_date timestamp, -- Дата создания отчета
+    order_date timestamp, -- Дата заказа
+    sale_date timestamp, -- Дата продажи
+    transaction_date timestamp, -- Дата транзакции
+    sa_name text, -- Артикул продавца
+    bonus_type_name text, -- Штрафы или доплаты
+    penalty numeric(10, 2), -- Штрафы
+    additional_payment numeric(10, 2), -- Доплаты
+    acquiring_fee numeric(10, 2), -- Возмещение издержек по эквайрингу
+    acquiring_percent numeric(10, 2), -- Размер комиссии за эквайринг без НДС, %
+    acquiring_bank text, -- Банк экварйрер
+    doc_type text, -- Тип документа
+    supplier_oper_name text, -- Обоснование оплаты
+    site_country text, -- Страна сайта
+    kiz text, -- Код маркировки товара
+    storage_fee numeric(10, 2), -- Стоимость хранения
+    deduction numeric(10, 2), -- Прочие удержания и выплаты
+    acceptance numeric(10, 2), -- Стоимость платной приемки
+    pvz_id serial, -- ID пункта выдачи
+    barcode text, -- Штрихкод
+    size_id serial, -- ID размера
+    card_id serial, -- ID карты
+    order_id serial, -- ID заказа
+    warehouse_id serial, -- ID склада
+    seller_id serial -- ID продавца
 );
 
 ALTER TABLE shop.sale_reports OWNER TO erp_db_usr;
@@ -88,7 +90,7 @@ COMMENT ON COLUMN shop.sale_reports.quantity IS 'Количество';
 
 COMMENT ON COLUMN shop.sale_reports.retail_price IS 'Цена розничная';
 
-COMMENT ON COLUMN shop.sale_reports.return_amoun IS 'Количество возвратов';
+COMMENT ON COLUMN shop.sale_reports.retail_amount IS 'Цена продажи';
 
 COMMENT ON COLUMN shop.sale_reports.sale_percent IS 'Процент скидки';
 
@@ -161,12 +163,11 @@ COMMENT ON COLUMN shop.sale_reports.order_id IS 'ID заказа';
 COMMENT ON COLUMN shop.sale_reports.warehouse_id IS 'ID склада';
 
 COMMENT ON COLUMN shop.sale_reports.seller_id IS 'ID продавца';
-
 -- +goose StatementEnd
+
 -- +goose Down
 -- +goose StatementBegin
 DROP INDEX sales_card_id_idx;
 
 DROP TABLE shop.salereports;
-
 -- +goose StatementEnd

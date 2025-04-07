@@ -30,9 +30,12 @@ func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 		}
 	}
 
-	productInfo, err := ozon.getProductInfoOnSKU(ctx, skus)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка получение подробной информации о товаре %w", err)
+	productInfo := make(map[int]ItemsResponse, len(skus))
+	if len(skus) > 1 {
+		productInfo, err = ozon.getProductInfoOnSKU(ctx, skus)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка получение подробной информации о товаре %w", err)
+		}
 	}
 
 	var sales []entity.Sale
@@ -87,6 +90,10 @@ func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 				}
 			}
 
+			order := entity.Order{
+				ExternalID: strconv.Itoa(elem.OrderID),
+			}
+
 			sale := entity.Sale{}
 			sale.ExternalID = strconv.Itoa(elem.OrderID)
 			sale.Price = priceSize.Price
@@ -102,6 +109,7 @@ func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 			sale.Card = &card
 			sale.Barcode = &barcode
 			sale.Region = &region
+			sale.Order = &order
 
 			sales = append(sales, sale)
 		}

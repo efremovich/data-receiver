@@ -13,7 +13,7 @@ type saleReportDB struct {
 	UpdatedAt              time.Time `db:"updated_at"`                // Дата обновления данных
 	Quantity               float32   `db:"quantity"`                  // Количество
 	RetailPrice            float32   `db:"retail_price"`              // Цена розничная
-	ReturnAmoun            float32   `db:"return_amoun"`              // Количество возвратов
+	RetailAmount           float32   `db:"retail_amount"`             // Цена продажи
 	SalePercent            int       `db:"sale_percent"`              // Процент скидки
 	CommissionPercent      float32   `db:"commission_percent"`        // Процент комиссии
 	RetailPriceWithdiscRub float32   `db:"retail_price_withdisc_rub"` // Цена розничная с учетом скидок в рублях.
@@ -61,7 +61,7 @@ func convertDBToSaleReport(_ context.Context, in *entity.SaleReport) *saleReport
 		UpdatedAt:              in.UpdatedAt,
 		Quantity:               in.Quantity,
 		RetailPrice:            in.RetailPrice,
-		ReturnAmoun:            in.ReturnAmoun,
+		RetailAmount:           in.RetailAmount,
 		SalePercent:            in.SalePercent,
 		CommissionPercent:      in.CommissionPercent,
 		RetailPriceWithdiscRub: in.RetailPriceWithdiscRub,
@@ -108,7 +108,7 @@ func (s saleReportDB) convertToEntitySaleReport(_ context.Context) *entity.SaleR
 		UpdatedAt:              s.UpdatedAt,
 		Quantity:               s.Quantity,
 		RetailPrice:            s.RetailPrice,
-		ReturnAmoun:            s.ReturnAmoun,
+		RetailAmount:           s.RetailAmount,
 		SalePercent:            s.SalePercent,
 		CommissionPercent:      s.CommissionPercent,
 		RetailPriceWithdiscRub: s.RetailPriceWithdiscRub,
@@ -160,5 +160,4 @@ func (s saleReportDB) convertToEntitySaleReport(_ context.Context) *entity.SaleR
 			ID: s.SellerID,
 		},
 	}
-
 }

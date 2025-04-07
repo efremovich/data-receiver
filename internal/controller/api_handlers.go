@@ -148,8 +148,8 @@ func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
-	daysToGet := 5 // Количество дней для загрузки
-	delay := 61    // Количество секунд задержки перед следующим запросом
+	daysToGet := 30 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),
@@ -162,8 +162,8 @@ func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveSalesWB(ctx context.Context) error {
-	daysToGet := 365 // Количество дней для загрузки
-	delay := 61      // Количество секунд задержки перед следующим запросом
+	daysToGet := 30 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
 
 	descDescription := entity.PackageDescription{
 		PackageType: entity.PackageTypeSale,
@@ -192,7 +192,7 @@ func (gw *grpcGatewayServerImpl) receiveSalesOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error {
-	daysToGet := 60 // Количество дней для загрузки
+	daysToGet := 30 // Количество дней для загрузки
 	delay := 61     // Количество секунд задержки перед следующим запросом
 	startDate := time.Now()
 	// startDate := time.Date(2025, 03, 01, 0, 0, 0, 0, time.Local)
@@ -208,10 +208,9 @@ func (gw *grpcGatewayServerImpl) receiveSaleReportWB(ctx context.Context) error 
 }
 
 func (gw *grpcGatewayServerImpl) receiveSaleReportOzon(ctx context.Context) error {
-	daysToGet := 60 // Количество дней для загрузки
+	daysToGet := 30 // Количество дней для загрузки
 	delay := 61     // Количество секунд задержки перед следующим запросом
 	startDate := time.Now()
-	// startDate := time.Date(2025, 03, 01, 0, 0, 0, 0, time.Local)
 	descDescription := entity.PackageDescription{
 		PackageType: entity.PackageTypeSaleReports,
 		UpdatedAt:   startDate,

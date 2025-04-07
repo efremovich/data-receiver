@@ -259,7 +259,7 @@ func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkC
             MAX(ps.price) AS price, 
             COALESCE(MIN(s."name")::text, '') || ' - ' || COALESCE(MAX(s."name")::text, '') AS size,
             sc.external_id as external_id,
-            sl.title as seller_name 
+            COALESCE(sl.title, '') as seller_name
           FROM shop.cards card
           JOIN filtered_brands b ON b.id = card.brand_id
           LEFT JOIN shop.cards_characteristics char_color ON char_color.card_id = card.id AND char_color.characteristic_id = 11

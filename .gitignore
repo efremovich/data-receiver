@@ -2,7 +2,7 @@ bin
 vendor.protogen
 config/*.env
 /prometheus_data
-/grafana_data
-data/postgres
+grafana_data/*
+data/postgres/*
 metabase-data/*
 superset/*
