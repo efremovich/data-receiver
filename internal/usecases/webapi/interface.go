@@ -13,6 +13,7 @@ type ExtAPIFetcher interface {
 	GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.Order, error)
 	GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error)
 	GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error)
+	GetCosts(ctx context.Context, desc entity.PackageDescription) ([]entity.Cost, error)
 
 	Ping(ctx context.Context) error
 

@@ -16,6 +16,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/cardrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/categoryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/charrepo"
+	costrepo "github.com/efremovich/data-receiver/internal/usecases/repository/cost"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/countryrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/dimensionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/districtrepo"
@@ -219,6 +220,11 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	costRepo, err := costrepo.NewCostRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
 	// Основной бизнес-сервис.
 	packageReceiverCoreService := usecases.NewPackageReceiverService(
 		conf,
@@ -248,6 +254,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		warehouseTypeRepo,
 		saleReportRepo,
 		pvzRepo,
+		costRepo,
 
 		brokerPublisher,
 		apiFetcher,

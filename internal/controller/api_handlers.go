@@ -23,7 +23,7 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	err := gw.receiveSalesWB(ctx)
+	err := gw.receiveCostFrom1C(ctx)
 	if err != nil {
 		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
 	}
@@ -54,6 +54,8 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 
 		{"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
 		{"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
+
+		{"Загрузка себестоимости товара из 1с", "30 17 * * *", gw.receiveCostFrom1C},
 	}
 
 	for _, task := range tasks {
@@ -219,4 +221,18 @@ func (gw *grpcGatewayServerImpl) receiveSaleReportOzon(ctx context.Context) erro
 	}
 
 	return gw.core.ReceiveSaleReport(ctx, descDescription)
+}
+
+func (gw *grpcGatewayServerImpl) receiveCostFrom1C(ctx context.Context) error {
+	daysToGet := 30
+	delay := 3
+	startDate := time.Now()
+	descDescription := entity.PackageDescription{
+		PackageType: entity.PackageTypeSaleReports,
+		UpdatedAt:   startDate,
+		Seller:      entity.OdinAss,
+		Limit:       daysToGet,
+		Delay:       delay,
+	}
+	return gw.core.ReceiveCostFrom1C(ctx, descDescription)
 }

@@ -2,6 +2,7 @@ package wbfetcher
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -60,6 +61,10 @@ type apiClientImp struct {
 	marketPlace entity.MarketPlace
 
 	metric metrics.Collector
+}
+
+func (wb *apiClientImp) GetCosts(_ context.Context, _ entity.PackageDescription) ([]entity.Cost, error) {
+	return nil, fmt.Errorf("не реализовано")
 }
 
 func (wb *apiClientImp) GetMarketPlace() entity.MarketPlace {

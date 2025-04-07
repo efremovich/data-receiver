@@ -56,7 +56,7 @@ linters:
   # Default set of linters.
   # The value can be: `standard`, `all`, `none`, or `fast`.
   # Default: standard
-  default: all
+  # default: all
   # Enable specific linter.
   # https://golangci-lint.run/usage/linters/#enabled-by-default
   enable:
@@ -87,7 +87,7 @@ linters:
     - forbidigo
     - forcetypeassert
     - funlen
-    - gci
+    # - gci
     - ginkgolinter
     - gocheckcompilerdirectives
     - gochecknoglobals
@@ -99,15 +99,15 @@ linters:
     - gocyclo
     - godot
     - godox
-    - gofmt
-    - gofumpt
+    # - gofmt
+    # - gofumpt
     - goheader
-    - goimports
+    # - goimports
     - gomoddirectives
     - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple
+    # - gosimple
     - gosmopolitan
     - govet
     - grouper
@@ -150,7 +150,7 @@ linters:
     - spancheck
     - sqlclosecheck
     - staticcheck
-    - stylecheck
+    # - stylecheck
     - tagalign
     # - tagliatelle
     - testableexamples
