@@ -35,12 +35,13 @@ func (p PackageDescription) GetCursor() string {
 	if p.Cursor == "" {
 		return "0"
 	}
+
 	return p.Cursor
 }
-func StringToPackageType(s string) (PackageType, error) {
-	s = strings.ToUpper(s)
+func StringToPackageType(packageName string) (PackageType, error) {
+	packageName = strings.ToUpper(packageName)
 
-	switch s {
+	switch packageName {
 	case "CARD":
 		return PackageTypeCard, nil
 	case "ORDER":
@@ -54,7 +55,7 @@ func StringToPackageType(s string) (PackageType, error) {
 	case "COSTFROM1C":
 		return PackageTypeCostFrom1C, nil
 	default:
-		return "", fmt.Errorf("неизвестный тип пакета: %s", s)
+		return "", fmt.Errorf("неизвестный тип пакета: %s", packageName)
 	}
 }
 

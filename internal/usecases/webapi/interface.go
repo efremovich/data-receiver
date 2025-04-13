@@ -14,7 +14,7 @@ type ExtAPIFetcher interface {
 	GetSales(ctx context.Context, desc entity.PackageDescription) ([]entity.Sale, error)
 	GetSaleReport(ctx context.Context, desc entity.PackageDescription) ([]entity.SaleReport, error)
 	GetCosts(ctx context.Context, desc entity.PackageDescription) ([]entity.Cost, error)
-	GetPromotionInfo(ctx context.Context, desc entity.PackageDescription) ([]entity.GetPromotionInfo, error)
+	GetPromotion(ctx context.Context, desc entity.PackageDescription) ([]entity.Promotion, error)
 
 	Ping(ctx context.Context) error
 

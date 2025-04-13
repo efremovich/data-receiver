@@ -54,21 +54,21 @@ func (repo *costRepoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int6
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrObjectNotFound
 	} else if err != nil {
-		return nil, fmt.Errorf("ошибка при поиске данные по cardID %d и дате %s", cardID, startOfDay)
+		return nil, fmt.Errorf("ошибка при поиске данные по cardID %d и дате %s: %w", cardID, startOfDay, err)
 	}
 
 	return result.convertToEntityCost(ctx), nil
 }
 
-func (repo *costRepoImpl) Insert(_ context.Context, in entity.Cost) (*entity.Cost, error) {
-	startOfDay := time.Date(in.CreatedAt.Year(), in.CreatedAt.Month(), in.CreatedAt.Day(), 0, 0, 0, 0, in.CreatedAt.Location())
+func (repo *costRepoImpl) Insert(_ context.Context, cost entity.Cost) (*entity.Cost, error) {
+	startOfDay := time.Date(cost.CreatedAt.Year(), cost.CreatedAt.Month(), cost.CreatedAt.Day(), 0, 0, 0, 0, cost.CreatedAt.Location())
 	query := `INSERT INTO shop.costs (card_id, amount, created_at, updated_at)
 	VALUES ($1, $2, $3, $4) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
-		in.CardID,
-		in.Amount,
+		cost.CardID,
+		cost.Amount,
 		startOfDay,
 		time.Now(),
 	)
@@ -76,9 +76,9 @@ func (repo *costRepoImpl) Insert(_ context.Context, in entity.Cost) (*entity.Cos
 		return nil, fmt.Errorf("ошибка при вставке данных в таблицу cost: %w", err)
 	}
 
-	in.ID = charIDWrap.ID.Int64
+	cost.ID = charIDWrap.ID.Int64
 
-	return &in, nil
+	return &cost, nil
 }
 
 func (repo *costRepoImpl) UpdateExecOne(ctx context.Context, in entity.Cost) error {
@@ -102,7 +102,7 @@ func (repo *costRepoImpl) UpdateExecOne(ctx context.Context, in entity.Cost) err
 }
 
 func (repo *costRepoImpl) Ping(_ context.Context) error {
-	return repo.getWriteConnection().Ping()
+	return fmt.Errorf("%w", repo.getWriteConnection().Ping())
 }
 
 func (repo *costRepoImpl) BeginTX(ctx context.Context) (postgresdb.Transaction, error) {
