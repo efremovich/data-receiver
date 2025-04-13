@@ -118,13 +118,13 @@ linters:
     - interfacebloat
     - intrange
     - ireturn
-    - lll
+    # - lll
     - loggercheck
     - maintidx
     - makezero
     - mirror
     - misspell
-    - mnd
+    # - mnd
     - musttag
     - nakedret
     - nestif
