@@ -29,3 +29,14 @@ CELERY_CONFIG = CeleryConfig
 # Безопасность
 SESSION_COOKIE_SECURE = True
 ENABLE_PROXY_FIX = True  # Если Superset за Nginx
+
+# Добавление русского языка в список доступных языков
+LANGUAGES = {
+    "ru": {"flag": "ru", "name": "Русский"},
+    "en": {"flag": "us", "name": "English"}    
+}
+# Установка русского языка в качестве языка по умолчанию
+BABEL_DEFAULT_LOCALE = "ru"
+
+# Установка таймаута до 5 минут
+SQLALCHEMY_QUERY_TIMEOUT = 300
