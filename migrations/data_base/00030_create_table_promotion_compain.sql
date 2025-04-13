@@ -1,3 +1,5 @@
+-- + goose Up
+-- +goose StatementBegin
 -- Создаем последовательность для ID кампаний (если нужно)
 CREATE SEQUENCE IF NOT EXISTS campaign_id_seq;
 
@@ -105,3 +107,19 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_campaign_timestamp
 BEFORE UPDATE ON campaigns
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TRIGGER IF EXISTS update_campaign_timestamp ON campaigns;
+DROP INDEX idx_booster_stats_nm_id;
+DROP INDEX idx_product_stats_nm_id;
+DROP INDEX idx_day_stats_date
+DROP INDEX idx_campaign_dates_date;
+DROP TABLE shop.booster_stats;
+DROP TABLE shop.product_stats;
+DROP TABLE shop.platform_stats;
+DROP TABLE shop.day_stats;
+DROP TABLE shop.campaigns;
+-- +goose StatementEnd
