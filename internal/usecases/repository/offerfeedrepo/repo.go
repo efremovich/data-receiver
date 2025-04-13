@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
 
@@ -217,6 +218,7 @@ func (repo *offerRepoImpl) GetOffers(ctx context.Context) ([]*entity.Offer, erro
 
 func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkCardsFeedParams) ([]*entity.VKCard, error) {
 	const limit = 1000
+
 	conditions := []string{}
 	whereCondition := ""
 
@@ -242,38 +244,55 @@ func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkC
 	}
 
 	var results []vkFeedDB
+
 	query := fmt.Sprintf(`
-          WITH filtered_brands AS (
-            SELECT id, title
-            FROM shop.brands
-            WHERE title ~ 'LARETTO|LRTT'
-          )
-          SELECT 
-            card.vendor_code AS code,
-            c.title AS subject,
-            char_color.value AS color,
-            card.title,
-            char_gender.value AS gender,
-            card.description,
-            array_agg(DISTINCT mf.link) AS media_links,
-            MAX(ps.price) AS price, 
-            COALESCE(MIN(s."name")::text, '') || ' - ' || COALESCE(MAX(s."name")::text, '') AS size,
-            sc.external_id as external_id,
-            COALESCE(sl.title, '') as seller_name
-          FROM shop.cards card
-          JOIN filtered_brands b ON b.id = card.brand_id
-          LEFT JOIN shop.cards_characteristics char_color ON char_color.card_id = card.id AND char_color.characteristic_id = 11
-          LEFT JOIN shop.cards_characteristics char_gender ON char_gender.card_id = card.id AND char_gender.characteristic_id = 8
-          LEFT JOIN shop.media_files mf ON mf.card_id = card.id AND mf.type_id = 1
-          LEFT JOIN shop.card_categories cc ON cc.card_id = card.id 
-          LEFT JOIN shop.categories c ON c.id = cc.category_id
-          LEFT JOIN shop.price_sizes ps ON ps.card_id = card.id
-          LEFT JOIN shop.sizes s ON s.id = ps.size_id 
-          LEFT JOIN shop.seller2cards sc ON sc.card_id = card.id
-          LEFT JOIN shop.sellers sl on sl.id = sc.seller_id 
+			WITH filtered_brands AS (
+					SELECT
+							id,
+							title
+					FROM
+							shop.brands
+					WHERE
+							title ~ 'LARETTO|LRTT'
+			)
+			SELECT
+					card.vendor_code AS code,
+					c.title AS subject,
+					char_color.value AS color,
+					card.title,
+					char_gender.value AS gender,
+					card.description,
+					(
+							SELECT ARRAY_AGG(link)
+							FROM (
+									SELECT DISTINCT mf.link
+									FROM shop.media_files mf
+									WHERE mf.card_id = card.id AND mf.type_id = 1
+									LIMIT 5
+							) AS limited_links
+					) AS media_links,
+					MAX(ps.price) AS price,
+					COALESCE(MIN(s."name")::text, '') || ' - ' || COALESCE(MAX(s."name")::text, '') AS size,
+					sc.external_id AS external_id,
+					COALESCE(sl.title, '') AS seller_name
+			FROM
+					shop.cards card
+					JOIN filtered_brands b ON b.id = card.brand_id
+					LEFT JOIN shop.cards_characteristics char_color ON char_color.card_id = card.id
+							AND char_color.characteristic_id = 11
+					LEFT JOIN shop.cards_characteristics char_gender ON char_gender.card_id = card.id
+							AND char_gender.characteristic_id = 8
+					LEFT JOIN shop.card_categories cc ON cc.card_id = card.id
+					LEFT JOIN shop.categories c ON c.id = cc.category_id
+					LEFT JOIN shop.price_sizes ps ON ps.card_id = card.id
+					LEFT JOIN shop.sizes s ON s.id = ps.size_id
+					LEFT JOIN shop.seller2cards sc ON sc.card_id = card.id
+					LEFT JOIN shop.sellers sl ON sl.id = sc.seller_id 
           %s
-          GROUP BY card.vendor_code, c.title, char_color.value, card.title, char_gender.value, card.description, b.title, sc.external_id, sc.seller_id, sl.title 
-          ORDER BY code ASC 
+			GROUP BY
+					card.vendor_code, c.title, char_color.value, card.title, char_gender.value, card.description, b.title, sc.external_id, sc.seller_id, sl.title, card.id
+			ORDER BY
+					code ASC
           %s`, whereCondition, limitCondititon)
 
 	err := repo.getReadConnection().Select(&results, query)
@@ -284,11 +303,21 @@ func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkC
 		return nil, fmt.Errorf("ошибка при получении данных фида предложений: %w", err)
 	}
 
-	var vkCards []*entity.VKCard
+	vkCards := make([]*entity.VKCard, 0, len(results))
+
 	for _, result := range results {
+		if repository.NullStringToString(result.Size) == " - " {
+			continue
+		}
+
+		if repository.NullFloatToFloat(result.Price) == 0 {
+			continue
+		}
+
 		vkCard := result.ConvertToEntityVKCard(ctx)
 		vkCards = append(vkCards, vkCard)
 	}
+
 	return vkCards, nil
 }
 

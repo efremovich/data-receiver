@@ -5,6 +5,7 @@ CREATE TABLE shop.costs (
     id SERIAL NOT NULL,
     card_id INTEGER, -- ID карточки товара
     amount NUMERIC(10, 2), -- Себестоимость товара
+    purchase_amount NUMERIC(10, 2), -- Закупочная цена
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(), -- Дата создания записи
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() -- Дата обновления записи
 );

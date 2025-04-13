@@ -65,15 +65,21 @@ func (odinc *apiClientImp) GetCosts(ctx context.Context, desc entity.PackageDesc
 		}
 
 		for _, elem := range response {
-			costPrice, err := strconv.ParseFloat(elem.CostPrice, 32)
+			costPrice, err := convertToFloat64(elem.CostPrice)
 			if err != nil {
 				return nil, fmt.Errorf("ошибка конвертации себестоимости в float32: %w", err)
+			}
+
+			purchasePrice, err := convertToFloat64(elem.PurchasePrice)
+			if err != nil {
+				return nil, fmt.Errorf("ошибка конвертации закупочной цены в float32: %w", err)
 			}
 
 			cost := entity.Cost{}
 			cost.Amount = costPrice
 			cost.ExternalID = elem.VendorCode
 			cost.CreatedAt = desc.UpdatedAt
+			cost.PurchasePrice = purchasePrice
 
 			cursor = strings.TrimSpace(elem.VendorCode)
 
@@ -82,4 +88,29 @@ func (odinc *apiClientImp) GetCosts(ctx context.Context, desc entity.PackageDesc
 	}
 
 	return costList, nil
+}
+
+func convertToFloat64(value any) (float64, error) {
+	switch v := value.(type) {
+	case float64:
+		return v, nil
+	case float32:
+		return float64(v), nil
+	case int:
+		return float64(v), nil
+	case int32:
+		return float64(v), nil
+	case int64:
+		return float64(v), nil
+	case string:
+		if v == "" {
+			return 0, nil
+		}
+
+		return strconv.ParseFloat(v, 64)
+	case nil:
+		return 0, nil
+	default:
+		return 0, fmt.Errorf("unsupported type: %T", value)
+	}
 }
