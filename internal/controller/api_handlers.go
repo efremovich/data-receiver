@@ -23,10 +23,10 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	// err := gw.receiveCostFrom1C(ctx)
-	// if err != nil {
-	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
-	// }
+	err := gw.receivePromotionCompanies(ctx)
+	if err != nil {
+		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
+	}
 }
 
 type Task struct {
@@ -234,4 +234,11 @@ func (gw *grpcGatewayServerImpl) receiveCostFrom1C(ctx context.Context) error {
 		Delay:       delay,
 	}
 	return gw.core.ReceiveCostFrom1C(ctx, descDescription)
+}
+
+func (gw *grpcGatewayServerImpl) receivePromotionCompanies(ctx context.Context) error {
+	descDescription := entity.PackageDescription{
+		Seller: entity.Wildberries,
+	}
+	return gw.core.ReceivePromotionCompanies(ctx, descDescription)
 }

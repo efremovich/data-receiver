@@ -44,6 +44,7 @@ type ReceiverCoreService interface {
 	ReceiveSales(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveSaleReport(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveCostFrom1C(ctx context.Context, desc entity.PackageDescription) error
+	ReceivePromotionCompanies(ctx context.Context, desc entity.PackageDescription) error
 
 	OfferFeed(ctx context.Context) ([]byte, error)
 	StockFeed(ctx context.Context) ([]byte, error)
