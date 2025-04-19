@@ -155,3 +155,91 @@ type SaleReportResponce struct {
 	IsLegalEntity            bool      `json:"is_legal_entity"`
 	TrbxID                   string    `json:"trbx_id"`
 }
+
+type PromotionsList struct {
+	Adverts []Adverts `json:"adverts"`
+	All     int       `json:"all"`
+}
+
+type Adverts struct {
+	Type       int          `json:"type"`
+	Status     int          `json:"status"`
+	Count      int          `json:"count"`
+	AdvertList []AdvertList `json:"advert_list"`
+}
+type AdvertList struct {
+	EndTime    time.Time `json:"endTime"`
+	CreateTime time.Time `json:"createTime"`
+	ChangeTime time.Time `json:"changeTime"`
+	StartTime  time.Time `json:"startTime"`
+	Name       string    `json:"name"`
+	AdvertID   int       `json:"advertId"`
+	Status     int       `json:"status"`
+	Type       int       `json:"type"`
+}
+
+type PromotionListDetail struct {
+	Interval struct {
+		Begin string `json:"begin"`
+		End   string `json:"end"`
+	} `json:"interval"`
+	Views    int     `json:"views"`
+	Clicks   int     `json:"clicks"`
+	Ctr      float64 `json:"ctr"`
+	Cpc      float64 `json:"cpc"`
+	Sum      float64 `json:"sum"`
+	Atbs     int     `json:"atbs"`
+	Orders   int     `json:"orders"`
+	Cr       float64 `json:"cr"`
+	Shks     int     `json:"shks"`
+	SumPrice float64 `json:"sum_price"`
+	Days     []struct {
+		Date     time.Time `json:"date"`
+		Views    int       `json:"views"`
+		Clicks   int       `json:"clicks"`
+		Ctr      float64   `json:"ctr"`
+		Cpc      float64   `json:"cpc"`
+		Sum      float64   `json:"sum"`
+		Atbs     int       `json:"atbs"`
+		Orders   int       `json:"orders"`
+		Cr       float64   `json:"cr"`
+		Shks     int       `json:"shks"`
+		SumPrice float64   `json:"sum_price"`
+		Apps     []struct {
+			Views    int     `json:"views"`
+			Clicks   int     `json:"clicks"`
+			Ctr      float64 `json:"ctr"`
+			Cpc      float64 `json:"cpc"`
+			Sum      float64 `json:"sum"`
+			Atbs     int     `json:"atbs"`
+			Orders   int     `json:"orders"`
+			Cr       float64 `json:"cr"`
+			Shks     int     `json:"shks"`
+			SumPrice float64 `json:"sum_price"`
+			Nm       []struct {
+				Views    int     `json:"views"`
+				Clicks   int     `json:"clicks"`
+				Ctr      float64 `json:"ctr"`
+				Cpc      float64 `json:"cpc"`
+				Sum      float64 `json:"sum"`
+				Atbs     int     `json:"atbs"`
+				Orders   int     `json:"orders"`
+				Cr       float64 `json:"cr"`
+				Shks     int     `json:"shks"`
+				SumPrice float64 `json:"sum_price"`
+				Name     string  `json:"name"`
+				NmID     int     `json:"nmId"`
+			} `json:"nm"`
+			AppType int `json:"appType"`
+		} `json:"apps"`
+	} `json:"days"`
+	AdvertID int `json:"advertId"`
+}
+
+type PromotionFilter struct {
+	ID       int64 `json:"id"`
+	Interval struct {
+		Begin string `json:"begin"`
+		End   string `json:"end"`
+	} `json:"interval"`
+}

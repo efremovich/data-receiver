@@ -62,3 +62,7 @@ type apiClientImp struct {
 func (odinc *apiClientImp) GetMarketPlace() entity.MarketPlace {
 	return odinc.marketPlace
 }
+
+func (odin *apiClientImp) GetPromotion(_ context.Context, _ entity.PackageDescription) ([]*entity.Promotion, error) {
+	return nil, nil
+}

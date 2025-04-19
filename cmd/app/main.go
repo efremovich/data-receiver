@@ -26,23 +26,31 @@ func main() {
 	if envPath != "" {
 		err := aconf.PreloadEnvsFile(envPath)
 		if err != nil {
-			log.Fatalf("ошибка загрузки конфигурационного файла: %s", err.Error())
+			log.Printf("ошибка загрузки конфигурационного файла: %s", err.Error())
+
+			return
 		}
 	}
 
 	if err := aconf.Load(&cfg); err != nil {
-		log.Fatalf("ошибка инициализации конфигурации: %s", err.Error())
+		log.Printf("ошибка инициализации конфигурации: %s", err.Error())
+
+		return
 	}
 	// Подгрузим настройки маркетплейса в конфигурацию
 	cfg.FillMarketPlaceMap()
 
 	app, err := app.New(ctx, cfg)
 	if err != nil {
-		log.Fatalf("app.New failed: %s", err.Error())
+		log.Printf("app.New failed: %s", err.Error())
+
+		return
 	}
 
 	err = app.Start(ctx)
 	if err != nil {
-		log.Fatalf("app.Start failed: %s", err.Error())
+		log.Printf("app.Start failed: %s", err.Error())
+
+		return
 	}
 }

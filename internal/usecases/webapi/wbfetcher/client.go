@@ -16,9 +16,17 @@ const (
 	marketPlaceAPIURL string = "https://marketplace-api.wildberries.ru"
 	contentAPIURL     string = "https://content-api.wildberries.ru"
 	statisticAPIURL   string = "https://statistics-api.wildberries.ru"
-	cardListMethod    string = "/content/v2/get/cards/list?locale=ru"
+	advertAPIURL      string = "https://advert-api.wildberries.ru"
+
+	cardListMethod string = "/content/v2/get/cards/list?locale=ru"
 
 	reportDetailByPeriodMethod string = "/api/v5/supplier/reportDetailByPeriod"
+
+	promotionListMethod      string = "/adv/v1/promotion/count"
+	promotionInfoMetod       string = "/adv/v1/promotion/adverts"
+	mediaPromotionListMethod string = "/adv/v1/count"
+	advertsInfoMetod         string = "/adv/v1/adverts"
+	promoFullStatsMethod     string = "/adv/v2/fullstats"
 
 	saleReportResponseLimit int = 100000 // Максимальное количество строк отчета, возвращаемых методом. Не может быть более 100000.
 	cardRequestLimit        int = 100

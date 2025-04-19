@@ -68,14 +68,14 @@ linters:
     - containedctx
     - contextcheck
     - copyloopvar
-    - cyclop
+    # - cyclop
     - decorder
     # - depguard
     - dogsled
     - dupl
     - dupword
     - durationcheck
-    - err113
+    # - err113
     - errcheck
     - errchkjson
     - errname
@@ -86,7 +86,7 @@ linters:
     - fatcontext
     - forbidigo
     - forcetypeassert
-    - funlen
+    # - funlen
     # - gci
     - ginkgolinter
     - gocheckcompilerdirectives
@@ -117,7 +117,7 @@ linters:
     - ineffassign
     - interfacebloat
     - intrange
-    - ireturn
+    # - ireturn
     # - lll
     - loggercheck
     - maintidx

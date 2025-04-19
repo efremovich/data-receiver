@@ -20,6 +20,8 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/offerfeedrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/promotionrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/promotionstatsrepo"
 	pvzrepo "github.com/efremovich/data-receiver/internal/usecases/repository/pvz"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/salerepo"
@@ -44,6 +46,7 @@ type ReceiverCoreService interface {
 	ReceiveSales(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveSaleReport(ctx context.Context, desc entity.PackageDescription) error
 	ReceiveCostFrom1C(ctx context.Context, desc entity.PackageDescription) error
+	ReceivePromotionCompanies(ctx context.Context, desc entity.PackageDescription) error
 
 	OfferFeed(ctx context.Context) ([]byte, error)
 	StockFeed(ctx context.Context) ([]byte, error)
@@ -56,29 +59,31 @@ type ReceiverCoreService interface {
 type receiverCoreServiceImpl struct {
 	cfg conf.Config
 	// Блок репозиотриев
-	sellerRepo       sellerrepo.SellerRepo
-	cardRepo         cardrepo.CardRepo
-	sizerepo         sizerepo.SizeRepo
-	brandRepo        brandrepo.BrandRepo
-	charRepo         charrepo.CharRepo
-	cardCharRepo     cardcharrepo.CardCharRepo
-	barcodeRepo      barcoderepo.BarcodeRepo
-	categoryRepo     categoryrepo.CategoryRepo
-	cardcategoryrepo cardcategoryrepo.CardCategoryRepo
-	dimensionrepo    dimensionrepo.DimensionsRepo
-	mediafilerepo    mediafilerepo.MediaFileRepo
-	pricesizerepo    pricerepo.PriceRepo
-	stockrepo        stockrepo.StockRepo
-	orderrepo        orderrepo.OrderRepo
-	statusrepo       statusrepo.StatusRepo
-	countryrepo      countryrepo.CountryRepo
-	regionrepo       regionrepo.RegoinRepo
-	districtrepo     districtrepo.DistrictRepo
-	salerepo         salerepo.SaleRepo
-	offerfeedrepo    offerfeedrepo.OfferRepo
-	saleReportRepo   salereportrepo.SaleReportRepo
-	pvzrepo          pvzrepo.PvzRepo
-	costrepo         costrepo.CostRepo
+	sellerRepo         sellerrepo.SellerRepo
+	cardRepo           cardrepo.CardRepo
+	sizerepo           sizerepo.SizeRepo
+	brandRepo          brandrepo.BrandRepo
+	charRepo           charrepo.CharRepo
+	cardCharRepo       cardcharrepo.CardCharRepo
+	barcodeRepo        barcoderepo.BarcodeRepo
+	categoryRepo       categoryrepo.CategoryRepo
+	cardcategoryrepo   cardcategoryrepo.CardCategoryRepo
+	dimensionrepo      dimensionrepo.DimensionsRepo
+	mediafilerepo      mediafilerepo.MediaFileRepo
+	pricesizerepo      pricerepo.PriceRepo
+	stockrepo          stockrepo.StockRepo
+	orderrepo          orderrepo.OrderRepo
+	statusrepo         statusrepo.StatusRepo
+	countryrepo        countryrepo.CountryRepo
+	regionrepo         regionrepo.RegoinRepo
+	districtrepo       districtrepo.DistrictRepo
+	salerepo           salerepo.SaleRepo
+	offerfeedrepo      offerfeedrepo.OfferRepo
+	saleReportRepo     salereportrepo.SaleReportRepo
+	pvzrepo            pvzrepo.PvzRepo
+	costrepo           costrepo.CostRepo
+	promotionrepo      promotionrepo.PromotionRepo
+	promotionstatsrepo promotionstatsrepo.PromotionStatsRepo
 
 	seller2cardrepo seller2cardrepo.Seller2CardRepo
 
@@ -120,6 +125,8 @@ func NewPackageReceiverService(
 	saleReportRepo salereportrepo.SaleReportRepo,
 	pvzrepo pvzrepo.PvzRepo,
 	costrepo costrepo.CostRepo,
+	promotionrepo promotionrepo.PromotionRepo,
+	promotionstatsrepo promotionstatsrepo.PromotionStatsRepo,
 
 	brokerPublisher brokerpublisher.BrokerPublisher,
 	apiFetcher map[entity.MarketplaceType][]webapi.ExtAPIFetcher,
@@ -128,30 +135,32 @@ func NewPackageReceiverService(
 	service := receiverCoreServiceImpl{
 		cfg: cfg,
 
-		cardRepo:         cardRepo,
-		sizerepo:         sizerepo,
-		sellerRepo:       sellerRepo,
-		brandRepo:        brandRepo,
-		charRepo:         charRepo,
-		cardCharRepo:     cardcharRepo,
-		barcodeRepo:      barcoderepo,
-		categoryRepo:     categoryRepo,
-		cardcategoryrepo: cardcategoryrepo,
-		dimensionrepo:    dimensionrepo,
-		mediafilerepo:    mediafilerepo,
-		pricesizerepo:    pricesizerepo,
-		stockrepo:        stockrepo,
-		seller2cardrepo:  seller2cardrepo,
-		orderrepo:        orderrepo,
-		statusrepo:       statusrepo,
-		countryrepo:      countryrepo,
-		regionrepo:       regionrepo,
-		districtrepo:     districtrepo,
-		salerepo:         salerepo,
-		offerfeedrepo:    offerfeedrepo,
-		saleReportRepo:   saleReportRepo,
-		pvzrepo:          pvzrepo,
-		costrepo:         costrepo,
+		cardRepo:           cardRepo,
+		sizerepo:           sizerepo,
+		sellerRepo:         sellerRepo,
+		brandRepo:          brandRepo,
+		charRepo:           charRepo,
+		cardCharRepo:       cardcharRepo,
+		barcodeRepo:        barcoderepo,
+		categoryRepo:       categoryRepo,
+		cardcategoryrepo:   cardcategoryrepo,
+		dimensionrepo:      dimensionrepo,
+		mediafilerepo:      mediafilerepo,
+		pricesizerepo:      pricesizerepo,
+		stockrepo:          stockrepo,
+		seller2cardrepo:    seller2cardrepo,
+		orderrepo:          orderrepo,
+		statusrepo:         statusrepo,
+		countryrepo:        countryrepo,
+		regionrepo:         regionrepo,
+		districtrepo:       districtrepo,
+		salerepo:           salerepo,
+		offerfeedrepo:      offerfeedrepo,
+		saleReportRepo:     saleReportRepo,
+		pvzrepo:            pvzrepo,
+		costrepo:           costrepo,
+		promotionrepo:      promotionrepo,
+		promotionstatsrepo: promotionstatsrepo,
 
 		warehouserepo:     warehouserepo,
 		warehousetyperepo: warehousetyperepo,

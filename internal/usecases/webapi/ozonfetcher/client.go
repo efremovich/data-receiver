@@ -2,7 +2,7 @@ package ozonfetcher
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -90,8 +90,8 @@ type apiClientImp struct {
 	metric metrics.Collector
 }
 
-func (wb *apiClientImp) GetCosts(_ context.Context, _ entity.PackageDescription) ([]entity.Cost, error) {
-	return nil, fmt.Errorf("не реализовано")
+func (ozon *apiClientImp) GetCosts(_ context.Context, _ entity.PackageDescription) ([]entity.Cost, error) {
+	return nil, errors.New("не реализовано")
 }
 
 func (ozon *apiClientImp) GetMarketPlace() entity.MarketPlace {
@@ -100,4 +100,9 @@ func (ozon *apiClientImp) GetMarketPlace() entity.MarketPlace {
 
 func (ozon *apiClientImp) Ping(_ context.Context) error {
 	return nil
+}
+
+func (ozon *apiClientImp) GetPromotion(_ context.Context, _ entity.PackageDescription) ([]*entity.Promotion, error) {
+	return nil, errors.New("не реализовано")
+
 }

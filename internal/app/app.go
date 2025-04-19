@@ -24,6 +24,8 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/offerfeedrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/orderrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/pricerepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/promotionrepo"
+	"github.com/efremovich/data-receiver/internal/usecases/repository/promotionstatsrepo"
 	pvzrepo "github.com/efremovich/data-receiver/internal/usecases/repository/pvz"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/regionrepo"
 	"github.com/efremovich/data-receiver/internal/usecases/repository/salerepo"
@@ -225,6 +227,17 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	promotionrepo, err := promotionrepo.NewPromotionRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	promotionstatsrepo, err := promotionstatsrepo.NewPromotionStatsRepo(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
 	// Основной бизнес-сервис.
 	packageReceiverCoreService := usecases.NewPackageReceiverService(
 		conf,
@@ -255,6 +268,8 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		saleReportRepo,
 		pvzRepo,
 		costRepo,
+		promotionrepo,
+		promotionstatsrepo,
 
 		brokerPublisher,
 		apiFetcher,
