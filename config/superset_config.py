@@ -3,11 +3,6 @@ from superset.security import SupersetSecurityManager
 class CustomSecurityManager(SupersetSecurityManager):
     pass
 
-# Отключаем телеметрию
-FEATURE_FLAGS = {
-    "ENABLE_TELEMETRY": False,
-}
-
 # Кеширование в Redis
 CACHE_CONFIG = {
     'CACHE_TYPE': 'RedisCache',
@@ -47,6 +42,7 @@ FEATURE_FLAGS = {
     "DATAPANEL_CLOSED_BY_DEFAULT": True,
     "DASHBOARD_VIRTUALIZATION": True,
     "DASHBOARD_RBAC": True,
+    "ENABLE_TELEMETRY": False,
     "ENABLE_TEMPLATE_PROCESSING": True,
     "ESCAPE_MARKDOWN_HTML": True,
     "LISTVIEWS_DEFAULT_CARD_VIEW": True,
@@ -57,4 +53,7 @@ FEATURE_FLAGS = {
     "ESTIMATE_QUERY_COST": True,
     "TAGGING_SYSTEM": True,
     "HTML_SANITIZATION": False,
+    "THUMBNAILS": True,
+    "THUMBNAILS_SQLA_LISTENERS": True,
+    "TABLES_ALLOW_HTML": True,
 }
