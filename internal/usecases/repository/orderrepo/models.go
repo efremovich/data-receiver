@@ -16,6 +16,7 @@ type orderDB struct {
 	Direction  string  `db:"direction"`
 	Type       string  `db:"type"`
 	Sale       float32 `db:"sale"`
+	IsCancel   bool    `db:"is_cancel"`
 
 	Quantity  int          `db:"quantity"`
 	CreatedAt sql.NullTime `db:"created_at"`
@@ -36,6 +37,7 @@ func convertToDBOrder(_ context.Context, in entity.Order) *orderDB {
 		Quantity:   in.Quantity,
 		Direction:  in.Direction,
 		Type:       in.Type,
+		IsCancel:   in.IsCancel,
 		CreatedAt:  repository.TimeToNullInt(in.CreatedAt),
 		UpdatedAt:  repository.TimeToNullInt(in.UpdatedAt),
 
@@ -54,6 +56,7 @@ func (c orderDB) convertToEntityOrder(_ context.Context) *entity.Order {
 		ExternalID: c.ExternalID,
 		Price:      c.Price,
 		Type:       c.Type,
+		IsCancel:   c.IsCancel,
 		Direction:  c.Direction,
 		Sale:       c.Sale,
 		Quantity:   c.Quantity,

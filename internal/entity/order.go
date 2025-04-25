@@ -10,6 +10,7 @@ type Order struct {
 	Type      string
 	Direction string
 	Sale      float32
+	IsCancel  bool
 
 	Quantity  int
 	CreatedAt time.Time
