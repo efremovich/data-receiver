@@ -57,7 +57,7 @@ func (wb *apiClientImp) GetOrders(ctx context.Context, desc entity.PackageDescri
 
 	req.Header.Set("Authorization", wb.token)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("accept", "application/json")
+	req.Header.Set("Accept", "application/json")
 
 	resp, err := wb.client.Do(req)
 	if err != nil {
@@ -103,7 +103,7 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 		card.VendorID = vendorCode
 
 		status := entity.Status{
-			Name: elem.OrderType,
+			Name: "",
 		}
 
 		region := entity.Region{
@@ -124,13 +124,14 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 		priceSize := entity.PriceSize{
 			Price:        elem.TotalPrice,
 			Discount:     elem.DiscountPercent,
-			SpecialPrice: elem.PriceWithDisc,
+			SpecialPrice: elem.FinishedPrice,
+			UpdatedAt:    time.Now(),
 		}
 
 		order := entity.Order{}
 		order.ExternalID = elem.Srid
 		order.Price = elem.TotalPrice
-		order.Type = elem.OrderType
+		order.IsCancel = elem.IsCancel
 		order.Quantity = 1
 
 		order.CreatedAt, _ = time.Parse("2006-01-02T15:04:05", elem.Date)

@@ -19,9 +19,10 @@ type Card struct {
 }
 
 type Cost struct {
-	VendorCode string `json:"vendor_code"`
-	Title      string `json:"title"`
-	SizeCode   string `json:"size_code"`
-	SizeTitle  string `json:"size_title"`
-	CostPrice  string `json:"cost_price"`
+	VendorCode    string `json:"vendor_code"`
+	Title         string `json:"title"`
+	SizeCode      string `json:"size_code"`
+	SizeTitle     string `json:"size_title"`
+	CostPrice     any    `json:"cost_price"`
+	PurchasePrice any    `json:"purchase_price"`
 }

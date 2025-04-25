@@ -36,7 +36,7 @@ func NewCostRepo(_ context.Context, db *postgresdb.DBConnection) (CostRepo, erro
 func (repo *costRepoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, date time.Time) (*entity.Cost, error) {
 	var result costsDB
 
-	startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
+	startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
 	endOfDay := startOfDay.Add(24 * time.Hour)
 
 	query := `SELECT
@@ -62,6 +62,7 @@ func (repo *costRepoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int6
 
 func (repo *costRepoImpl) Insert(_ context.Context, cost entity.Cost) (*entity.Cost, error) {
 	startOfDay := time.Date(cost.CreatedAt.Year(), cost.CreatedAt.Month(), cost.CreatedAt.Day(), 0, 0, 0, 0, cost.CreatedAt.Location())
+
 	query := `INSERT INTO shop.costs (card_id, amount, created_at, updated_at)
 	VALUES ($1, $2, $3, $4) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
@@ -83,7 +84,7 @@ func (repo *costRepoImpl) Insert(_ context.Context, cost entity.Cost) (*entity.C
 
 func (repo *costRepoImpl) UpdateExecOne(ctx context.Context, in entity.Cost) error {
 	dbModel := convertDBToCost(ctx, &in)
-	startOfDay := time.Date(in.CreatedAt.Year(), in.CreatedAt.Month(), in.CreatedAt.Day(), 0, 0, 0, 0, in.CreatedAt.Location())
+	startOfDay := time.Date(in.CreatedAt.Year(), in.CreatedAt.Month(), in.CreatedAt.Day(), 0, 0, 0, 0, time.UTC)
 
 	query := `UPDATE shop.costs SET card_id = $1, amount=$2, created_at = $3, updated_at = $4 WHERE id = $5`
 

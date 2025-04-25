@@ -19,7 +19,7 @@ type PriceRepo interface {
 	SelectByPriceID(ctx context.Context, cardID int64) ([]*entity.PriceSize, error)
 	SelectByCardIDAndSizeID(ctx context.Context, cardID, sizeID int64) (*entity.PriceSize, error)
 	Insert(ctx context.Context, in entity.PriceSize) (*entity.PriceSize, error)
-	UpdateExecOne(ctx context.Context, in entity.PriceSize) error
+	UpdateExecOne(ctx context.Context, in *entity.PriceSize) error
 
 	Ping(ctx context.Context) error
 	BeginTX(ctx context.Context) (postgresdb.Transaction, error)
@@ -101,10 +101,10 @@ func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, priceID int64) ([
 
 func (repo *charRepoImpl) Insert(ctx context.Context, in entity.PriceSize) (*entity.PriceSize, error) {
 	query := `INSERT INTO shop.price_sizes (price, discount, special_price, size_id, card_id, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+            VALUES ($1, $2, $3, $4, $5, now()) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Price, in.Discount, in.SpecialPrice, in.SizeID, in.CardID, in.UpdatedAt)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Price, in.Discount, in.SpecialPrice, in.SizeID, in.CardID)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.PriceSize) (*ent
 	return &in, nil
 }
 
-func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.PriceSize) error {
+func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in *entity.PriceSize) error {
 	dbModel := convertToDBPrice(ctx, in)
 
 	query := `UPDATE shop.price_sizes SET 

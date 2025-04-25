@@ -136,7 +136,7 @@ func TestPriceRepo(t *testing.T) {
 	newPrice.CardID = modelCard.ID
 	newPrice.SizeID = modelSize.ID
 
-	err = sqlPriceRepo.UpdateExecOne(ctx, newPrice)
+	err = sqlPriceRepo.UpdateExecOne(ctx, &newPrice)
 	if err != nil {
 		t.Fatal(err)
 	}

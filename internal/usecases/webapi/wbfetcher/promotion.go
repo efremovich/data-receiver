@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/efremovich/data-receiver/internal/entity"
@@ -69,9 +70,16 @@ func (wb *apiClientImp) GetPromotionList(ctx context.Context, promoType int) ([]
 	ticker := time.NewTicker(200 * time.Millisecond) // 5 раз в секунду (1000ms/5 = 200ms)
 	defer ticker.Stop()
 
-	for i := range 2 { // response.Adverts {
-		for z := range 1 { // response.Adverts[i].AdvertList {
+	alogger.InfoFromCtx(ctx, "Начали загрузку данных по рекламной компании %d", response.All)
+
+	var counter int
+
+	for i := range response.Adverts {
+		for z := range response.Adverts[i].AdvertList {
 			<-ticker.C
+
+			counter++
+			alogger.InfoFromCtx(ctx, "Получение информации по компании %d из %d", counter, response.All)
 
 			promotion, err := wb.GetPromotionInfo(ctx, response.Adverts[i].AdvertList[z].AdvertID, promoType)
 			if err != nil {
@@ -115,6 +123,8 @@ func (wb *apiClientImp) GetPromotionList(ctx context.Context, promoType int) ([]
 	}
 
 	for i := range chunkFilter {
+		alogger.InfoFromCtx(ctx, "Получение детальной информации по компании %d из %d", i, len(chunkFilter))
+
 		err = wb.GetPromotionStats(ctx, promoMap, chunkFilter[i])
 		if err != nil {
 			return nil, err
@@ -130,7 +140,6 @@ func (wb *apiClientImp) GetPromotionList(ctx context.Context, promoType int) ([]
 
 func (wb *apiClientImp) GetPromotionInfo(ctx context.Context, advertId, promoType int) (*entity.Promotion, error) {
 	promotion := new(entity.Promotion)
-
 	method := promotionInfoMetod
 
 	switch promoType {
@@ -141,55 +150,111 @@ func (wb *apiClientImp) GetPromotionInfo(ctx context.Context, advertId, promoTyp
 	}
 
 	reqURL := fmt.Sprintf("%s%s", advertAPIURL, method)
-	filter := []int{
-		advertId,
-	}
+	filter := []int{advertId}
 
 	bodyData, err := json.Marshal(filter)
 	if err != nil {
 		return promotion, fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", method, err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqURL, bytes.NewReader(bodyData))
-	if err != nil {
-		return nil, fmt.Errorf("%s: ошибка создания запроса: %w", method, err)
+	maxRetries := 3
+	retryDelay := time.Second * 60
+
+	var lastErr error
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqURL, bytes.NewReader(bodyData))
+		if err != nil {
+			return nil, fmt.Errorf("%s: ошибка создания запроса: %w", method, err)
+		}
+
+		req.Header.Set("Authorization", wb.token)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := wb.client.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("%s: ошибка отправки запроса: %w", method, err)
+
+			if attempt < maxRetries {
+				time.Sleep(retryDelay)
+			}
+
+			continue
+		}
+
+		// Обработка статуса 429
+		if resp.StatusCode == http.StatusTooManyRequests {
+			err := resp.Body.Close()
+			if err != nil {
+				return promotion, fmt.Errorf("%s: ошибка закрытия тела ответа: %w", method, err)
+			}
+			// Пытаемся получить время ожидания из заголовка Retry-After
+			retryAfter := resp.Header.Get("X-Ratelimit-Retry")
+			if retryAfter != "" {
+				if seconds, err := strconv.Atoi(retryAfter); err == nil {
+					retryDelay = time.Second * time.Duration(seconds)
+				}
+			}
+
+			lastErr = fmt.Errorf("%s: сервер ответил: %d (Too Many Requests)", method, resp.StatusCode)
+
+			if attempt < maxRetries {
+				time.Sleep(retryDelay)
+			}
+
+			continue
+		}
+
+		// Обработка других ошибок HTTP
+		if resp.StatusCode != http.StatusOK {
+			err := resp.Body.Close()
+			if err != nil {
+				return promotion, fmt.Errorf("%s: ошибка закрытия тела ответа: %w", method, err)
+			}
+
+			lastErr = fmt.Errorf("%s: сервер ответил: %d", method, resp.StatusCode)
+
+			if attempt < maxRetries && resp.StatusCode >= 500 {
+				// Повторяем только для 5xx ошибок
+				time.Sleep(retryDelay)
+
+				continue
+			}
+
+			return promotion, fmt.Errorf("%s: сервер ответил: %d %w", method, resp.StatusCode, entity.ErrPermanent)
+		}
+
+		var response []AdvertList
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			err := resp.Body.Close()
+			if err != nil {
+				return promotion, fmt.Errorf("%s: ошибка закрытия тела ответа: %w", method, err)
+			}
+
+			return promotion, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", promotionListMethod, err)
+		}
+
+		err = resp.Body.Close()
+		if err != nil {
+			return promotion, fmt.Errorf("%s: ошибка закрытия тела ответа: %w", promotionListMethod, err)
+		}
+
+		for _, advert := range response {
+			promotion.ExternalID = int64(advert.AdvertID)
+			promotion.Name = advert.Name
+			promotion.Type = advert.Type
+			promotion.DateStart = advert.StartTime
+			promotion.DateEnd = advert.EndTime
+			promotion.CreateTime = advert.CreateTime
+			promotion.ChangeTime = advert.ChangeTime
+			promotion.Status = advert.Status
+		}
+
+		return promotion, nil
 	}
 
-	req.Header.Set("Authorization", wb.token)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := wb.client.Do(req)
-	if err != nil {
-		return promotion, fmt.Errorf("%s: ошибка отправки запроса: %w", method, err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return promotion, fmt.Errorf("%s: сервер ответил: %d %w", method, resp.StatusCode, entity.ErrPermanent)
-	}
-
-	var response []AdvertList
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return promotion, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", promotionListMethod, err)
-	}
-
-	err = resp.Body.Close()
-	if err != nil {
-		return promotion, fmt.Errorf("%s: ошибка закрытия тела ответа: %w", promotionListMethod, err)
-	}
-
-	for _, advert := range response {
-		promotion.ExternalID = int64(advert.AdvertID)
-		promotion.Name = advert.Name
-		promotion.Type = advert.Type
-		promotion.DateStart = advert.StartTime
-		promotion.DateEnd = advert.EndTime
-		promotion.CreateTime = advert.CreateTime
-		promotion.ChangeTime = advert.ChangeTime
-		promotion.Status = advert.Status
-	}
-
-	return promotion, nil
+	return promotion, lastErr
 }
 
 func (wb *apiClientImp) GetPromotionStats(ctx context.Context, promotions map[int64]*entity.Promotion, chunks []PromotionFilter) error {
@@ -200,78 +265,141 @@ func (wb *apiClientImp) GetPromotionStats(ctx context.Context, promotions map[in
 		return fmt.Errorf("%s: ошибка маршалинга тела запроса: %w", promoFullStatsMethod, err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqURL, bytes.NewReader(bodyData))
-	if err != nil {
-		return fmt.Errorf("%s: ошибка создания запроса: %w", promoFullStatsMethod, err)
-	}
+	maxRetries := 3
+	retryDelay := time.Second * 60
 
-	req.Header.Set("Authorization", wb.token)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
+	var lastErr error
 
-	resp, err := wb.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("%s: ошибка отправки запроса: %w", promoFullStatsMethod, err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-
-		return fmt.Errorf("%s: сервер ответил: %d %s %w", promoFullStatsMethod, resp.StatusCode, string(body), entity.ErrPermanent)
-	}
-
-	var response []PromotionListDetail
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", promoFullStatsMethod, err)
-	}
-
-	err = resp.Body.Close()
-	if err != nil {
-		return fmt.Errorf("%s: ошибка закрытия тела ответа: %w", promoFullStatsMethod, err)
-	}
-
-	// Обрабатываем все полученные данные
-	for _, elem := range response {
-		promotion, ok := promotions[int64(elem.AdvertID)]
-		if !ok {
-			alogger.WarnFromCtx(ctx, "Промо %d не нашлось в карте", elem.AdvertID)
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqURL, bytes.NewReader(bodyData))
+		if err != nil {
+			return fmt.Errorf("%s: ошибка создания запроса: %w", promoFullStatsMethod, err)
 		}
 
-		promotion.Views += elem.Views
-		promotion.Clicks += elem.Clicks
-		promotion.CTR += elem.Ctr
-		promotion.CPC += elem.Cpc
-		promotion.Spent += elem.Sum
-		promotion.Orders += elem.Orders
-		promotion.CR += elem.Cr
-		promotion.SHKs += elem.Shks
-		promotion.OrderAmount += elem.SumPrice
+		req.Header.Set("Authorization", wb.token)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
 
-		for _, days := range elem.Days {
-			for _, apps := range days.Apps {
-				for _, cardPromoDetail := range apps.Nm {
-					promoStats := entity.PromotionStats{}
-					promoStats.Views = cardPromoDetail.Views
-					promoStats.Clicks = cardPromoDetail.Clicks
-					promoStats.CTR = cardPromoDetail.Ctr
-					promoStats.CPC = cardPromoDetail.Cpc
-					promoStats.Spent = cardPromoDetail.Sum
-					promoStats.Orders = cardPromoDetail.Orders
-					promoStats.CR = cardPromoDetail.Cr
-					promoStats.SHKs = cardPromoDetail.Shks
-					promoStats.OrderAmount = cardPromoDetail.SumPrice
-					promoStats.PromotionID = promotion.ID
-					promoStats.CardExternalID = int64(cardPromoDetail.NmID)
-					promoStats.Date = days.Date
-					promoStats.AppType = apps.AppType
+		resp, err := wb.client.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("%s: ошибка отправки запроса: %w", promoFullStatsMethod, err)
 
-					promotion.PromotionStats = append(promotion.PromotionStats, promoStats)
+			if attempt < maxRetries {
+				time.Sleep(retryDelay)
+			}
+
+			continue
+		}
+
+		// Обработка статуса 429
+		if resp.StatusCode == http.StatusTooManyRequests {
+			body, _ := io.ReadAll(resp.Body)
+
+			err := resp.Body.Close()
+			if err != nil {
+				return fmt.Errorf("%s: ошибка закрытия тела ответа: %w", promoFullStatsMethod, err)
+			}
+
+			// Пытаемся получить время ожидания из заголовка Retry-After
+			if retryAfter := resp.Header.Get("Retry-After"); retryAfter != "" {
+				if seconds, err := strconv.Atoi(retryAfter); err == nil {
+					retryDelay = time.Second * time.Duration(seconds)
+				}
+			}
+
+			lastErr = fmt.Errorf("%s: сервер ответил: %d %s (Too Many Requests)", promoFullStatsMethod, resp.StatusCode, string(body))
+
+			if attempt < maxRetries {
+				time.Sleep(retryDelay)
+			}
+
+			continue
+		}
+
+		// Обработка других ошибок HTTP
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+
+			err := resp.Body.Close()
+			if err != nil {
+				return fmt.Errorf("%s: ошибка закрытия тела ответа: %w", promoFullStatsMethod, err)
+			}
+
+			lastErr = fmt.Errorf("%s: сервер ответил: %d %s", promoFullStatsMethod, resp.StatusCode, string(body))
+
+			if attempt < maxRetries && resp.StatusCode >= 500 {
+				// Повторяем только для 5xx ошибок
+				time.Sleep(retryDelay)
+
+				continue
+			}
+
+			return fmt.Errorf("%s: сервер ответил: %d %s %w", promoFullStatsMethod, resp.StatusCode, string(body), entity.ErrPermanent)
+		}
+
+		var response []PromotionListDetail
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			err := resp.Body.Close()
+			if err != nil {
+				return fmt.Errorf("%s: ошибка закрытия тела ответа: %w", promoFullStatsMethod, err)
+			}
+
+			return fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", promoFullStatsMethod, err)
+		}
+
+		err = resp.Body.Close()
+		if err != nil {
+			return fmt.Errorf("%s: ошибка закрытия тела ответа: %w", promoFullStatsMethod, err)
+		}
+
+		alogger.InfoFromCtx(ctx, "обработка данных по рекламным компаниям %d", len(response))
+		// Обрабатываем все полученные данные
+		for _, elem := range response {
+			promotion, ok := promotions[int64(elem.AdvertID)]
+			if !ok {
+				alogger.WarnFromCtx(ctx, "Промо %d не нашлось в карте", elem.AdvertID)
+
+				continue
+			}
+
+			promotion.Views += elem.Views
+			promotion.Clicks += elem.Clicks
+			promotion.CTR += elem.Ctr
+			promotion.CPC += elem.Cpc
+			promotion.Spent += elem.Sum
+			promotion.Orders += elem.Orders
+			promotion.CR += elem.Cr
+			promotion.SHKs += elem.Shks
+			promotion.OrderAmount += elem.SumPrice
+
+			for _, days := range elem.Days {
+				for _, apps := range days.Apps {
+					for _, cardPromoDetail := range apps.Nm {
+						promoStats := entity.PromotionStats{}
+						promoStats.Views = cardPromoDetail.Views
+						promoStats.Clicks = cardPromoDetail.Clicks
+						promoStats.CTR = cardPromoDetail.Ctr
+						promoStats.CPC = cardPromoDetail.Cpc
+						promoStats.Spent = cardPromoDetail.Sum
+						promoStats.Orders = cardPromoDetail.Orders
+						promoStats.CR = cardPromoDetail.Cr
+						promoStats.SHKs = cardPromoDetail.Shks
+						promoStats.OrderAmount = cardPromoDetail.SumPrice
+						promoStats.PromotionID = promotion.ID
+						promoStats.CardExternalID = int64(cardPromoDetail.NmID)
+						promoStats.Date = days.Date
+						promoStats.AppType = apps.AppType
+
+						promotion.PromotionStats = append(promotion.PromotionStats, promoStats)
+					}
 				}
 			}
 		}
+
+		return nil
 	}
 
-	return nil
+	return lastErr
 }
 
 // Разбивает интервал на подынтервалы по maxDays дней.

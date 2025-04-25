@@ -3,6 +3,7 @@ package offerfeedrepo
 import (
 	"context"
 	"database/sql"
+	"strconv"
 	"strings"
 
 	"github.com/efremovich/data-receiver/internal/entity"
@@ -111,7 +112,7 @@ type vkFeedDB struct {
 	Title       string          `db:"title"`
 	VendorCode  string          `db:"code"`
 	Description string          `db:"description"`
-	MediaLinks  string          `db:"media_links"`
+	MediaLinks  sql.NullString  `db:"media_links"`
 	Subject     sql.NullString  `db:"subject"`
 	Color       sql.NullString  `db:"color"`
 	Gender      sql.NullString  `db:"gender"`
@@ -122,13 +123,16 @@ type vkFeedDB struct {
 }
 
 func (c vkFeedDB) ConvertToEntityVKCard(_ context.Context) *entity.VKCard {
-	trimBraces := strings.Trim(c.MediaLinks, "{}")
+	trimBraces := strings.Trim(c.MediaLinks.String, "{}")
 	mediaLinks := strings.Split(trimBraces, ",")
 
 	// Опционально: удаление пробелов вокруг ссылок
 	for i, link := range mediaLinks {
 		mediaLinks[i] = strings.TrimSpace(link)
 	}
+
+	size := processSizeRange(repository.NullStringToString(c.Size))
+
 	return &entity.VKCard{
 		VendorCode:  c.VendorCode,
 		Subject:     repository.NullStringToString(c.Subject),
@@ -138,8 +142,51 @@ func (c vkFeedDB) ConvertToEntityVKCard(_ context.Context) *entity.VKCard {
 		Description: c.Description,
 		MediaLinks:  mediaLinks,
 		Price:       repository.NullFloatToFloat(c.Price),
-		MaxSize:     repository.NullStringToString(c.Size),
+		MaxSize:     size,
 		ExternalID:  repository.NullIntToInt(c.ExternalID),
 		SellerName:  c.SellerName,
 	}
+}
+
+func processSizeRange(sizeRange string) string {
+	parts := strings.Split(sizeRange, " - ")
+	if len(parts) != 2 {
+		return ""
+	}
+
+	leftStr := strings.TrimSpace(parts[0])
+	rightStr := strings.TrimSpace(parts[1])
+
+	// Если оба значения пустые
+	if leftStr == "" && rightStr == "" {
+		return ""
+	}
+
+	// Если одно из значений пустое
+	if leftStr == "" {
+		return rightStr
+	}
+
+	if rightStr == "" {
+		return leftStr
+	}
+
+	// Парсим числовые значения
+	left, err1 := strconv.Atoi(leftStr)
+	right, err2 := strconv.Atoi(rightStr)
+
+	if err1 != nil || err2 != nil {
+		return ""
+	}
+
+	// Сравниваем значения
+	if left == right {
+		return leftStr
+	}
+
+	if left > right {
+		return leftStr
+	}
+
+	return rightStr
 }

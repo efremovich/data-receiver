@@ -14,7 +14,6 @@ import (
 )
 
 func (s *receiverCoreServiceImpl) ReceiveCostFrom1C(ctx context.Context, desc entity.PackageDescription) error {
-
 	clients := s.apiFetcher[desc.Seller]
 
 	g, gCtx := errgroup.WithContext(ctx)
@@ -39,7 +38,7 @@ func (s *receiverCoreServiceImpl) ReceiveCostFrom1C(ctx context.Context, desc en
 
 	if desc.Limit > 0 {
 		p := entity.PackageDescription{
-			PackageType: entity.PackageTypeOrder,
+			PackageType: entity.PackageTypeCostFrom1C,
 
 			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
 			Limit:     desc.Limit - 1,

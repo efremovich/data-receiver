@@ -25,6 +25,10 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
 	err := gw.receivePromotionCompanies(ctx)
 	if err != nil {
+		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении рекламных компаний:%s", err.Error())
+	}
+	err = gw.receiveOrdersWB(ctx)
+	if err != nil {
 		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
 	}
 }
@@ -46,16 +50,16 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 		{"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
 		{"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
 
-		{"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
+		// {"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
 		{"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
 
-		{"Загрузка продаж wildberries", "30 19 * * *", gw.receiveSalesWB},
-		{"Загрузка продаж ozon", "30 19 * * *", gw.receiveSalesOzon},
+		{"Загрузка продаж wildberries", "00 22 * * *", gw.receiveSalesWB},
+		{"Загрузка продаж ozon", "00 22 * * *", gw.receiveSalesOzon},
 
 		{"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
 		{"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
 
-		{"Загрузка себестоимости товара из 1с", "30 17 * * *", gw.receiveCostFrom1C},
+		{"Загрузка себестоимости товара из 1с", "00 22 * * *", gw.receiveCostFrom1C},
 	}
 
 	for _, task := range tasks {
@@ -134,8 +138,8 @@ func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
-	daysToGet := 30 // Количество дней для загрузки
-	delay := 61     // Количество секунд задержки перед следующим запросом
+	daysToGet := 365 // Количество дней для загрузки
+	delay := 61      // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),

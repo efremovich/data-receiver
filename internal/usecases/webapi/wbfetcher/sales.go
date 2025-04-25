@@ -105,7 +105,7 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		card.VendorID = vendorCode
 
 		status := entity.Status{
-			Name: elem.OrderType,
+			Name: "",
 		}
 
 		region := entity.Region{
@@ -125,7 +125,8 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		priceSize := entity.PriceSize{
 			Price:        elem.TotalPrice,
 			Discount:     elem.DiscountPercent,
-			SpecialPrice: elem.PriceWithDisc,
+			SpecialPrice: elem.FinishedPrice,
+			UpdatedAt:    time.Now(),
 		}
 
 		order := &entity.Order{
@@ -135,7 +136,6 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		sale.ExternalID = elem.SaleID
 		sale.Order = order
 		sale.Price = elem.TotalPrice
-		sale.Type = elem.OrderType
 		sale.DiscountP = elem.DiscountPercent
 		sale.ForPay = elem.ForPay
 		sale.FinalPrice = elem.FinishedPrice
