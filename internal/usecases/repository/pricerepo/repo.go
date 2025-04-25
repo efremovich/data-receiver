@@ -19,7 +19,7 @@ type PriceRepo interface {
 	SelectByPriceID(ctx context.Context, cardID int64) ([]*entity.PriceSize, error)
 	SelectByCardIDAndSizeID(ctx context.Context, cardID, sizeID int64) (*entity.PriceSize, error)
 	Insert(ctx context.Context, in entity.PriceSize) (*entity.PriceSize, error)
-	UpdateExecOne(ctx context.Context, in entity.PriceSize) error
+	UpdateExecOne(ctx context.Context, in *entity.PriceSize) error
 
 	Ping(ctx context.Context) error
 	BeginTX(ctx context.Context) (postgresdb.Transaction, error)
@@ -114,7 +114,7 @@ func (repo *charRepoImpl) Insert(ctx context.Context, in entity.PriceSize) (*ent
 	return &in, nil
 }
 
-func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in entity.PriceSize) error {
+func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in *entity.PriceSize) error {
 	dbModel := convertToDBPrice(ctx, in)
 
 	query := `UPDATE shop.price_sizes SET 

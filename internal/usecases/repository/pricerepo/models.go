@@ -18,15 +18,15 @@ type priceSizeDB struct {
 	UpdatedAt    sql.NullTime `db:"updated_at"`
 }
 
-func convertToDBPrice(_ context.Context, in entity.PriceSize) *priceSizeDB {
+func convertToDBPrice(_ context.Context, income *entity.PriceSize) *priceSizeDB {
 	return &priceSizeDB{
-		ID:           in.ID,
-		CardID:       in.CardID,
-		SizeID:       in.SizeID,
-		Price:        in.Price,
-		Discount:     in.Discount,
-		SpecialPrice: in.SpecialPrice,
-		UpdatedAt:    repository.TimeToNullInt(in.UpdatedAt),
+		ID:           income.ID,
+		CardID:       income.CardID,
+		SizeID:       income.SizeID,
+		Price:        income.Price,
+		Discount:     income.Discount,
+		SpecialPrice: income.SpecialPrice,
+		UpdatedAt:    repository.TimeToNullInt(income.UpdatedAt),
 	}
 }
 
@@ -41,4 +41,3 @@ func (c priceSizeDB) convertToEntityPrice(_ context.Context) *entity.PriceSize {
 		UpdatedAt:    c.UpdatedAt.Time,
 	}
 }
-

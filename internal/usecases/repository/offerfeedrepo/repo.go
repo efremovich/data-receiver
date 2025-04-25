@@ -258,7 +258,7 @@ func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkC
 			SELECT
 					card.vendor_code AS code,
 					c.title AS subject,
-					char_color.value AS color,
+ 					SPLIT_PART(char_color.value, ',', 1) AS color,
 					card.title,
 					char_gender.value AS gender,
 					card.description,
@@ -311,6 +311,14 @@ func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkC
 		}
 
 		if repository.NullFloatToFloat(result.Price) == 0 {
+			continue
+		}
+
+		if result.SellerName == "odinc" {
+			continue
+		}
+
+		if len(result.Size.String) == 0 {
 			continue
 		}
 

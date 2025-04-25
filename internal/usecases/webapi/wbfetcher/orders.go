@@ -125,6 +125,7 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 			Price:        elem.TotalPrice,
 			Discount:     elem.DiscountPercent,
 			SpecialPrice: elem.PriceWithDisc,
+			UpdatedAt:    time.Now(),
 		}
 
 		order := entity.Order{}

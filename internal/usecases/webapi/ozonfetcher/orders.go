@@ -87,6 +87,7 @@ func (ozon *apiClientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 						Price:        fData.Price,
 						Discount:     fData.TotalDiscountValue,
 						SpecialPrice: fData.OldPrice,
+						UpdatedAt:    time.Now(),
 					}
 				}
 			}
