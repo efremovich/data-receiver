@@ -27,10 +27,11 @@ func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
 	if err != nil {
 		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении рекламных компаний:%s", err.Error())
 	}
-	err = gw.receiveOrdersWB(ctx)
-	if err != nil {
-		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
-	}
+
+	// err = gw.receiveOrdersWB(ctx)
+	// if err != nil {
+	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
+	// }
 }
 
 type Task struct {

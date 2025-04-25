@@ -83,8 +83,8 @@ func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, d
 func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Order, error) {
 	dbModel := convertToDBOrder(ctx, in)
 
-	query := `INSERT INTO shop.orders (external_id, price, status_id, direction, type, sale, created_at, seller_id, card_id, warehouse_id, region_id, price_size_id)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	query := `INSERT INTO shop.orders (external_id, price, status_id, direction, type, sale, created_at, seller_id, card_id, warehouse_id, region_id, price_size_id, is_cancel)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             RETURNING
               id`
 
@@ -104,6 +104,7 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 		dbModel.WarehouseID,
 		dbModel.RegionID,
 		dbModel.PriceSizeID,
+		dbModel.IsCancel,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка вставки в таблицу orders %w", err)
@@ -133,8 +134,9 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error 
               warehouse_id = $11,
               region_id = $12,
               price_size_id = $13,
+						is_cancel = $14
             WHERE
-              id = $14`
+              id = $15`
 
 	_, err := repo.getWriteConnection().ExecOne(query,
 		dbModel.ExternalID,
@@ -151,6 +153,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error 
 		dbModel.WarehouseID,
 		dbModel.RegionID,
 		dbModel.PriceSizeID,
+		dbModel.IsCancel,
 		dbModel.ID,
 	)
 

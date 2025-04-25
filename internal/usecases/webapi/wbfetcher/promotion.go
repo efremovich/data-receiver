@@ -72,14 +72,9 @@ func (wb *apiClientImp) GetPromotionList(ctx context.Context, promoType int) ([]
 
 	alogger.InfoFromCtx(ctx, "Начали загрузку данных по рекламной компании %d", response.All)
 
-	var counter int
-
 	for i := range response.Adverts {
 		for z := range response.Adverts[i].AdvertList {
 			<-ticker.C
-
-			counter++
-			alogger.InfoFromCtx(ctx, "Получение информации по компании %d из %d", counter, response.All)
 
 			promotion, err := wb.GetPromotionInfo(ctx, response.Adverts[i].AdvertList[z].AdvertID, promoType)
 			if err != nil {
@@ -115,7 +110,7 @@ func (wb *apiClientImp) GetPromotionList(ctx context.Context, promoType int) ([]
 		filters = append(filters, filter)
 	}
 
-	chunkFilter := chunkPromotionFilters(filters, 10, 30)
+	chunkFilter := chunkPromotionFilters(filters, 100, 31)
 
 	promoMap := make(map[int64]*entity.Promotion, len(promotionsList))
 	for _, promotion := range promotionsList {
@@ -123,16 +118,12 @@ func (wb *apiClientImp) GetPromotionList(ctx context.Context, promoType int) ([]
 	}
 
 	for i := range chunkFilter {
-		alogger.InfoFromCtx(ctx, "Получение детальной информации по компании %d из %d", i, len(chunkFilter))
+		alogger.InfoFromCtx(ctx, "Получение дальной информации по компании %d из %d", i, len(chunkFilter))
 
 		err = wb.GetPromotionStats(ctx, promoMap, chunkFilter[i])
 		if err != nil {
 			return nil, err
 		}
-
-		ticker := time.NewTicker(60 * time.Second)
-		// Выждем таймер для получения статистики по каждому интервалу
-		<-ticker.C
 	}
 
 	return promotionsList, nil
@@ -190,7 +181,7 @@ func (wb *apiClientImp) GetPromotionInfo(ctx context.Context, advertId, promoTyp
 				return promotion, fmt.Errorf("%s: ошибка закрытия тела ответа: %w", method, err)
 			}
 			// Пытаемся получить время ожидания из заголовка Retry-After
-			retryAfter := resp.Header.Get("X-Ratelimit-Retry")
+			retryAfter := resp.Header.Get("X-Ratelimit-Reset")
 			if retryAfter != "" {
 				if seconds, err := strconv.Atoi(retryAfter); err == nil {
 					retryDelay = time.Second * time.Duration(seconds)
@@ -213,16 +204,13 @@ func (wb *apiClientImp) GetPromotionInfo(ctx context.Context, advertId, promoTyp
 				return promotion, fmt.Errorf("%s: ошибка закрытия тела ответа: %w", method, err)
 			}
 
-			lastErr = fmt.Errorf("%s: сервер ответил: %d", method, resp.StatusCode)
-
-			if attempt < maxRetries && resp.StatusCode >= 500 {
-				// Повторяем только для 5xx ошибок
-				time.Sleep(retryDelay)
-
-				continue
-			}
-
 			return promotion, fmt.Errorf("%s: сервер ответил: %d %w", method, resp.StatusCode, entity.ErrPermanent)
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			if limitRemaning := resp.Header.Get("X-Ratelimit-Remaining"); limitRemaning == "0" {
+				time.Sleep(retryDelay)
+			}
 		}
 
 		var response []AdvertList
@@ -300,8 +288,8 @@ func (wb *apiClientImp) GetPromotionStats(ctx context.Context, promotions map[in
 				return fmt.Errorf("%s: ошибка закрытия тела ответа: %w", promoFullStatsMethod, err)
 			}
 
-			// Пытаемся получить время ожидания из заголовка Retry-After
-			if retryAfter := resp.Header.Get("Retry-After"); retryAfter != "" {
+			// Пытаемся получить время ожидания из заголовка X-Ratelimit-Retry
+			if retryAfter := resp.Header.Get("X-Ratelimit-Reset"); retryAfter != "" {
 				if seconds, err := strconv.Atoi(retryAfter); err == nil {
 					retryDelay = time.Second * time.Duration(seconds)
 				}
@@ -335,6 +323,12 @@ func (wb *apiClientImp) GetPromotionStats(ctx context.Context, promotions map[in
 			}
 
 			return fmt.Errorf("%s: сервер ответил: %d %s %w", promoFullStatsMethod, resp.StatusCode, string(body), entity.ErrPermanent)
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			if limitRemaning := resp.Header.Get("X-Ratelimit-Remaining"); limitRemaning == "0" {
+				time.Sleep(retryDelay)
+			}
 		}
 
 		var response []PromotionListDetail
