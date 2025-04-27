@@ -23,14 +23,14 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	// err := gw.receivePromotionCompanies(ctx)
-	// if err != nil {
-	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении рекламных компаний:%s", err.Error())
-	// }
-	err := gw.receiveOrdersWB(ctx)
+	err := gw.receivePromotionCompanies(ctx)
 	if err != nil {
-		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
+		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении рекламных компаний:%s", err.Error())
 	}
+	// err := gw.receiveOrdersWB(ctx)
+	// if err != nil {
+	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
+	// }
 }
 
 type Task struct {
@@ -42,24 +42,24 @@ type Task struct {
 func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 	c := cron.New()
 	tasks := []Task{
-		{"Загрузка товарных позиций wildberries", "0 12 * * *", gw.receiveCardsWB}, // Каждый день в 12
-		{"Загрузка товарных позиций ozon", "05 12 * * *", gw.receiveCardsOzon},
-
-		{"Загрузка складов wildberries", "15 12 * * *", gw.receiveWarehousesWB},
-
-		{"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
-		{"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
+		// {"Загрузка товарных позиций wildberries", "0 12 * * *", gw.receiveCardsWB}, // Каждый день в 12
+		// {"Загрузка товарных позиций ozon", "05 12 * * *", gw.receiveCardsOzon},
+		//
+		// {"Загрузка складов wildberries", "15 12 * * *", gw.receiveWarehousesWB},
+		//
+		// {"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
+		// {"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
 
 		// {"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
-		{"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
-
-		{"Загрузка продаж wildberries", "00 22 * * *", gw.receiveSalesWB},
-		{"Загрузка продаж ozon", "00 22 * * *", gw.receiveSalesOzon},
-
-		{"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
-		{"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
-
-		{"Загрузка себестоимости товара из 1с", "00 22 * * *", gw.receiveCostFrom1C},
+		// {"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
+		//
+		// {"Загрузка продаж wildberries", "00 22 * * *", gw.receiveSalesWB},
+		// {"Загрузка продаж ozon", "00 22 * * *", gw.receiveSalesOzon},
+		//
+		// {"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
+		// {"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
+		//
+		// {"Загрузка себестоимости товара из 1с", "00 22 * * *", gw.receiveCostFrom1C},
 	}
 
 	for _, task := range tasks {
