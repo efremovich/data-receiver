@@ -58,7 +58,7 @@ func (repo *charRepoImpl) SelectByCardID(ctx context.Context, cardID int64) ([]*
 		return nil, err
 	}
 
-	var resEntity []*entity.PriceSize
+	resEntity := make([]*entity.PriceSize, 0, len(result))
 	for _, v := range result {
 		resEntity = append(resEntity, v.convertToEntityPrice(ctx))
 	}
@@ -91,7 +91,7 @@ func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, priceID int64) ([
 		return nil, err
 	}
 
-	var resEntity []*entity.PriceSize
+	resEntity := make([]*entity.PriceSize, 0, len(result))
 	for _, v := range result {
 		resEntity = append(resEntity, v.convertToEntityPrice(ctx))
 	}
@@ -99,29 +99,29 @@ func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, priceID int64) ([
 	return resEntity, nil
 }
 
-func (repo *charRepoImpl) Insert(ctx context.Context, in entity.PriceSize) (*entity.PriceSize, error) {
-	query := `INSERT INTO shop.price_sizes (price, discount, special_price, size_id, card_id, updated_at)
+func (repo *charRepoImpl) Insert(ctx context.Context, income entity.PriceSize) (*entity.PriceSize, error) {
+	query := `INSERT INTO shop.price_sizes (price, price_without_discont, price_finish, size_id, card_id, updated_at)
             VALUES ($1, $2, $3, $4, $5, now()) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
 
-	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, in.Price, in.Discount, in.SpecialPrice, in.SizeID, in.CardID)
+	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query, income.Price, income.PriceWithoutDiscount, income.PriceFinish, income.SizeID, income.CardID)
 	if err != nil {
 		return nil, err
 	}
 
-	in.ID = charIDWrap.ID.Int64
+	income.ID = charIDWrap.ID.Int64
 
-	return &in, nil
+	return &income, nil
 }
 
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in *entity.PriceSize) error {
 	dbModel := convertToDBPrice(ctx, in)
 
 	query := `UPDATE shop.price_sizes SET 
-            price = $1, discount = $2, special_price = $3, size_id = $4, card_id = $5, updated_at = now()
+            price = $1, price_without_discont = $2, price_finish = $3, size_id = $4, card_id = $5, updated_at = now()
             WHERE id = $6`
 
-	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Price, dbModel.Discount, dbModel.SpecialPrice, dbModel.SizeID, dbModel.CardID, dbModel.ID)
+	_, err := repo.getWriteConnection().ExecOne(query, dbModel.Price, dbModel.PriceWithoutDiscount, dbModel.PriceFinish, dbModel.SizeID, dbModel.CardID, dbModel.ID)
 	if err != nil {
 		return err
 	}

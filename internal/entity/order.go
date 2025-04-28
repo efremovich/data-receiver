@@ -6,10 +6,10 @@ type Order struct {
 	ID         int64
 	ExternalID string
 
-	Price     float32
+	Price     float64
 	Type      string
 	Direction string
-	Sale      float32
+	Sale      float64
 	IsCancel  bool
 
 	Quantity  int

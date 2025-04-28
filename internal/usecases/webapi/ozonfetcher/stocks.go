@@ -95,9 +95,9 @@ func (ozon *apiClientImp) GetStocks(ctx context.Context, _ entity.PackageDescrip
 				}
 
 				stockMeta.PriceSize = entity.PriceSize{
-					Price:        float32(price),
-					Discount:     float32(oldPrice - price),
-					SpecialPrice: float32(marketingPrice),
+					Price:                price,
+					PriceWithoutDiscount: oldPrice,
+					PriceFinish:          marketingPrice,
 				}
 			}
 		}

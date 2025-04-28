@@ -212,5 +212,12 @@ func (s *receiverCoreServiceImpl) setSale(ctx context.Context, in *entity.Sale) 
 		return nil, err
 	}
 
+	if sale.Price != in.Price {
+		err = s.salerepo.UpdateExecOne(ctx, sale)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return sale, nil
 }

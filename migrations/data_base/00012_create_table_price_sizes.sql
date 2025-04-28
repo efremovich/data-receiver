@@ -5,8 +5,8 @@ CREATE TABLE shop.price_sizes (
 	card_id integer NOT NULL,
 	size_id integer NOT NULL,
 	price numeric(10, 2) NOT NULL,
-	discount numeric(10, 2) NOT NULL,
-	special_price numeric(10, 2) NOT NULL,
+	price_with_discount numeric(10, 2) NOT NULL,
+	price_finish numeric(10, 2) NOT NULL,
 	updated_at timestamp NOT NULL
 );
 
@@ -35,9 +35,9 @@ COMMENT ON COLUMN shop.price_sizes.size_id IS 'Размер';
 
 COMMENT ON COLUMN shop.price_sizes.price IS 'Цена';
 
-COMMENT ON COLUMN shop.price_sizes.special_price IS 'Специальная цена';
+COMMENT ON COLUMN shop.price_sizes.price_finish IS 'Окончательная цена';
 
-COMMENT ON COLUMN shop.price_sizes.discount IS 'Скидка';
+COMMENT ON COLUMN shop.price_sizes.price_with_discount IS 'Цена без скидки';
 
 -- +goose StatementEnd
 -- +goose Down

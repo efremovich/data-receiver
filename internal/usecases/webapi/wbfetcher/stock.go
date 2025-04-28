@@ -46,7 +46,7 @@ func (wb *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDescri
 
 	req.Header.Set("Authorization", wb.token)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("accept", "application/json")
+	req.Header.Set("Accept", "application/json")
 
 	resp, err := wb.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
@@ -59,7 +59,7 @@ func (wb *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDescri
 		return nil, fmt.Errorf("%s: ошибка чтения/десериализации тела ответа: %w", methodName, err)
 	}
 
-	var stockMetaList []entity.StockMeta
+	stockMetaList := make([]entity.StockMeta, 0, len(stockResponce))
 
 	for _, elem := range stockResponce {
 		stockMeta := entity.StockMeta{}
@@ -72,9 +72,7 @@ func (wb *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDescri
 		}
 
 		stockMeta.PriceSize = entity.PriceSize{
-			Price:        float32(elem.Price),
-			Discount:     float32(elem.Discount),
-			SpecialPrice: 0,
+			Price: float64(elem.Price),
 		}
 
 		stockMeta.Seller2Card = entity.Seller2Card{

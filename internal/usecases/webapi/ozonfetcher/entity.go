@@ -299,9 +299,9 @@ type OrderRespose struct {
 				Payout               float64  `json:"payout"`
 				ProductID            int      `json:"product_id"`
 				CurrencyCode         string   `json:"currency_code"`
-				OldPrice             float32  `json:"old_price"`
-				Price                float32  `json:"price"`
-				TotalDiscountValue   float32  `json:"total_discount_value"`
+				OldPrice             float64  `json:"old_price"`
+				Price                float64  `json:"price"`
+				TotalDiscountValue   float64  `json:"total_discount_value"`
 				TotalDiscountPercent float64  `json:"total_discount_percent"`
 				Actions              []string `json:"actions"`
 				Picking              any      `json:"picking"`

@@ -47,7 +47,7 @@ func (ozon *apiClientImp) GetSaleReport(ctx context.Context, desc entity.Package
 
 			saleReport.ExternalID = strconv.Itoa(elem.OrderID)
 			saleReport.Quantity = 1
-			saleReport.RetailPrice = product.OldPrice
+			saleReport.RetailPrice = float32(product.OldPrice)
 			saleReport.SalePercent = int(product.TotalDiscountPercent)
 			saleReport.CommissionPercent = float32(product.CommissionPercent)
 			saleReport.RetailPriceWithdiscRub = float32(product.OldPrice)

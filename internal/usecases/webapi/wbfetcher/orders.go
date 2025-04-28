@@ -83,7 +83,7 @@ func (wb *apiClientImp) GetOrders(ctx context.Context, desc entity.PackageDescri
 }
 
 func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
-	var orders []entity.Order
+	orders := make([]entity.Order, 0, len(orderResponce))
 
 	for _, elem := range orderResponce {
 		warehouse := entity.Warehouse{}
@@ -122,15 +122,15 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 		}
 
 		priceSize := entity.PriceSize{
-			Price:        elem.FinishedPrice,
-			Discount:     elem.DiscountPercent,
-			SpecialPrice: elem.PriceWithDisc,
-			UpdatedAt:    time.Now(),
+			Price:                float64(elem.PriceWithDisc),
+			PriceWithoutDiscount: float64(elem.TotalPrice),
+			PriceFinish:          float64(elem.FinishedPrice),
+			UpdatedAt:            time.Now(),
 		}
 
 		order := entity.Order{}
 		order.ExternalID = elem.Srid
-		order.Price = elem.FinishedPrice
+		order.Price = float64(elem.PriceWithDisc)
 		order.IsCancel = elem.IsCancel
 		order.Quantity = 1
 

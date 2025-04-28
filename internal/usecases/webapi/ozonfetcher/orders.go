@@ -12,6 +12,8 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 )
 
+const cancelledStatus string = "cancelled"
+
 //nolint:dupl // похожий метод есть и в sale.go но они задублированны не случайно
 func (ozon *apiClientImp) GetOrders(ctx context.Context, desc entity.PackageDescription) ([]entity.Order, error) {
 	// Загружаем все заказы со всеми возможными статусами
@@ -84,10 +86,10 @@ func (ozon *apiClientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 			for _, fData := range elem.FinancialData.Products {
 				if fData.ProductID == product.Sku {
 					priceSize = entity.PriceSize{
-						Price:        fData.Price,
-						Discount:     fData.TotalDiscountValue,
-						SpecialPrice: fData.OldPrice,
-						UpdatedAt:    time.Now(),
+						Price:                fData.Price,
+						PriceWithoutDiscount: fData.OldPrice,
+						PriceFinish:          fData.Payout,
+						UpdatedAt:            time.Now(),
 					}
 				}
 			}
@@ -97,6 +99,8 @@ func (ozon *apiClientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 			order.Price = priceSize.Price
 			order.Type = elem.Status
 			order.Quantity = product.Quantity
+
+			order.IsCancel = elem.Status == cancelledStatus
 
 			order.CreatedAt = elem.CreatedAt
 

@@ -18,8 +18,8 @@ type OrderRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Order, error)
 	SelectByExternalID(ctx context.Context, externalID string) (*entity.Order, error)
 	SelectByCardIDAndDate(ctx context.Context, cardID int64, date time.Time) (*entity.Order, error)
-	Insert(ctx context.Context, in entity.Order) (*entity.Order, error)
-	UpdateExecOne(ctx context.Context, in entity.Order) error
+	Insert(ctx context.Context, in *entity.Order) (*entity.Order, error)
+	UpdateExecOne(ctx context.Context, in *entity.Order) error
 
 	Ping(ctx context.Context) error
 	BeginTX(ctx context.Context) (postgresdb.Transaction, error)
@@ -80,7 +80,7 @@ func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, d
 	return result.convertToEntityOrder(ctx), nil
 }
 
-func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Order, error) {
+func (repo *repoImpl) Insert(ctx context.Context, in *entity.Order) (*entity.Order, error) {
 	dbModel := convertToDBOrder(ctx, in)
 
 	query := `INSERT INTO shop.orders (external_id, price, status_id, direction, type, sale, created_at, seller_id, card_id, warehouse_id, region_id, price_size_id, is_cancel)
@@ -112,10 +112,10 @@ func (repo *repoImpl) Insert(ctx context.Context, in entity.Order) (*entity.Orde
 
 	in.ID = charIDWrap.ID.Int64
 
-	return &in, nil
+	return in, nil
 }
 
-func (repo *repoImpl) UpdateExecOne(ctx context.Context, in entity.Order) error {
+func (repo *repoImpl) UpdateExecOne(ctx context.Context, in *entity.Order) error {
 	dbModel := convertToDBOrder(ctx, in)
 
 	query := `UPDATE

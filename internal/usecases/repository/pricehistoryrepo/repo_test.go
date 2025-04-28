@@ -93,11 +93,11 @@ func TestPriceRepo(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	newPrice := entity.PriceSize{
-		Price:        5.5,
-		Discount:     1.5,
-		SpecialPrice: 8.0,
-		CardID:       modelCard.ID,
-		SizeID:       modelSize.ID,
+		Price:                5.5,
+		PriceWithoutDiscount: 1.5,
+		PriceFinish:          8.0,
+		CardID:               modelCard.ID,
+		SizeID:               modelSize.ID,
 	}
 
 	modelPriceSize, err := sqlPriceRepo.Insert(ctx, newPrice)
@@ -142,8 +142,8 @@ func TestPriceRepo(t *testing.T) {
 	}
 	for _, model := range models {
 		assert.Equal(t, model.Price, newPriceHistory.Price)
-		assert.Equal(t, model.Discount, newPriceHistory.Discount)
-		assert.Equal(t, model.SpecialPrice, newPriceHistory.SpecialPrice)
+		assert.Equal(t, model.PriceWithoutDiscount, newPriceHistory.Discount)
+		assert.Equal(t, model.PriceFinish, newPriceHistory.SpecialPrice)
 	}
 
 	// Обновление

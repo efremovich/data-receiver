@@ -56,7 +56,7 @@ func TestOrderRepo(t *testing.T) {
 	// Создание карточки
 	sqlCardRepo, err := cardrepo.NewCardRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newCard := entity.Card{
 		VendorID:    uuid.NewString(),
@@ -71,7 +71,7 @@ func TestOrderRepo(t *testing.T) {
 	}
 	sqlRepo, err := orderrepo.NewOrderRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newOrder := entity.Order{
 		ID:         0,
@@ -88,7 +88,7 @@ func TestOrderRepo(t *testing.T) {
 		Card:       modelCard,
 	}
 	// Создание
-	model, err := sqlRepo.Insert(ctx, newOrder)
+	model, err := sqlRepo.Insert(ctx, &newOrder)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +112,7 @@ func TestOrderRepo(t *testing.T) {
 	newOrder.ExternalID = uuid.NewString()
 	newOrder.Price = 88.22
 
-	err = sqlRepo.UpdateExecOne(ctx, newOrder)
+	err = sqlRepo.UpdateExecOne(ctx, &newOrder)
 	if err != nil {
 		t.Fatal(err)
 	}

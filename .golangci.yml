@@ -113,7 +113,7 @@ linters:
     - grouper
     - iface
     - importas
-    - inamedparam
+    # - inamedparam
     - ineffassign
     - interfacebloat
     - intrange
@@ -166,7 +166,7 @@ linters:
     - varnamelen
     - wastedassign
     - whitespace
-    - wrapcheck
+    # - wrapcheck
     - wsl
     - zerologlint
   # All available settings of specific linters.

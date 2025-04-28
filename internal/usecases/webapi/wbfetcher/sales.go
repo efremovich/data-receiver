@@ -123,10 +123,10 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		}
 
 		priceSize := entity.PriceSize{
-			Price:        elem.PriceWithDisc,
-			Discount:     elem.DiscountPercent,
-			SpecialPrice: elem.PriceWithDisc,
-			UpdatedAt:    time.Now(),
+			Price:                float64(elem.PriceWithDisc),
+			PriceWithoutDiscount: float64(elem.TotalPrice),
+			PriceFinish:          float64(elem.FinishedPrice),
+			UpdatedAt:            time.Now(),
 		}
 
 		order := &entity.Order{
@@ -135,10 +135,10 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		sale := entity.Sale{}
 		sale.ExternalID = elem.SaleID
 		sale.Order = order
-		sale.Price = elem.FinishedPrice
-		sale.DiscountP = elem.DiscountPercent
-		sale.ForPay = elem.ForPay
-		sale.FinalPrice = elem.FinishedPrice
+		sale.Price = float64(elem.PriceWithDisc)
+		sale.DiscountP = float64(elem.DiscountPercent)
+		sale.ForPay = float64(elem.ForPay)
+		sale.FinalPrice = float64(elem.FinishedPrice)
 
 		sale.CreatedAt, _ = time.Parse("2006-01-02T15:04:05", elem.Date)
 

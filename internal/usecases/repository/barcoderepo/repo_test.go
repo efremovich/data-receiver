@@ -95,11 +95,11 @@ func TestBarcodeRepo(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	newPrice := entity.PriceSize{
-		Price:        5.5,
-		Discount:     1.5,
-		SpecialPrice: 8.0,
-		SizeID:       modelSize.ID,
-		CardID:       modelCard.ID,
+		Price:                5.5,
+		PriceWithoutDiscount: 8.0,
+		PriceFinish:          8.0,
+		SizeID:               modelSize.ID,
+		CardID:               modelCard.ID,
 	}
 
 	modelPrice, err := sqlPriceRepo.Insert(ctx, newPrice)

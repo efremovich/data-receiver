@@ -45,7 +45,7 @@ func TestStockRepo(t *testing.T) {
 	// Создание Brand
 	sqlRepo, err := brandrepo.NewBrandRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 
 	newBrand := entity.Brand{
@@ -59,7 +59,7 @@ func TestStockRepo(t *testing.T) {
 	// Создание карточки
 	sqlCardRepo, err := cardrepo.NewCardRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newCard := entity.Card{
 		ExternalID:  0,
@@ -77,7 +77,7 @@ func TestStockRepo(t *testing.T) {
 	// Создание Size
 	sqlSizeRepo, err := sizerepo.NewSizeRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newSize := entity.Size{
 		TechSize: uuid.NewString(),
@@ -92,14 +92,14 @@ func TestStockRepo(t *testing.T) {
 	// Создание цены
 	sqlPriceRepo, err := pricerepo.NewPriceRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newPrice := entity.PriceSize{
-		Price:        5.5,
-		Discount:     1.5,
-		SpecialPrice: 8.0,
-		CardID:       modelCard.ID,
-		SizeID:       modelSize.ID,
+		Price:                5.5,
+		PriceWithoutDiscount: 8.0,
+		PriceFinish:          8.0,
+		CardID:               modelCard.ID,
+		SizeID:               modelSize.ID,
 	}
 
 	modelPrice, err := sqlPriceRepo.Insert(ctx, newPrice)
@@ -109,7 +109,7 @@ func TestStockRepo(t *testing.T) {
 
 	sqlBarcodeRepo, err := barcoderepo.NewBarcodeRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newBarcode := entity.Barcode{
 		Barcode:     uuid.NewString(),
@@ -123,7 +123,7 @@ func TestStockRepo(t *testing.T) {
 
 	sqlWarehouseTypeRepo, err := warehousetyperepo.NewWarehouseTypeRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newWarehouseType := entity.WarehouseType{
 		Title: uuid.NewString(),
@@ -136,7 +136,7 @@ func TestStockRepo(t *testing.T) {
 	// Создание warehouse
 	sqlWarehouseRepo, err := warehouserepo.NewWarehouseRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newWarehouse := entity.Warehouse{
 		ExternalID: 0,
@@ -153,7 +153,7 @@ func TestStockRepo(t *testing.T) {
 
 	sqlStockRepo, err := stockrepo.NewStockRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newStock := entity.Stock{
 		Quantity:    55,

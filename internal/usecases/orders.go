@@ -215,11 +215,18 @@ func (s *receiverCoreServiceImpl) getOrderByExternalID(ctx context.Context, exte
 func (s *receiverCoreServiceImpl) setOrder(ctx context.Context, in *entity.Order) (*entity.Order, error) {
 	order, err := s.orderrepo.SelectByExternalID(ctx, in.ExternalID)
 	if errors.Is(err, ErrObjectNotFound) {
-		order, err = s.orderrepo.Insert(ctx, *in)
+		order, err = s.orderrepo.Insert(ctx, in)
 	}
 
 	if err != nil {
 		return nil, err
+	}
+
+	if order.Price != in.Price {
+		err = s.orderrepo.UpdateExecOne(ctx, order)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return order, nil

@@ -12,11 +12,11 @@ type saleDB struct {
 	ID         int64  `db:"id"`
 	ExternalID string `db:"external_id"`
 
-	Price      float32 `db:"price"`
-	Discount   float32 `db:"discount"`
-	FinalPrice float32 `db:"final_price"`
+	Price      float64 `db:"price"`
+	Discount   float64 `db:"discount"`
+	FinalPrice float64 `db:"final_price"`
 	Type       string  `db:"type"`
-	ForPay     float32 `db:"for_pay"`
+	ForPay     float64 `db:"for_pay"`
 
 	Quantity  int          `db:"quantity"`
 	CreatedAt sql.NullTime `db:"created_at"`

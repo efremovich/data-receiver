@@ -11,11 +11,11 @@ import (
 type orderDB struct {
 	ID         int64   `db:"id"`
 	ExternalID string  `db:"external_id"`
-	Price      float32 `db:"price"`
+	Price      float64 `db:"price"`
 	StatusID   int64   `db:"status_id"`
 	Direction  string  `db:"direction"`
 	Type       string  `db:"type"`
-	Sale       float32 `db:"sale"`
+	Sale       float64 `db:"sale"`
 	IsCancel   bool    `db:"is_cancel"`
 
 	Quantity  int          `db:"quantity"`
@@ -29,24 +29,24 @@ type orderDB struct {
 	PriceSizeID int64 `db:"price_size_id"`
 }
 
-func convertToDBOrder(_ context.Context, in entity.Order) *orderDB {
+func convertToDBOrder(_ context.Context, income *entity.Order) *orderDB {
 	return &orderDB{
-		ID:         in.ID,
-		ExternalID: in.ExternalID,
-		Price:      in.Price,
-		Quantity:   in.Quantity,
-		Direction:  in.Direction,
-		Type:       in.Type,
-		IsCancel:   in.IsCancel,
-		CreatedAt:  repository.TimeToNullInt(in.CreatedAt),
-		UpdatedAt:  repository.TimeToNullInt(in.UpdatedAt),
+		ID:         income.ID,
+		ExternalID: income.ExternalID,
+		Price:      income.Price,
+		Quantity:   income.Quantity,
+		Direction:  income.Direction,
+		Type:       income.Type,
+		IsCancel:   income.IsCancel,
+		CreatedAt:  repository.TimeToNullInt(income.CreatedAt),
+		UpdatedAt:  repository.TimeToNullInt(income.UpdatedAt),
 
-		StatusID:    in.Status.ID,
-		SellerID:    in.Seller.ID,
-		WarehouseID: in.Warehouse.ID,
-		RegionID:    in.Region.ID,
-		CardID:      in.Card.ID,
-		PriceSizeID: in.PriceSize.ID,
+		StatusID:    income.Status.ID,
+		SellerID:    income.Seller.ID,
+		WarehouseID: income.Warehouse.ID,
+		RegionID:    income.Region.ID,
+		CardID:      income.Card.ID,
+		PriceSizeID: income.PriceSize.ID,
 	}
 }
 

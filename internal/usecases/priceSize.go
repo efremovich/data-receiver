@@ -23,8 +23,8 @@ func (s *receiverCoreServiceImpl) setPriceSize(ctx context.Context, income entit
 	}
 
 	if priceSize.Price != income.Price ||
-		priceSize.Discount != income.Discount ||
-		priceSize.SpecialPrice != income.SpecialPrice {
+		priceSize.PriceWithoutDiscount != income.PriceWithoutDiscount ||
+		priceSize.PriceFinish != income.PriceFinish {
 		err = s.pricesizerepo.UpdateExecOne(ctx, priceSize)
 		if err != nil {
 			return nil, fmt.Errorf("ошибка обновления данных о ценовой базе модуль pricesizes:%w", err)

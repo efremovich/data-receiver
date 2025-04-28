@@ -83,9 +83,9 @@ func (ozon *apiClientImp) GetSales(ctx context.Context, desc entity.PackageDescr
 			for _, fData := range elem.FinancialData.Products {
 				if fData.ProductID == product.Sku {
 					priceSize = entity.PriceSize{
-						Price:        fData.Price,
-						Discount:     fData.TotalDiscountValue,
-						SpecialPrice: fData.OldPrice,
+						Price:                fData.Price,
+						PriceWithoutDiscount: fData.OldPrice,
+						PriceFinish:          fData.Payout,
 					}
 				}
 			}
