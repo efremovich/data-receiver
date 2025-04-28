@@ -124,7 +124,7 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 		priceSize := entity.PriceSize{
 			Price:                float64(elem.PriceWithDisc),
 			PriceWithoutDiscount: float64(elem.TotalPrice),
-			PriceFinish:          float64(elem.FinishedPrice),
+			PriceFinal:           float64(elem.FinishedPrice),
 			UpdatedAt:            time.Now(),
 		}
 

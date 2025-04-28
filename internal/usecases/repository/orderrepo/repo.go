@@ -134,7 +134,7 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in *entity.Order) error
               warehouse_id = $11,
               region_id = $12,
               price_size_id = $13,
-						is_cancel = $14
+							is_cancel = $14
             WHERE
               id = $15`
 

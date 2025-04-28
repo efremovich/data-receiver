@@ -95,7 +95,7 @@ func TestPriceRepo(t *testing.T) {
 	newPrice := entity.PriceSize{
 		Price:                5.5,
 		PriceWithoutDiscount: 1.5,
-		PriceFinish:          8.0,
+		PriceFinal:           8.0,
 		CardID:               modelCard.ID,
 		SizeID:               modelSize.ID,
 	}
@@ -143,7 +143,7 @@ func TestPriceRepo(t *testing.T) {
 	for _, model := range models {
 		assert.Equal(t, model.Price, newPriceHistory.Price)
 		assert.Equal(t, model.PriceWithoutDiscount, newPriceHistory.Discount)
-		assert.Equal(t, model.PriceFinish, newPriceHistory.SpecialPrice)
+		assert.Equal(t, model.PriceFinal, newPriceHistory.SpecialPrice)
 	}
 
 	// Обновление

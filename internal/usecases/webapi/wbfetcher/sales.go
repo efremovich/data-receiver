@@ -125,7 +125,7 @@ func fillSaleStruct(saleResponce []SalesResponse) []entity.Sale {
 		priceSize := entity.PriceSize{
 			Price:                float64(elem.PriceWithDisc),
 			PriceWithoutDiscount: float64(elem.TotalPrice),
-			PriceFinish:          float64(elem.FinishedPrice),
+			PriceFinal:           float64(elem.FinishedPrice),
 			UpdatedAt:            time.Now(),
 		}
 

@@ -9,6 +9,7 @@ CREATE TABLE shop.orders (
     direction text,
     type text,
     sale numeric(10, 2),
+    quantity integer,
     is_cancel boolean DEFAULT false,
     card_id integer NOT NULL,
     seller_id integer NOT NULL,
@@ -70,6 +71,8 @@ COMMENT ON COLUMN shop.orders.direction IS 'Направление заказа'
 COMMENT ON COLUMN shop.orders.type IS 'Тип заказа';
 
 COMMENT ON COLUMN shop.orders.sale IS 'Скидка (СПП)';
+
+COMMENT on COLUMN shop.orders.quantity IS 'Количество';
 
 COMMENT on COLUMN shop.orders.is_cancel IS 'Является ли заказ отмененным';
 

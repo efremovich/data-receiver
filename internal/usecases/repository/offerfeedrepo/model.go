@@ -185,8 +185,8 @@ func processSizeRange(sizeRange string) string {
 	}
 
 	if left > right {
-		return leftStr
+		return rightStr + " - " + leftStr
 	}
 
-	return rightStr
+	return leftStr + " - " + rightStr
 }

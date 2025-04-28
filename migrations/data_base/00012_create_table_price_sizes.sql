@@ -6,7 +6,7 @@ CREATE TABLE shop.price_sizes (
 	size_id integer NOT NULL,
 	price numeric(10, 2) NOT NULL,
 	price_with_discount numeric(10, 2) NOT NULL,
-	price_finish numeric(10, 2) NOT NULL,
+	price_final numeric(10, 2) NOT NULL,
 	updated_at timestamp NOT NULL
 );
 
@@ -35,7 +35,7 @@ COMMENT ON COLUMN shop.price_sizes.size_id IS 'Размер';
 
 COMMENT ON COLUMN shop.price_sizes.price IS 'Цена';
 
-COMMENT ON COLUMN shop.price_sizes.price_finish IS 'Окончательная цена';
+COMMENT ON COLUMN shop.price_sizes.price_final IS 'Окончательная цена';
 
 COMMENT ON COLUMN shop.price_sizes.price_with_discount IS 'Цена без скидки';
 

@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/efremovich/data-receiver/internal/entity"
-	"github.com/efremovich/data-receiver/internal/usecases/repository"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
 
@@ -306,23 +305,24 @@ func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkC
 	vkCards := make([]*entity.VKCard, 0, len(results))
 
 	for _, result := range results {
-		if repository.NullStringToString(result.Size) == " - " {
-			continue
-		}
-
-		if repository.NullFloatToFloat(result.Price) == 0 {
-			continue
-		}
-
-		if result.SellerName == "odinc" {
-			continue
-		}
-
-		if len(result.Size.String) == 0 {
-			continue
-		}
-
 		vkCard := result.ConvertToEntityVKCard(ctx)
+
+		if vkCard.Price == 0 {
+			continue
+		}
+
+		if vkCard.SellerName == "odinc" {
+			continue
+		}
+
+		if len(vkCard.MediaLinks) == 0 {
+			continue
+		}
+
+		if len(vkCard.MaxSize) == 0 {
+			continue
+		}
+
 		vkCards = append(vkCards, vkCard)
 	}
 

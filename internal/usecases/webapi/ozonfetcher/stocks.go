@@ -97,7 +97,7 @@ func (ozon *apiClientImp) GetStocks(ctx context.Context, _ entity.PackageDescrip
 				stockMeta.PriceSize = entity.PriceSize{
 					Price:                price,
 					PriceWithoutDiscount: oldPrice,
-					PriceFinish:          marketingPrice,
+					PriceFinal:           marketingPrice,
 				}
 			}
 		}
@@ -308,7 +308,7 @@ func (ozon *apiClientImp) getSupplyList(ctx context.Context) ([]int, error) {
 		resp, err := ozon.client.Do(req)
 
 		if err != nil || resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", supplyOrderListMethod, err.Error())
+			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", supplyOrderListMethod, err)
 		}
 		defer resp.Body.Close()
 

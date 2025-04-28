@@ -88,7 +88,7 @@ func (ozon *apiClientImp) GetOrders(ctx context.Context, desc entity.PackageDesc
 					priceSize = entity.PriceSize{
 						Price:                fData.Price,
 						PriceWithoutDiscount: fData.OldPrice,
-						PriceFinish:          fData.Payout,
+						PriceFinal:           fData.Payout,
 						UpdatedAt:            time.Now(),
 					}
 				}

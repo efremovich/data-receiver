@@ -30,25 +30,25 @@ type saleDB struct {
 	PriceSizeID int64 `db:"price_size_id"`
 }
 
-func convertToDBSale(_ context.Context, in *entity.Sale) *saleDB {
+func convertToDBSale(_ context.Context, income *entity.Sale) *saleDB {
 	return &saleDB{
-		ID:         in.ID,
-		ExternalID: in.ExternalID,
-		Price:      in.Price,
-		Discount:   in.DiscountP,
-		FinalPrice: in.FinalPrice,
-		Type:       in.Type,
-		ForPay:     in.ForPay,
-		Quantity:   in.Quantity,
-		CreatedAt:  repository.TimeToNullInt(in.CreatedAt),
-		UpdatedAt:  repository.TimeToNullInt(in.UpdatedAt),
+		ID:         income.ID,
+		ExternalID: income.ExternalID,
+		Price:      income.Price,
+		Discount:   income.DiscountP,
+		FinalPrice: income.FinalPrice,
+		Type:       income.Type,
+		ForPay:     income.ForPay,
+		Quantity:   income.Quantity,
+		CreatedAt:  repository.TimeToNullInt(income.CreatedAt),
+		UpdatedAt:  repository.TimeToNullInt(income.UpdatedAt),
 
-		OrderID:     in.Order.ID,
-		SellerID:    in.Seller.ID,
-		CardID:      in.Card.ID,
-		WarehouseID: in.Warehouse.ID,
-		RegionID:    in.Region.ID,
-		PriceSizeID: in.PriceSize.ID,
+		OrderID:     income.Order.ID,
+		SellerID:    income.Seller.ID,
+		CardID:      income.Card.ID,
+		WarehouseID: income.Warehouse.ID,
+		RegionID:    income.Region.ID,
+		PriceSizeID: income.PriceSize.ID,
 	}
 }
 

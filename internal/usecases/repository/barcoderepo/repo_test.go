@@ -97,7 +97,7 @@ func TestBarcodeRepo(t *testing.T) {
 	newPrice := entity.PriceSize{
 		Price:                5.5,
 		PriceWithoutDiscount: 8.0,
-		PriceFinish:          8.0,
+		PriceFinal:           8.0,
 		SizeID:               modelSize.ID,
 		CardID:               modelCard.ID,
 	}

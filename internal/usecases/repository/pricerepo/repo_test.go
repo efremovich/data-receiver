@@ -93,7 +93,7 @@ func TestPriceRepo(t *testing.T) {
 	newPrice := entity.PriceSize{
 		Price:                5.5,
 		PriceWithoutDiscount: 1.5,
-		PriceFinish:          8.0,
+		PriceFinal:          8.0,
 		CardID:               modelCard.ID,
 		SizeID:               modelSize.ID,
 	}
@@ -105,7 +105,7 @@ func TestPriceRepo(t *testing.T) {
 	}
 	assert.Equal(t, model.Price, newPrice.Price)
 	assert.Equal(t, model.PriceWithoutDiscount, newPrice.PriceWithoutDiscount)
-	assert.Equal(t, model.PriceFinish, newPrice.PriceFinish)
+	assert.Equal(t, model.PriceFinal, newPrice.PriceFinal)
 
 	// Выборка по ID
 	model, err = sqlPriceRepo.SelectByID(ctx, model.ID)
@@ -115,7 +115,7 @@ func TestPriceRepo(t *testing.T) {
 
 	assert.Equal(t, model.Price, newPrice.Price)
 	assert.Equal(t, model.PriceWithoutDiscount, newPrice.PriceWithoutDiscount)
-	assert.Equal(t, model.PriceFinish, newPrice.PriceFinish)
+	assert.Equal(t, model.PriceFinal, newPrice.PriceFinal)
 
 	// Выборка по названию
 	models, err := sqlPriceRepo.SelectByCardID(ctx, modelCard.ID)
@@ -125,13 +125,13 @@ func TestPriceRepo(t *testing.T) {
 	for _, model := range models {
 		assert.Equal(t, model.Price, newPrice.Price)
 		assert.Equal(t, model.PriceWithoutDiscount, newPrice.PriceWithoutDiscount)
-		assert.Equal(t, model.PriceFinish, newPrice.PriceFinish)
+		assert.Equal(t, model.PriceFinal, newPrice.PriceFinal)
 	}
 
 	// Обновление
 	newPrice.Price = 6.6
 	newPrice.PriceWithoutDiscount = 1.6
-	newPrice.PriceFinish = 9.0
+	newPrice.PriceFinal = 9.0
 	newPrice.ID = model.ID
 	newPrice.CardID = modelCard.ID
 	newPrice.SizeID = modelSize.ID
@@ -149,5 +149,5 @@ func TestPriceRepo(t *testing.T) {
 
 	assert.Equal(t, model.Price, newPrice.Price)
 	assert.Equal(t, model.PriceWithoutDiscount, newPrice.PriceWithoutDiscount)
-	assert.Equal(t, model.PriceFinish, newPrice.PriceFinish)
+	assert.Equal(t, model.PriceFinal, newPrice.PriceFinal)
 }
