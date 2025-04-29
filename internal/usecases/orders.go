@@ -9,6 +9,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/alogger"
+	"github.com/efremovich/data-receiver/pkg/jaeger"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -63,6 +64,9 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	var notFoundElements int
 
 	startTime := time.Now()
+	span, ctx := jaeger.StartSpan(ctx, "Запрос заказов")
+
+	defer span.Finish()
 
 	ordersMetaList, err := client.GetOrders(ctx, desc)
 	if err != nil {
@@ -72,17 +76,25 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	s.metricsCollector.AddReceiveReqestTime(time.Since(startTime), "orders", "receive")
 	alogger.InfoFromCtx(ctx, "Получение данных о заказах за %s", desc.UpdatedAt.Format("02.01.2006"))
 
+	span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Получение seller")
+
 	seller, err := s.getSeller(ctx, client.GetMarketPlace())
 	if err != nil {
 		return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль sales:%w", desc.Seller, err))
 	}
 
-	for _, meta := range ordersMetaList {
+	span.Finish()
 
+	for _, meta := range ordersMetaList {
 		meta.Seller = seller
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обработка полученных данных по заказам")
+
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Получение seller2card")
 
 		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
 		_, err = s.getSeller2Card(ctx, meta.Card.ExternalID, seller.ID)
+
+		span.Finish()
 		// Получаем ошибку что такой записи нет, поищем карточку товара в 1с
 		if errors.Is(err, ErrObjectNotFound) {
 			query := make(map[string]string)
@@ -94,28 +106,38 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 				Query:  query,
 			}
 
+			span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Получение seller2card из 1с")
+
 			err := s.ReceiveCards(ctx, descOdinAss)
 			if err != nil {
 				return err
 			}
+
+			span.Finish()
 		} else if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", err))
 		}
 
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Получение getSeller2Card")
 		card, err := s.getCardByVendorID(ctx, meta.Card.VendorID)
+
 		if errors.Is(err, ErrObjectNotFound) {
 			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
-			// TODO Писать эти данные в jaeger
 			notFoundElements++
+
 			continue
 		} else if err != nil {
 			return err
 		}
+
+		span.Finish()
 		// Проверим и создадим связь продавца и товара
 		seller2card := entity.Seller2Card{
 			CardID:   card.ID,
 			SellerID: seller.ID,
 		}
+
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по seller2card")
 
 		_, err = s.setSeller2Card(ctx, seller2card)
 		if err != nil {
@@ -124,15 +146,23 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		meta.Card = card
 
+		span.Finish()
+
 		// Size
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по size")
+
 		size, err := s.setSize(ctx, meta.Size)
 		if err != nil {
 			return err
 		}
 
+		span.Finish()
+
 		// PriceSize
 		meta.PriceSize.CardID = card.ID
 		meta.PriceSize.SizeID = size.ID
+
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по priceSize")
 
 		priceSize, err := s.setPriceSize(ctx, *meta.PriceSize)
 		if err != nil {
@@ -141,26 +171,38 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		meta.PriceSize = priceSize
 
+		span.Finish()
+
 		// Barcode
 		meta.Barcode.SellerID = seller.ID
 		meta.Barcode.PriceSizeID = priceSize.ID
+
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по barcode")
 
 		_, err = s.setBarcode(ctx, *meta.Barcode)
 		if err != nil {
 			return err
 		}
 
+		span.Finish()
+
 		// Warehouse
 		meta.Warehouse.SellerID = seller.ID
+
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по warehouse")
 
 		warehouse, err := s.setWarehouse(ctx, meta.Warehouse)
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных по складам хранения модуль orders:%w", err))
 		}
 
+		span.Finish()
+
 		meta.Warehouse = warehouse
 
 		// Status
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по status")
+
 		status, err := s.setStatus(ctx, meta.Status)
 		if err != nil {
 			return wrapErr(fmt.Errorf("ошибка получения данных по статусу заказа модуль orders:%w", err))
@@ -168,13 +210,21 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		meta.Status = status
 
+		span.Finish()
+
 		// Region
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по country")
+
 		country, err := s.setCountry(ctx, meta.Region.Country)
 		if err != nil {
 			return err
 		}
 
 		meta.Region.Country.ID = country.ID
+
+		span.Finish()
+
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по district")
 
 		district, err := s.setDistrict(ctx, meta.Region.District)
 		if err != nil {
@@ -183,6 +233,10 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		meta.Region.District.ID = district.ID
 
+		span.Finish()
+
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по district")
+
 		region, err := s.setRegion(ctx, *meta.Region)
 		if err != nil {
 			return err
@@ -190,10 +244,16 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		meta.Region = region
 
+		span.Finish()
+
+		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по orderrepo")
+
 		_, err = s.setOrder(ctx, &meta)
 		if err != nil {
 			return err
 		}
+
+		span.Finish()
 	}
 
 	s.metricsCollector.AddReceiveReqestTime(time.Since(startTime), "orders", "write")
@@ -212,17 +272,17 @@ func (s *receiverCoreServiceImpl) getOrderByExternalID(ctx context.Context, exte
 	return order, nil
 }
 
-func (s *receiverCoreServiceImpl) setOrder(ctx context.Context, in *entity.Order) (*entity.Order, error) {
-	order, err := s.orderrepo.SelectByExternalID(ctx, in.ExternalID)
+func (s *receiverCoreServiceImpl) setOrder(ctx context.Context, income *entity.Order) (*entity.Order, error) {
+	order, err := s.orderrepo.SelectByExternalID(ctx, income.ExternalID)
 	if errors.Is(err, ErrObjectNotFound) {
-		order, err = s.orderrepo.Insert(ctx, in)
+		order, err = s.orderrepo.Insert(ctx, income)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if order.Price != in.Price {
+	if order.Price != income.Price {
 		err = s.orderrepo.UpdateExecOne(ctx, order)
 		if err != nil {
 			return nil, err

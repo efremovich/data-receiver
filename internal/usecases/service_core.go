@@ -35,6 +35,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/usecases/repository/warehousetyperepo"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/broker/brokerpublisher"
+	"github.com/efremovich/data-receiver/pkg/jaeger"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 )
 
@@ -94,6 +95,7 @@ type receiverCoreServiceImpl struct {
 	brokerPublisher  brokerpublisher.BrokerPublisher
 	apiFetcher       map[entity.MarketplaceType][]webapi.ExtAPIFetcher
 	metricsCollector metrics.Collector
+	jaeger           jaeger.IJaeger
 }
 
 func NewPackageReceiverService(
@@ -131,6 +133,7 @@ func NewPackageReceiverService(
 	brokerPublisher brokerpublisher.BrokerPublisher,
 	apiFetcher map[entity.MarketplaceType][]webapi.ExtAPIFetcher,
 	metricsCollector metrics.Collector,
+	jaeger jaeger.IJaeger,
 ) ReceiverCoreService {
 	service := receiverCoreServiceImpl{
 		cfg: cfg,
@@ -168,6 +171,7 @@ func NewPackageReceiverService(
 		brokerPublisher:  brokerPublisher,
 		apiFetcher:       apiFetcher,
 		metricsCollector: metricsCollector,
+		jaeger:           jaeger,
 	}
 
 	return &service

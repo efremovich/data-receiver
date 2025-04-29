@@ -14,6 +14,7 @@ type Config struct {
 	ServiceName           string                 `env:"SERVICE_NAME, default=data-receiver"`
 	PGWriterConn          string                 `env:"POSTGRES_WRITER_CONN"`
 	PGReaderConn          string                 `env:"POSTGRES_READER_CONN"`
+	JaegerCollector       string                 `env:"JAEGER_COLLECTOR"`
 	LogLevel              int                    `env:"LOG_LEVEL, default=-4"` // debug = -4, info = 0, warn = 4
 	BrokerConsumerURL     []string               `env:"BROKER_CONSUMER_URL" validate:"required"`
 	BrokerPublisherURL    []string               `env:"BROKER_PUBLISHER_URL" validate:"required"`
