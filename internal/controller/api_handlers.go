@@ -138,8 +138,8 @@ func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
-	daysToGet := 365 // Количество дней для загрузки
-	delay := 61      // Количество секунд задержки перед следующим запросом
+	daysToGet := 3 // Количество дней для загрузки
+	delay := 61    // Количество секунд задержки перед следующим запросом
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
 		UpdatedAt:   time.Now(),

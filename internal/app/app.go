@@ -44,6 +44,7 @@ import (
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/broker/brokerconsumer"
 	"github.com/efremovich/data-receiver/pkg/broker/brokerpublisher"
+	"github.com/efremovich/data-receiver/pkg/jaeger"
 	"github.com/efremovich/data-receiver/pkg/metrics"
 	"github.com/efremovich/data-receiver/pkg/postgresdb"
 )
@@ -62,6 +63,12 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 	metricsCollector, err := metrics.NewMetricCollector(conf.ServiceName)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при создании сборщика метрик: %s", err.Error())
+	}
+
+	j := jaeger.NewJaeger()
+	err = j.Start("data-receiver", conf.JaegerCollector)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка при создании jaeger collector: %w", err)
 	}
 
 	// Брокер издатель.
@@ -273,7 +280,8 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 
 		brokerPublisher,
 		apiFetcher,
-		metricsCollector)
+		metricsCollector,
+		j)
 
 	gw, err := controller.NewGatewayServer(ctx, conf, packageReceiverCoreService, metricsCollector, brokerConsumer)
 	if err != nil {

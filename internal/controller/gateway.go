@@ -100,11 +100,11 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 	}
 
 	// gw.autoupdate(ctx, updateIntervalDefault)
-
-	g, ctx := errgroup.WithContext(ctx)
+	//
+	groups, ctx := errgroup.WithContext(ctx)
 
 	// GRPC
-	g.Go(func() error {
+	groups.Go(func() error {
 		adr := gw.cfg.Gateway.GRPC.Host + ":" + gw.cfg.Gateway.GRPC.Port
 
 		grpcListener, err := reuseport.Listen("tcp4", adr)
@@ -124,7 +124,7 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 	})
 
 	// REST
-	g.Go(func() error {
+	groups.Go(func() error {
 		adr := gw.cfg.Gateway.HTTP.Host + ":" + gw.cfg.Gateway.HTTP.Port
 
 		alogger.InfoFromCtx(ctx, "запуск HTTP сервера на %s", adr)
@@ -137,19 +137,19 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 
 		return nil
 	})
-	g.Go(func() error {
+	groups.Go(func() error {
 		gw.scheduleTasks(ctx)
 
 		return nil
 	})
 
 	// Для теста
-	g.Go(func() error {
+	groups.Go(func() error {
 		gw.runTask(ctx)
 
 		return nil
 	})
-	g.Go(func() error {
+	groups.Go(func() error {
 		<-ctx.Done()
 		gw.grpcServer.GracefulStop()
 		err := gw.httpServer.Shutdown()
@@ -157,7 +157,7 @@ func (gw *grpcGatewayServerImpl) Start(ctx context.Context) error {
 		return err
 	})
 
-	if err := g.Wait(); err != nil {
+	if err := groups.Wait(); err != nil {
 		return fmt.Errorf("ошибка: %w", err)
 	}
 
@@ -170,4 +170,5 @@ func (gw *grpcGatewayServerImpl) gracefulStop() {
 
 	gracefulStopWaitMillisecond := 100
 	time.Sleep(time.Millisecond * time.Duration(gracefulStopWaitMillisecond))
+
 }
