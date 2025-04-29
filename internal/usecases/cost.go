@@ -37,7 +37,7 @@ func (s *receiverCoreServiceImpl) ReceiveCostFrom1C(ctx context.Context, desc en
 	alogger.InfoFromCtx(ctx, "постановка задачи в очередь %d", desc.Limit)
 
 	if desc.Limit > 0 {
-		p := entity.PackageDescription{
+		packet := entity.PackageDescription{
 			PackageType: entity.PackageTypeCostFrom1C,
 
 			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
@@ -46,12 +46,12 @@ func (s *receiverCoreServiceImpl) ReceiveCostFrom1C(ctx context.Context, desc en
 			Delay:     desc.Delay,
 		}
 
-		err := s.brokerPublisher.SendPackage(ctx, &p)
+		err := s.brokerPublisher.SendPackage(ctx, &packet)
 		if err != nil {
 			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
 		}
 
-		alogger.InfoFromCtx(ctx, "Создана очередь для получения заказов на %s", p.UpdatedAt.Format("02.01.2006"))
+		alogger.InfoFromCtx(ctx, "Создана очередь для получения заказов на %s", packet.UpdatedAt.Format("02.01.2006"))
 	} else {
 		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
 	}

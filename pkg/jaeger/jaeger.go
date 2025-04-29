@@ -8,6 +8,7 @@ import (
 	"io"
 
 	opentracing "github.com/opentracing/opentracing-go"
+	client "github.com/uber/jaeger-client-go"
 	config "github.com/uber/jaeger-client-go/config"
 )
 
@@ -18,12 +19,12 @@ type IJaeger interface {
 	Stop() error
 }
 
-// Инициализация IJaeger
+// Инициализация IJaeger.
 func NewJaeger() IJaeger {
 	return new(jaeger)
 }
 
-// jaeger реализация IJaerger
+// jaeger реализация IJaerger.
 type jaeger struct {
 	closer io.Closer
 }
@@ -33,7 +34,7 @@ func (j *jaeger) Start(serviceName, collectorURL string) error {
 	cfg := config.Configuration{
 		ServiceName: serviceName,
 		Sampler: &config.SamplerConfig{
-			Type:  "const",
+			Type:  client.SamplerTypeConst,
 			Param: 1,
 		},
 		Reporter: &config.ReporterConfig{
@@ -47,6 +48,7 @@ func (j *jaeger) Start(serviceName, collectorURL string) error {
 	if err != nil {
 		return fmt.Errorf("jaeger: ошибка инициализации трейсера: %w", err)
 	}
+
 	j.closer = closer
 
 	// Установка трейсера в обертку opentracing

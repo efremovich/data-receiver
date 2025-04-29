@@ -170,4 +170,5 @@ func (gw *grpcGatewayServerImpl) gracefulStop() {
 
 	gracefulStopWaitMillisecond := 100
 	time.Sleep(time.Millisecond * time.Duration(gracefulStopWaitMillisecond))
+
 }

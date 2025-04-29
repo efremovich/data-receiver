@@ -6,28 +6,29 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/efremovich/data-receiver/internal/entity"
 	"github.com/efremovich/data-receiver/internal/usecases/webapi"
 	"github.com/efremovich/data-receiver/pkg/alogger"
 	"github.com/efremovich/data-receiver/pkg/jaeger"
-	"golang.org/x/sync/errgroup"
 )
 
 func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity.PackageDescription) error {
 	clients := s.apiFetcher[desc.Seller]
 
-	g, gCtx := errgroup.WithContext(ctx)
+	group, gCtx := errgroup.WithContext(ctx)
 
 	for _, c := range clients {
 		client := c
 
-		g.Go(func() error {
+		group.Go(func() error {
 			return s.receiveAndSaveOrders(gCtx, client, desc)
 		})
 	}
 
 	// Ждем завершения всех горутин и проверяем наличие ошибок
-	if err := g.Wait(); err != nil {
+	if err := group.Wait(); err != nil {
 		if errors.Is(err, context.Canceled) {
 			alogger.WarnFromCtx(ctx, "Операция была отменена: %v", err)
 			return nil
@@ -38,7 +39,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 	alogger.InfoFromCtx(ctx, "постановка задачи в очередь %d", desc.Limit)
 
 	if desc.Limit > 0 {
-		p := entity.PackageDescription{
+		packet := entity.PackageDescription{
 			PackageType: entity.PackageTypeOrder,
 
 			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
@@ -47,12 +48,12 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 			Delay:     desc.Delay,
 		}
 
-		err := s.brokerPublisher.SendPackage(ctx, &p)
+		err := s.brokerPublisher.SendPackage(ctx, &packet)
 		if err != nil {
 			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
 		}
 
-		alogger.InfoFromCtx(ctx, "Создана очередь для получения заказов на %s", p.UpdatedAt.Format("02.01.2006"))
+		alogger.InfoFromCtx(ctx, "Создана очередь для получения заказов на %s", packet.UpdatedAt.Format("02.01.2006"))
 	} else {
 		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
 	}
@@ -64,200 +65,168 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	var notFoundElements int
 
 	startTime := time.Now()
-	span, ctx := jaeger.StartSpan(ctx, "Запрос заказов")
+	rootSpan, ctx := jaeger.StartSpan(ctx, "receiveAndSaveOrders")
 
-	defer span.Finish()
+	ordersSpan, ctx := jaeger.StartSpan(ctx, fmt.Sprintf("GetOrders from %s", client.GetMarketPlace().Title))
 
 	ordersMetaList, err := client.GetOrders(ctx, desc)
 	if err != nil {
+		rootSpan.SetTag("error", true)
 		return fmt.Errorf("ошибка при получение данных из внешнего источника %s: %w", desc.Seller, err)
 	}
+
+	ordersSpan.Finish()
 
 	s.metricsCollector.AddReceiveReqestTime(time.Since(startTime), "orders", "receive")
 	alogger.InfoFromCtx(ctx, "Получение данных о заказах за %s", desc.UpdatedAt.Format("02.01.2006"))
 
-	span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Получение seller")
+	sellerSpan, sellerCtx := jaeger.StartSpan(ctx, "getSeller")
 
-	seller, err := s.getSeller(ctx, client.GetMarketPlace())
+	seller, err := s.getSeller(sellerCtx, client.GetMarketPlace())
 	if err != nil {
 		return wrapErr(fmt.Errorf("ошибка получения данных о продавце %s модуль sales:%w", desc.Seller, err))
 	}
 
-	span.Finish()
+	sellerSpan.Finish()
 
 	for _, meta := range ordersMetaList {
 		meta.Seller = seller
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обработка полученных данных по заказам")
 
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Получение seller2card")
-
-		// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
-		_, err = s.getSeller2Card(ctx, meta.Card.ExternalID, seller.ID)
-
-		span.Finish()
-		// Получаем ошибку что такой записи нет, поищем карточку товара в 1с
-		if errors.Is(err, ErrObjectNotFound) {
-			query := make(map[string]string)
-			query["barcode"] = meta.Barcode.Barcode
-			query["article"] = meta.Card.VendorID
-
-			descOdinAss := entity.PackageDescription{
-				Seller: "odinc",
-				Query:  query,
-			}
-
-			span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Получение seller2card из 1с")
-
-			err := s.ReceiveCards(ctx, descOdinAss)
-			if err != nil {
-				return err
-			}
-
-			span.Finish()
-		} else if err != nil {
-			return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", err))
-		}
-
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Получение getSeller2Card")
-		card, err := s.getCardByVendorID(ctx, meta.Card.VendorID)
-
-		if errors.Is(err, ErrObjectNotFound) {
-			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
-			notFoundElements++
-
-			continue
-		} else if err != nil {
+		err = s.processSingleOrder(ctx, &meta)
+		if err != nil {
+			rootSpan.SetTag("error", true)
 			return err
 		}
-
-		span.Finish()
-		// Проверим и создадим связь продавца и товара
-		seller2card := entity.Seller2Card{
-			CardID:   card.ID,
-			SellerID: seller.ID,
-		}
-
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по seller2card")
-
-		_, err = s.setSeller2Card(ctx, seller2card)
-		if err != nil {
-			return err
-		}
-
-		meta.Card = card
-
-		span.Finish()
-
-		// Size
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по size")
-
-		size, err := s.setSize(ctx, meta.Size)
-		if err != nil {
-			return err
-		}
-
-		span.Finish()
-
-		// PriceSize
-		meta.PriceSize.CardID = card.ID
-		meta.PriceSize.SizeID = size.ID
-
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по priceSize")
-
-		priceSize, err := s.setPriceSize(ctx, *meta.PriceSize)
-		if err != nil {
-			return err
-		}
-
-		meta.PriceSize = priceSize
-
-		span.Finish()
-
-		// Barcode
-		meta.Barcode.SellerID = seller.ID
-		meta.Barcode.PriceSizeID = priceSize.ID
-
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по barcode")
-
-		_, err = s.setBarcode(ctx, *meta.Barcode)
-		if err != nil {
-			return err
-		}
-
-		span.Finish()
-
-		// Warehouse
-		meta.Warehouse.SellerID = seller.ID
-
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по warehouse")
-
-		warehouse, err := s.setWarehouse(ctx, meta.Warehouse)
-		if err != nil {
-			return wrapErr(fmt.Errorf("ошибка получения данных по складам хранения модуль orders:%w", err))
-		}
-
-		span.Finish()
-
-		meta.Warehouse = warehouse
-
-		// Status
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по status")
-
-		status, err := s.setStatus(ctx, meta.Status)
-		if err != nil {
-			return wrapErr(fmt.Errorf("ошибка получения данных по статусу заказа модуль orders:%w", err))
-		}
-
-		meta.Status = status
-
-		span.Finish()
-
-		// Region
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по country")
-
-		country, err := s.setCountry(ctx, meta.Region.Country)
-		if err != nil {
-			return err
-		}
-
-		meta.Region.Country.ID = country.ID
-
-		span.Finish()
-
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по district")
-
-		district, err := s.setDistrict(ctx, meta.Region.District)
-		if err != nil {
-			return err
-		}
-
-		meta.Region.District.ID = district.ID
-
-		span.Finish()
-
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по district")
-
-		region, err := s.setRegion(ctx, *meta.Region)
-		if err != nil {
-			return err
-		}
-
-		meta.Region = region
-
-		span.Finish()
-
-		span, ctx = jaeger.StartSpan(ctx, "Запрос заказов: Обновление данных по orderrepo")
-
-		_, err = s.setOrder(ctx, &meta)
-		if err != nil {
-			return err
-		}
-
-		span.Finish()
 	}
 
 	s.metricsCollector.AddReceiveReqestTime(time.Since(startTime), "orders", "write")
 	alogger.InfoFromCtx(ctx, "Загружена информация о заказах всего: %d из них не найдено %d", len(ordersMetaList), notFoundElements)
+
+	rootSpan.Finish()
+
+	return nil
+}
+
+func (s *receiverCoreServiceImpl) processSingleOrder(ctx context.Context, meta *entity.Order) error {
+	singleOrderSpan, ctx := jaeger.StartSpan(ctx, "processSingleOrder")
+	defer singleOrderSpan.Finish()
+	// Проверим есть ли товар в базе, в случае отсутствия запросим его в 1с
+	_, err := s.getSeller2Card(ctx, meta.Card.ExternalID, meta.Seller.ID)
+
+	// Получаем ошибку что такой записи нет, поищем карточку товара в 1с
+	if errors.Is(err, ErrObjectNotFound) {
+		query := make(map[string]string)
+		query["barcode"] = meta.Barcode.Barcode
+		query["article"] = meta.Card.VendorID
+
+		descOdinAss := entity.PackageDescription{
+			Seller: "odinc",
+			Query:  query,
+		}
+
+		span, ctx := jaeger.StartSpan(ctx, "getCardFromOdinAs")
+
+		err := s.ReceiveCards(ctx, descOdinAss)
+		if err != nil {
+			return err
+		}
+
+		span.Finish()
+	} else if err != nil {
+		return wrapErr(fmt.Errorf("ошибка получения данных отсутствует связь между продавцом и товаром модуль stocks:%w", err))
+	}
+
+	card, err := s.getCardByVendorID(ctx, meta.Card.VendorID)
+
+	if errors.Is(err, ErrObjectNotFound) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	// Проверим и создадим связь продавца и товара
+	seller2card := entity.Seller2Card{
+		CardID:   card.ID,
+		SellerID: meta.Seller.ID,
+	}
+
+	_, err = s.setSeller2Card(ctx, seller2card)
+	if err != nil {
+		return err
+	}
+
+	meta.Card = card
+
+	// Size
+	size, err := s.setSize(ctx, meta.Size)
+	if err != nil {
+		return err
+	}
+
+	// PriceSize
+	meta.PriceSize.CardID = card.ID
+	meta.PriceSize.SizeID = size.ID
+
+	priceSize, err := s.setPriceSize(ctx, *meta.PriceSize)
+	if err != nil {
+		return err
+	}
+
+	meta.PriceSize = priceSize
+
+	// Barcode
+	meta.Barcode.SellerID = meta.Seller.ID
+	meta.Barcode.PriceSizeID = priceSize.ID
+
+	_, err = s.setBarcode(ctx, *meta.Barcode)
+	if err != nil {
+		return err
+	}
+
+	// Warehouse
+	meta.Warehouse.SellerID = meta.Seller.ID
+
+	warehouse, err := s.setWarehouse(ctx, meta.Warehouse)
+	if err != nil {
+		return wrapErr(fmt.Errorf("ошибка получения данных по складам хранения модуль orders:%w", err))
+	}
+
+	meta.Warehouse = warehouse
+
+	// Status
+	status, err := s.setStatus(ctx, meta.Status)
+	if err != nil {
+		return wrapErr(fmt.Errorf("ошибка получения данных по статусу заказа модуль orders:%w", err))
+	}
+
+	meta.Status = status
+
+	// Region
+	country, err := s.setCountry(ctx, meta.Region.Country)
+	if err != nil {
+		return err
+	}
+
+	meta.Region.Country.ID = country.ID
+
+	district, err := s.setDistrict(ctx, meta.Region.District)
+	if err != nil {
+		return err
+	}
+
+	meta.Region.District.ID = district.ID
+
+	region, err := s.setRegion(ctx, *meta.Region)
+	if err != nil {
+		return err
+	}
+
+	meta.Region = region
+
+	_, err = s.setOrder(ctx, meta)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

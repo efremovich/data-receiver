@@ -65,8 +65,8 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		return nil, fmt.Errorf("ошибка при создании сборщика метрик: %s", err.Error())
 	}
 
-	jaeger := jaeger.NewJaeger()
-	err = jaeger.Start("data-receiver", conf.JaegerCollector)
+	j := jaeger.NewJaeger()
+	err = j.Start("data-receiver", conf.JaegerCollector)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при создании jaeger collector: %w", err)
 	}
@@ -281,7 +281,7 @@ func New(ctx context.Context, conf config.Config) (*Application, error) {
 		brokerPublisher,
 		apiFetcher,
 		metricsCollector,
-		jaeger)
+		j)
 
 	gw, err := controller.NewGatewayServer(ctx, conf, packageReceiverCoreService, metricsCollector, brokerConsumer)
 	if err != nil {
