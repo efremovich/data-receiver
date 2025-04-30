@@ -16,6 +16,7 @@ type Transaction interface {
 	Commit() error
 	Rollback() error
 	RollbackIfNotCommitted() error
+	PrepareNamedContext(ctx context.Context, query string) (*sqlx.NamedStmt, error)
 
 	QueryExecutor
 }
@@ -32,7 +33,7 @@ func (tx *transactionImpl) ExecOne(query string, args ...interface{}) (sql.Resul
 
 	affected, err := res.RowsAffected()
 	if err != nil {
-		alogger.WarnFromCtx(context.Background(), "драйвер не поддерживает RowsAffected(): " + err.Error(), nil, nil, false)
+		alogger.WarnFromCtx(context.Background(), "драйвер не поддерживает RowsAffected(): "+err.Error(), nil, nil, false)
 		return res, nil
 	}
 
@@ -99,6 +100,9 @@ func (TransactionMock) Select(dest interface{}, query string, args ...interface{
 }
 func (TransactionMock) QueryAndScan(dest interface{}, query string, args ...interface{}) error {
 	return nil
+}
+func (tx *transactionImpl) PrepareNamedContext(ctx context.Context, query string) (*sqlx.NamedStmt, error) {
+	return tx.Tx.PrepareNamedContext(ctx, query)
 }
 func (TransactionMock) Ping() error {
 	return nil

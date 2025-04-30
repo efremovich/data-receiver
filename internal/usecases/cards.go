@@ -15,21 +15,23 @@ import (
 func (s *receiverCoreServiceImpl) ReceiveCards(ctx context.Context, desc entity.PackageDescription) error {
 	clients := s.apiFetcher[desc.Seller]
 
-	g, gCtx := errgroup.WithContext(ctx)
+	group, gCtx := errgroup.WithContext(ctx)
 
 	for _, c := range clients {
 		client := c
 
-		g.Go(func() error {
+		group.Go(func() error {
 			return s.receiveAndSaveCard(gCtx, client, desc)
 		})
 	}
 
-	if err := g.Wait(); err != nil {
+	if err := group.Wait(); err != nil {
 		if errors.Is(err, context.Canceled) {
 			alogger.WarnFromCtx(ctx, "Операция была отменена: %v", err)
+
 			return nil
 		}
+
 		return fmt.Errorf("ошибка при обработке клиентов: %w", err)
 	}
 
@@ -50,26 +52,26 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 
 	alogger.InfoFromCtx(ctx, "Начали загрузку карточек товара %d от %s", len(cards), seller.Title)
 
-	for _, in := range cards {
+	for _, income := range cards {
 		s.metricsCollector.IncServiceDocsTaskCounter()
 
 		// Brands
-		brand, err := s.getBrand(ctx, in.Brand, seller)
+		brand, err := s.getBrand(ctx, income.Brand, seller)
 		if err != nil {
 			return err
 		}
 
-		in.Brand = *brand
+		income.Brand = *brand
 
 		// Cards
-		card, err := s.setCard(ctx, in)
+		card, err := s.setCard(ctx, income)
 		if err != nil {
 			return err
 		}
 
 		// Seller2Card
 		seller2card := entity.Seller2Card{
-			ExternalID: in.ExternalID,
+			ExternalID: income.ExternalID,
 			CardID:     card.ID,
 			SellerID:   seller.ID,
 		}
@@ -100,7 +102,8 @@ func (s *receiverCoreServiceImpl) receiveAndSaveCard(ctx context.Context, client
 		}
 
 		// Mediafile
-		card.MediaFile = in.MediaFile
+		card.MediaFile = income.MediaFile
+
 		_, err = s.setMediaFile(ctx, card)
 		if err != nil {
 			return err

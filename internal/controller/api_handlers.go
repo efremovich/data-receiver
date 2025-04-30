@@ -13,10 +13,10 @@ import (
 )
 
 func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty) (*package_receiver.OfferFeedResponse, error) {
-	responce, err := gw.core.OfferFeed(ctx)
+	response, err := gw.core.OfferFeed(ctx)
 
 	offerResp := package_receiver.OfferFeedResponse{
-		Body: string(responce),
+		Body: string(response),
 	}
 
 	return &offerResp, err
@@ -27,7 +27,7 @@ func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
 	// if err != nil {
 	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении рекламных компаний:%s", err.Error())
 	// }
-	err := gw.receiveOrdersWB(ctx)
+	err := gw.receiveCardsWB(ctx)
 	if err != nil {
 		logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении отчета о продажах:%s", err.Error())
 	}
@@ -40,7 +40,7 @@ type Task struct {
 }
 
 func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
-	c := cron.New()
+	cron := cron.New()
 	tasks := []Task{
 		{"Загрузка товарных позиций wildberries", "0 12 * * *", gw.receiveCardsWB}, // Каждый день в 12
 		{"Загрузка товарных позиций ozon", "05 12 * * *", gw.receiveCardsOzon},
@@ -63,7 +63,7 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 	}
 
 	for _, task := range tasks {
-		_, err := c.AddFunc(task.Interval, func() {
+		_, err := cron.AddFunc(task.Interval, func() {
 			if err := task.Function(ctx); err != nil {
 				logger.GetLoggerFromContext(ctx).Errorf("задание %s завершилось с ошибкой: %v", task.Name, err)
 			} else {
@@ -75,7 +75,7 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 		}
 	}
 
-	c.Start()
+	cron.Start()
 	select {} // Block forever
 }
 
@@ -237,6 +237,7 @@ func (gw *grpcGatewayServerImpl) receiveCostFrom1C(ctx context.Context) error {
 		Limit:       daysToGet,
 		Delay:       delay,
 	}
+
 	return gw.core.ReceiveCostFrom1C(ctx, descDescription)
 }
 
@@ -244,5 +245,6 @@ func (gw *grpcGatewayServerImpl) receivePromotionCompanies(ctx context.Context) 
 	descDescription := entity.PackageDescription{
 		Seller: entity.Wildberries,
 	}
+
 	return gw.core.ReceivePromotionCompanies(ctx, descDescription)
 }

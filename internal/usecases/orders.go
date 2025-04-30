@@ -23,7 +23,30 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 		client := c
 
 		group.Go(func() error {
-			return s.receiveAndSaveOrders(gCtx, client, desc)
+			if err := s.receiveAndSaveOrders(gCtx, client, desc); err != nil {
+				return err
+			}
+
+			if desc.Limit > 0 {
+				packet := entity.PackageDescription{
+					PackageType: entity.PackageTypeOrder,
+
+					UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
+					Limit:     desc.Limit - 1,
+					Seller:    desc.Seller,
+					Delay:     desc.Delay,
+				}
+
+				err := s.brokerPublisher.SendPackage(ctx, &packet)
+				if err != nil {
+					return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
+				}
+
+				alogger.InfoFromCtx(ctx, "Создана очередь для получения заказов на %s", packet.UpdatedAt.Format("02.01.2006"))
+			} else {
+				alogger.InfoFromCtx(ctx, "Все элементы обработаны")
+			}
+			return nil
 		})
 	}
 
@@ -37,26 +60,6 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 	}
 
 	alogger.InfoFromCtx(ctx, "постановка задачи в очередь %d", desc.Limit)
-
-	if desc.Limit > 0 {
-		packet := entity.PackageDescription{
-			PackageType: entity.PackageTypeOrder,
-
-			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
-			Limit:     desc.Limit - 1,
-			Seller:    desc.Seller,
-			Delay:     desc.Delay,
-		}
-
-		err := s.brokerPublisher.SendPackage(ctx, &packet)
-		if err != nil {
-			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
-		}
-
-		alogger.InfoFromCtx(ctx, "Создана очередь для получения заказов на %s", packet.UpdatedAt.Format("02.01.2006"))
-	} else {
-		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
-	}
 
 	return nil
 }
@@ -89,7 +92,12 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 	sellerSpan.Finish()
 
+	orders := make([]*entity.Order, 0, len(ordersMetaList))
+	chunkSize := 1000 // Размер чанка
+
 	for _, meta := range ordersMetaList {
+		updateOrderSpan, ctx := jaeger.StartSpan(ctx, "updateOrder Чанк 1000")
+
 		meta.Seller = seller
 
 		err = s.processSingleOrder(ctx, &meta)
@@ -97,8 +105,36 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 			rootSpan.SetTag("error", true)
 			return err
 		}
+
+		orders = append(orders, &meta)
+
+		// Если накопилось 100 заказов - отправляем и очищаем срез
+		if len(orders) == chunkSize {
+			err = s.updateOrders(ctx, orders)
+			if err != nil {
+				rootSpan.SetTag("error", true)
+				return err
+			}
+
+			orders = orders[:0] // Очищаем срез (но сохраняем capacity)
+		}
+
+		updateOrderSpan.Finish()
 	}
 
+	// Отправляем оставшиеся заказы (если есть)
+	if len(orders) > 0 {
+		updateOrderSpan, ctx := jaeger.StartSpan(ctx, fmt.Sprintf("UpdateOrder финал чанк %d", len(orders)))
+
+		err = s.updateOrders(ctx, orders)
+		if err != nil {
+			return err
+		}
+
+		updateOrderSpan.Finish()
+	}
+
+	// Если не нужно делить или деление невозможно, обрабатываем все заказы сразу
 	s.metricsCollector.AddReceiveReqestTime(time.Since(startTime), "orders", "write")
 	alogger.InfoFromCtx(ctx, "Загружена информация о заказах всего: %d из них не найдено %d", len(ordersMetaList), notFoundElements)
 
@@ -223,11 +259,6 @@ func (s *receiverCoreServiceImpl) processSingleOrder(ctx context.Context, meta *
 
 	meta.Region = region
 
-	_, err = s.setOrder(ctx, meta)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -259,6 +290,23 @@ func (s *receiverCoreServiceImpl) setOrder(ctx context.Context, income *entity.O
 	}
 
 	return order, nil
+}
+func (s *receiverCoreServiceImpl) updateOrders(ctx context.Context, newOrders []*entity.Order) error {
+	// 1. Проверяем существующие заказы и фильтруем
+	toInsert, err := s.orderrepo.SelectByExternalIDAndCheckPrice(ctx, newOrders)
+	if err != nil {
+		return fmt.Errorf("ошибка проверки заказов: %w", err)
+	}
+
+	// 2. Если есть что вставлять - выполняем пакетную вставку
+	if len(toInsert) > 0 {
+		_, err = s.orderrepo.InsertBatch(ctx, toInsert)
+		if err != nil {
+			return fmt.Errorf("ошибка вставки заказов: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (s *receiverCoreServiceImpl) setStatus(ctx context.Context, in *entity.Status) (*entity.Status, error) {

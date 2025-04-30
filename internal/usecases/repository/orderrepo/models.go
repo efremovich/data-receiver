@@ -82,3 +82,13 @@ func (c orderDB) convertToEntityOrder(_ context.Context) *entity.Order {
 		},
 	}
 }
+
+// Добавляем метод для конвертации среза заказов.
+func convertToDBOrders(ctx context.Context, orders []*entity.Order) []*orderDB {
+	dbOrders := make([]*orderDB, len(orders))
+	for i, order := range orders {
+		dbOrders[i] = convertToDBOrder(ctx, order)
+	}
+
+	return dbOrders
+}

@@ -17,8 +17,10 @@ var ErrObjectNotFound = entity.ErrObjectNotFound
 type OrderRepo interface {
 	SelectByID(ctx context.Context, id int64) (*entity.Order, error)
 	SelectByExternalID(ctx context.Context, externalID string) (*entity.Order, error)
+	SelectByExternalIDAndCheckPrice(ctx context.Context, income []*entity.Order) ([]*entity.Order, error)
 	SelectByCardIDAndDate(ctx context.Context, cardID int64, date time.Time) (*entity.Order, error)
 	Insert(ctx context.Context, in *entity.Order) (*entity.Order, error)
+	InsertBatch(ctx context.Context, orders []*entity.Order) ([]*entity.Order, error)
 	UpdateExecOne(ctx context.Context, in *entity.Order) error
 
 	Ping(ctx context.Context) error
@@ -63,6 +65,50 @@ func (repo *repoImpl) SelectByExternalID(ctx context.Context, externalID string)
 	}
 
 	return result.convertToEntityOrder(ctx), nil
+}
+
+func (repo *repoImpl) SelectByExternalIDAndCheckPrice(ctx context.Context, income []*entity.Order) ([]*entity.Order, error) {
+	if len(income) == 0 {
+		return income, nil
+	}
+
+	// Собираем externalIDs для запроса
+	externalIDs := make([]string, len(income))
+	for i, order := range income {
+		externalIDs[i] = order.ExternalID
+	}
+
+	// Выполняем пакетный запрос существующих заказов
+	query := `SELECT external_id, price FROM shop.orders WHERE external_id = ANY($1)`
+	var existingOrders []struct {
+		ExternalID string  `db:"external_id"`
+		Price      float64 `db:"price"`
+	}
+
+	err := repo.getReadConnection().Select(&existingOrders, query, externalIDs)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("ошибка при поиске существующих заказов: %w", err)
+	}
+
+	// Создаем мапу для быстрого поиска существующих заказов
+	existingMap := make(map[string]float64)
+	for _, order := range existingOrders {
+		existingMap[order.ExternalID] = order.Price
+	}
+
+	// Фильтруем входные заказы
+	var toInsert []*entity.Order
+
+	for _, order := range income {
+		if existingPrice, exists := existingMap[order.ExternalID]; exists {
+			if existingPrice != order.Price {
+				// Цена отличается - добавляем в список на удаление
+				toInsert = append(toInsert, order)
+			}
+		}
+	}
+
+	return toInsert, nil
 }
 
 func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, date time.Time) (*entity.Order, error) {
@@ -113,6 +159,57 @@ func (repo *repoImpl) Insert(ctx context.Context, in *entity.Order) (*entity.Ord
 	in.ID = charIDWrap.ID.Int64
 
 	return in, nil
+}
+
+// Реализация метода InsertBatch
+func (repo *repoImpl) InsertBatch(ctx context.Context, orders []*entity.Order) ([]*entity.Order, error) {
+	if len(orders) == 0 {
+		return nil, nil
+	}
+
+	dbModels := convertToDBOrders(ctx, orders)
+
+	// Используем транзакцию для пакетной вставки
+	tx, err := repo.db.GetWriteConnection().BeginTX(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка начала транзакции: %w", err)
+	}
+	defer tx.Rollback() // Безопасный откат при ошибке
+
+	// Подготавливаем именованный запрос
+	query := `INSERT INTO shop.orders (
+        external_id, price, status_id, direction, type, sale, created_at, 
+        seller_id, card_id, warehouse_id, region_id, price_size_id, is_cancel, quantity
+    ) VALUES (
+        :external_id, :price, :status_id, :direction, :type, :sale, :created_at,
+        :seller_id, :card_id, :warehouse_id, :region_id, :price_size_id, :is_cancel, :quantity
+    )
+    RETURNING id`
+
+	stmt, err := tx.PrepareNamedContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка подготовки запроса: %w", err)
+	}
+	defer stmt.Close()
+
+	// Выполняем вставку для каждого элемента
+	for iter, dbModel := range dbModels {
+		var idWrapper repository.IDWrapper
+
+		err := stmt.GetContext(ctx, &idWrapper, dbModel)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка вставки заказа %d: %w", iter, err)
+		}
+
+		// Обновляем ID в исходном заказе
+		orders[iter].ID = idWrapper.ID.Int64
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("ошибка коммита транзакции: %w", err)
+	}
+
+	return orders, nil
 }
 
 func (repo *repoImpl) UpdateExecOne(ctx context.Context, in *entity.Order) error {

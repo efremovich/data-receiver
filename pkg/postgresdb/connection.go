@@ -75,17 +75,18 @@ func newConnect(ctx context.Context, connString string) (*sqlx.DB, error) {
 }
 
 type QueryExecutor interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	ExecOne(query string, args ...interface{}) (sql.Result, error) // возвращает ошибку, если затронут не ровно 1 ряд
-	Get(dest interface{}, query string, args ...interface{}) error
-	Select(dest interface{}, query string, args ...interface{}) error
-	QueryAndScan(dest interface{}, query string, args ...interface{}) error
+	Exec(query string, args ...any) (sql.Result, error)
+	ExecOne(query string, args ...any) (sql.Result, error) // возвращает ошибку, если затронут не ровно 1 ряд
+	Get(dest any, query string, args ...any) error
+	Select(dest any, query string, args ...any) error
+	QueryAndScan(dest any, query string, args ...any) error
 	Ping() error
 }
 
 type PostgresConnection interface {
 	QueryExecutor
 	BeginTX(ctx context.Context) (Transaction, error)
+	PrepareNamedContext(ctx context.Context, query string) (*sqlx.NamedStmt, error)
 }
 
 type postgresConnectionImpl struct {
@@ -129,6 +130,10 @@ func (r *postgresConnectionImpl) QueryAndScan(dest interface{}, query string, ar
 	}
 
 	return nil
+}
+
+func (r *postgresConnectionImpl) PrepareNamedContext(ctx context.Context, query string) (*sqlx.NamedStmt, error) {
+	return r.DB.PrepareNamedContext(ctx, query)
 }
 
 func (r *postgresConnectionImpl) BeginTX(ctx context.Context) (Transaction, error) {
