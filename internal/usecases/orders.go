@@ -70,7 +70,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	startTime := time.Now()
 	rootSpan, ctx := jaeger.StartSpan(ctx, "receiveAndSaveOrders")
 
-	ordersSpan, ctx := jaeger.StartSpan(ctx, fmt.Sprintf("GetOrders from %s", client.GetMarketPlace().Title))
+	ordersSpan, ctx := jaeger.StartSpan(ctx, "GetOrders from "+client.GetMarketPlace().Title+" "+desc.UpdatedAt.Format("02.01.2006"))
 
 	ordersMetaList, err := client.GetOrders(ctx, desc)
 	if err != nil {
@@ -96,11 +96,10 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	chunkSize := 1000 // Размер чанка
 
 	for _, meta := range ordersMetaList {
-		updateOrderSpan, ctx := jaeger.StartSpan(ctx, "updateOrder Чанк 1000")
-
 		meta.Seller = seller
 
-		err = s.processSingleOrder(ctx, &meta)
+		// err = s.processSingleOrder(ctx, &meta)
+		err = s.processUpdatePriceOrder(ctx, &meta)
 		if err != nil {
 			rootSpan.SetTag("error", true)
 			return err
@@ -110,28 +109,27 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		// Если накопилось 100 заказов - отправляем и очищаем срез
 		if len(orders) == chunkSize {
-			err = s.updateOrders(ctx, orders)
-			if err != nil {
-				rootSpan.SetTag("error", true)
-				return err
-			}
+			updateOrderSpan, _ := jaeger.StartSpan(ctx, "updateOrder Чанк 1000")
+			defer updateOrderSpan.Finish()
+			// err = s.updateOrders(ctx, orders)
+			// if err != nil {
+			// 	rootSpan.SetTag("error", true)
+			// 	return err
+			// }
 
 			orders = orders[:0] // Очищаем срез (но сохраняем capacity)
 		}
-
-		updateOrderSpan.Finish()
 	}
 
 	// Отправляем оставшиеся заказы (если есть)
 	if len(orders) > 0 {
-		updateOrderSpan, ctx := jaeger.StartSpan(ctx, fmt.Sprintf("UpdateOrder финал чанк %d", len(orders)))
+		updateOrderSpan, _ := jaeger.StartSpan(ctx, fmt.Sprintf("UpdateOrder финал чанк %d", len(orders)))
+		defer updateOrderSpan.Finish()
 
-		err = s.updateOrders(ctx, orders)
-		if err != nil {
-			return err
-		}
-
-		updateOrderSpan.Finish()
+		// err = s.updateOrders(ctx, orders)
+		// if err != nil {
+		// 	return err
+		// }
 	}
 
 	// Если не нужно делить или деление невозможно, обрабатываем все заказы сразу
@@ -203,7 +201,7 @@ func (s *receiverCoreServiceImpl) processSingleOrder(ctx context.Context, meta *
 	meta.PriceSize.CardID = card.ID
 	meta.PriceSize.SizeID = size.ID
 
-	priceSize, err := s.setPriceSize(ctx, *meta.PriceSize)
+	priceSize, err := s.setPriceSize(ctx, meta.PriceSize)
 	if err != nil {
 		return err
 	}
@@ -258,6 +256,37 @@ func (s *receiverCoreServiceImpl) processSingleOrder(ctx context.Context, meta *
 	}
 
 	meta.Region = region
+
+	return nil
+}
+
+func (s *receiverCoreServiceImpl) processUpdatePriceOrder(ctx context.Context, meta *entity.Order) error {
+	singleOrderSpan, ctx := jaeger.StartSpan(ctx, "processUpdatePriceOrder")
+	defer singleOrderSpan.Finish()
+
+	order, err := s.getOrderByExternalID(ctx, meta.ExternalID)
+	if errors.Is(err, ErrObjectNotFound) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	// Size
+	size, err := s.setSize(ctx, meta.Size)
+	if err != nil {
+		return err
+	}
+
+	// PriceSize
+	meta.PriceSize.CardID = order.Card.ID
+	meta.PriceSize.SizeID = size.ID
+
+	priceSize, err := s.setPriceSize(ctx, meta.PriceSize)
+	if err != nil {
+		return err
+	}
+
+	meta.PriceSize = priceSize
 
 	return nil
 }

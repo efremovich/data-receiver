@@ -44,7 +44,7 @@ func TestPriceRepo(t *testing.T) {
 	// Создание Brand
 	sqlBrandRepo, err := brandrepo.NewBrandRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newBrand := entity.Brand{
 		Title:    uuid.NewString(),
@@ -57,7 +57,7 @@ func TestPriceRepo(t *testing.T) {
 	// Создание карточки
 	sqlCardRepo, err := cardrepo.NewCardRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newCard := entity.Card{
 		ExternalID:  0,
@@ -75,7 +75,7 @@ func TestPriceRepo(t *testing.T) {
 
 	sqlSizeRepo, err := sizerepo.NewSizeRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newSize := entity.Size{
 		TechSize: uuid.NewString(),
@@ -90,7 +90,7 @@ func TestPriceRepo(t *testing.T) {
 	// Создание цены
 	sqlPriceRepo, err := pricerepo.NewPriceRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newPrice := entity.PriceSize{
 		Price:                5.5,
@@ -100,14 +100,14 @@ func TestPriceRepo(t *testing.T) {
 		SizeID:               modelSize.ID,
 	}
 
-	modelPriceSize, err := sqlPriceRepo.Insert(ctx, newPrice)
+	modelPriceSize, err := sqlPriceRepo.Insert(ctx, &newPrice)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	sqlPriceHistoryRepo, err := pricehistoryrepo.NewPriceHistoryRepo(ctx, conn)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	newPriceHistory := entity.PriceHistory{
 		Price:        2.2,

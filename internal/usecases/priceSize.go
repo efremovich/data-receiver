@@ -8,7 +8,7 @@ import (
 	"github.com/efremovich/data-receiver/internal/entity"
 )
 
-func (s *receiverCoreServiceImpl) setPriceSize(ctx context.Context, income entity.PriceSize) (*entity.PriceSize, error) {
+func (s *receiverCoreServiceImpl) setPriceSize(ctx context.Context, income *entity.PriceSize) (*entity.PriceSize, error) {
 	priceSize, err := s.pricesizerepo.SelectByCardIDAndSizeID(ctx, income.CardID, income.SizeID)
 
 	if errors.Is(err, ErrObjectNotFound) {

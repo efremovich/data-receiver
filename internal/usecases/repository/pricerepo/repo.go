@@ -18,7 +18,7 @@ type PriceRepo interface {
 	SelectByCardID(ctx context.Context, cardID int64) ([]*entity.PriceSize, error)
 	SelectByPriceID(ctx context.Context, cardID int64) ([]*entity.PriceSize, error)
 	SelectByCardIDAndSizeID(ctx context.Context, cardID, sizeID int64) (*entity.PriceSize, error)
-	Insert(ctx context.Context, in entity.PriceSize) (*entity.PriceSize, error)
+	Insert(ctx context.Context, in *entity.PriceSize) (*entity.PriceSize, error)
 	UpdateExecOne(ctx context.Context, in *entity.PriceSize) error
 
 	Ping(ctx context.Context) error
@@ -99,7 +99,7 @@ func (repo *charRepoImpl) SelectByPriceID(ctx context.Context, priceID int64) ([
 	return resEntity, nil
 }
 
-func (repo *charRepoImpl) Insert(ctx context.Context, income entity.PriceSize) (*entity.PriceSize, error) {
+func (repo *charRepoImpl) Insert(ctx context.Context, income *entity.PriceSize) (*entity.PriceSize, error) {
 	query := `INSERT INTO shop.price_sizes (price, price_without_discount, price_final, size_id, card_id, updated_at)
             VALUES ($1, $2, $3, $4, $5, now()) RETURNING id`
 	charIDWrap := repository.IDWrapper{}
@@ -111,7 +111,7 @@ func (repo *charRepoImpl) Insert(ctx context.Context, income entity.PriceSize) (
 
 	income.ID = charIDWrap.ID.Int64
 
-	return &income, nil
+	return income, nil
 }
 
 func (repo *charRepoImpl) UpdateExecOne(ctx context.Context, in *entity.PriceSize) error {

@@ -124,7 +124,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveStocks(ctx context.Context, clie
 		meta.PriceSize.CardID = card.ID
 		meta.PriceSize.SizeID = size.ID
 
-		priceSize, err := s.setPriceSize(ctx, meta.PriceSize)
+		priceSize, err := s.setPriceSize(ctx, &meta.PriceSize)
 		if err != nil {
 			return err
 		}

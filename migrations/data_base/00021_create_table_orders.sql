@@ -28,7 +28,7 @@ ALTER TABLE ONLY shop.orders
 	ADD CONSTRAINT orders_card_id_fkey FOREIGN KEY (card_id) REFERENCES shop.cards (id);
 
 ALTER TABLE ONLY shop.orders
-	ADD CONSTRAINT orders_fk FOREIGN KEY (status_id) REFERENCES shop.statuses (id);
+	ADD CONSTRAINT orders_status_id_fkey FOREIGN KEY (status_id) REFERENCES shop.statuses (id);
 
 ALTER TABLE ONLY shop.orders
 	ADD CONSTRAINT orders_price_sizes_fk FOREIGN KEY (price_size_id) REFERENCES shop.price_sizes (id);
