@@ -15,18 +15,18 @@ import (
 func (s *receiverCoreServiceImpl) ReceiveSales(ctx context.Context, desc entity.PackageDescription) error {
 	clients := s.apiFetcher[desc.Seller]
 
-	g, gCtx := errgroup.WithContext(ctx)
+	group, gCtx := errgroup.WithContext(ctx)
 
 	for _, c := range clients {
 		client := c
 
-		g.Go(func() error {
+		group.Go(func() error {
 			return s.receiveAndSaveSales(gCtx, client, desc)
 		})
 	}
 
 	// Ждем завершения всех горутин и проверяем наличие ошибок
-	if err := g.Wait(); err != nil {
+	if err := group.Wait(); err != nil {
 		if errors.Is(err, context.Canceled) {
 			alogger.WarnFromCtx(ctx, "Операция была отменена: %v", err)
 			return nil
@@ -84,13 +84,13 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 			query["barcode"] = meta.Barcode.Barcode
 			query["article"] = meta.Card.VendorID
 
-			in := entity.PackageDescription{
+			income := entity.PackageDescription{
 				PackageType: desc.PackageType,
 				Seller:      "odinc",
 				Query:       query,
 			}
 
-			err := s.ReceiveCards(ctx, in)
+			err := s.ReceiveCards(ctx, income)
 			if err != nil {
 				return err
 			}
@@ -100,9 +100,8 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 
 		card, err := s.getCardByVendorID(ctx, meta.Card.VendorID)
 		if errors.Is(err, ErrObjectNotFound) {
-			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
-			// TODO Писать эти данные в jaeger
 			notFoundElements++
+
 			continue
 		} else if err != nil {
 			return err
@@ -130,10 +129,11 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 		meta.PriceSize.CardID = card.ID
 		meta.PriceSize.SizeID = size.ID
 
-		priceSize, err := s.setPriceSize(ctx, *meta.PriceSize)
+		priceSize, err := s.setPriceSize(ctx, meta.PriceSize)
 		if err != nil {
 			return err
 		}
+
 		meta.PriceSize = priceSize
 
 		// Barcode
@@ -180,9 +180,8 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 		// Order
 		order, err := s.getOrderByExternalID(ctx, meta.Order.ExternalID)
 		if errors.Is(err, ErrObjectNotFound) {
-			// Нам не удалось получить запись, значит данные по этому товару исчезли, пропускаем загрузку остатков
-			// TODO Писать эти данные в jaeger
 			notFoundElements++
+
 			continue
 		} else if err != nil {
 			return err
@@ -202,17 +201,17 @@ func (s *receiverCoreServiceImpl) receiveAndSaveSales(ctx context.Context, clien
 	return nil
 }
 
-func (s *receiverCoreServiceImpl) setSale(ctx context.Context, in *entity.Sale) (*entity.Sale, error) {
-	sale, err := s.salerepo.SelectByExternalID(ctx, in.ExternalID, in.CreatedAt)
+func (s *receiverCoreServiceImpl) setSale(ctx context.Context, income *entity.Sale) (*entity.Sale, error) {
+	sale, err := s.salerepo.SelectByExternalID(ctx, income.ExternalID, income.CreatedAt)
 	if errors.Is(err, ErrObjectNotFound) {
-		sale, err = s.salerepo.Insert(ctx, *in)
+		sale, err = s.salerepo.Insert(ctx, *income)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if sale.Price != in.Price {
+	if sale.Price != income.Price {
 		err = s.salerepo.UpdateExecOne(ctx, sale)
 		if err != nil {
 			return nil, err

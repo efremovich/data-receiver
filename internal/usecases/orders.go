@@ -70,7 +70,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	startTime := time.Now()
 	rootSpan, ctx := jaeger.StartSpan(ctx, "receiveAndSaveOrders")
 
-	ordersSpan, ctx := jaeger.StartSpan(ctx, fmt.Sprintf("GetOrders from %s", client.GetMarketPlace().Title))
+	ordersSpan, ctx := jaeger.StartSpan(ctx, "GetOrders from "+client.GetMarketPlace().Title+" "+desc.UpdatedAt.Format("02.01.2006"))
 
 	ordersMetaList, err := client.GetOrders(ctx, desc)
 	if err != nil {
@@ -96,11 +96,10 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	chunkSize := 1000 // Размер чанка
 
 	for _, meta := range ordersMetaList {
-		updateOrderSpan, ctx := jaeger.StartSpan(ctx, "updateOrder Чанк 1000")
-
 		meta.Seller = seller
 
-		err = s.processSingleOrder(ctx, &meta)
+		// err = s.processSingleOrder(ctx, &meta)
+		err = s.processUpdatePriceOrder(ctx, &meta)
 		if err != nil {
 			rootSpan.SetTag("error", true)
 			return err
@@ -110,6 +109,9 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 		// Если накопилось 100 заказов - отправляем и очищаем срез
 		if len(orders) == chunkSize {
+			updateOrderSpan, _ := jaeger.StartSpan(ctx, "updateOrder Чанк 1000")
+			defer updateOrderSpan.Finish()
+
 			err = s.updateOrders(ctx, orders)
 			if err != nil {
 				rootSpan.SetTag("error", true)
@@ -118,20 +120,17 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 			orders = orders[:0] // Очищаем срез (но сохраняем capacity)
 		}
-
-		updateOrderSpan.Finish()
 	}
 
 	// Отправляем оставшиеся заказы (если есть)
 	if len(orders) > 0 {
-		updateOrderSpan, ctx := jaeger.StartSpan(ctx, fmt.Sprintf("UpdateOrder финал чанк %d", len(orders)))
+		updateOrderSpan, _ := jaeger.StartSpan(ctx, fmt.Sprintf("UpdateOrder финал чанк %d", len(orders)))
+		defer updateOrderSpan.Finish()
 
 		err = s.updateOrders(ctx, orders)
 		if err != nil {
 			return err
 		}
-
-		updateOrderSpan.Finish()
 	}
 
 	// Если не нужно делить или деление невозможно, обрабатываем все заказы сразу
@@ -203,7 +202,7 @@ func (s *receiverCoreServiceImpl) processSingleOrder(ctx context.Context, meta *
 	meta.PriceSize.CardID = card.ID
 	meta.PriceSize.SizeID = size.ID
 
-	priceSize, err := s.setPriceSize(ctx, *meta.PriceSize)
+	priceSize, err := s.setPriceSize(ctx, meta.PriceSize)
 	if err != nil {
 		return err
 	}
@@ -262,35 +261,48 @@ func (s *receiverCoreServiceImpl) processSingleOrder(ctx context.Context, meta *
 	return nil
 }
 
-func (s *receiverCoreServiceImpl) getOrderByExternalID(ctx context.Context, externalID string) (*entity.Order, error) {
-	order, err := s.orderrepo.SelectByExternalID(ctx, externalID)
-	if err != nil && errors.Is(err, entity.ErrObjectNotFound) {
-		return &entity.Order{}, nil
-	} else if err != nil {
-		return nil, err
-	}
-	return order, nil
-}
+func (s *receiverCoreServiceImpl) processUpdatePriceOrder(ctx context.Context, meta *entity.Order) error {
+	singleOrderSpan, ctx := jaeger.StartSpan(ctx, "processUpdatePriceOrder")
+	defer singleOrderSpan.Finish()
 
-func (s *receiverCoreServiceImpl) setOrder(ctx context.Context, income *entity.Order) (*entity.Order, error) {
-	order, err := s.orderrepo.SelectByExternalID(ctx, income.ExternalID)
+	order, err := s.getOrderByExternalID(ctx, meta.ExternalID)
 	if errors.Is(err, ErrObjectNotFound) {
-		order, err = s.orderrepo.Insert(ctx, income)
+		return s.processSingleOrder(ctx, meta)
+	} else if err != nil {
+		return err
 	}
 
+	// Size
+	size, err := s.setSize(ctx, meta.Size)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if order.Price != income.Price {
-		err = s.orderrepo.UpdateExecOne(ctx, order)
-		if err != nil {
-			return nil, err
-		}
-	}
+	// PriceSize
+	meta.PriceSize.CardID = order.Card.ID
+	meta.PriceSize.SizeID = size.ID
+	meta.Card = order.Card
 
-	return order, nil
+	priceSize, err := s.setPriceSize(ctx, meta.PriceSize)
+	if err != nil {
+		return err
+	}
+	meta.Status = order.Status
+	meta.Barcode = order.Barcode
+	meta.Region = order.Region
+	meta.Seller = order.Seller
+	meta.Warehouse = order.Warehouse
+	meta.Size = order.Size
+	meta.ID = order.ID
+	meta.PriceSize = priceSize
+
+	return nil
 }
+
+func (s *receiverCoreServiceImpl) getOrderByExternalID(ctx context.Context, externalID string) (*entity.Order, error) {
+	return s.orderrepo.SelectByExternalID(ctx, externalID)
+}
+
 func (s *receiverCoreServiceImpl) updateOrders(ctx context.Context, newOrders []*entity.Order) error {
 	// 1. Проверяем существующие заказы и фильтруем
 	toInsert, err := s.orderrepo.SelectByExternalIDAndCheckPrice(ctx, newOrders)

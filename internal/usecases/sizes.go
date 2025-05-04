@@ -9,8 +9,7 @@ import (
 )
 
 func (s *receiverCoreServiceImpl) setSize(ctx context.Context, in *entity.Size) (*entity.Size, error) {
-	size, err := s.sizerepo.SelectByTitle(ctx, in.Title)
-
+	size, err := s.getSizeByTitle(ctx, in.Title)
 	if errors.Is(err, ErrObjectNotFound) {
 		size, err = s.sizerepo.Insert(ctx, *in)
 	}
@@ -28,5 +27,5 @@ func (s *receiverCoreServiceImpl) getSizeByTitle(ctx context.Context, title stri
 		return nil, err
 	}
 
-	return size, err
+	return size, nil
 }

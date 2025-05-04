@@ -102,7 +102,7 @@ func TestStockRepo(t *testing.T) {
 		SizeID:               modelSize.ID,
 	}
 
-	modelPrice, err := sqlPriceRepo.Insert(ctx, newPrice)
+	modelPrice, err := sqlPriceRepo.Insert(ctx, &newPrice)
 	if err != nil {
 		t.Fatal(err)
 	}

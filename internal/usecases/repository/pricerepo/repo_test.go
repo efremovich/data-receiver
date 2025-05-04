@@ -93,13 +93,13 @@ func TestPriceRepo(t *testing.T) {
 	newPrice := entity.PriceSize{
 		Price:                5.5,
 		PriceWithoutDiscount: 1.5,
-		PriceFinal:          8.0,
+		PriceFinal:           8.0,
 		CardID:               modelCard.ID,
 		SizeID:               modelSize.ID,
 	}
 
 	// Создание
-	model, err := sqlPriceRepo.Insert(ctx, newPrice)
+	model, err := sqlPriceRepo.Insert(ctx, &newPrice)
 	if err != nil {
 		t.Fatal(err)
 	}
