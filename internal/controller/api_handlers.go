@@ -61,13 +61,13 @@ type Task struct {
 func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 	cron := cron.New()
 	tasks := []Task{
-		{"Загрузка товарных позиций wildberries", "0 12 * * *", gw.receiveCardsWB}, // Каждый день в 12
-		{"Загрузка товарных позиций ozon", "05 12 * * *", gw.receiveCardsOzon},
-
-		{"Загрузка складов wildberries", "15 12 * * *", gw.receiveWarehousesWB},
-
-		{"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
-		{"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
+		// {"Загрузка товарных позиций wildberries", "0 12 * * *", gw.receiveCardsWB}, // Каждый день в 12
+		// {"Загрузка товарных позиций ozon", "05 12 * * *", gw.receiveCardsOzon},
+		//
+		// {"Загрузка складов wildberries", "15 12 * * *", gw.receiveWarehousesWB},
+		//
+		// {"Загрузка остатков wildberries", "30 13 * * *", gw.receiveStocksWB},
+		// {"Загрузка остатков ozon", "0 13 * * *", gw.receiveStocksOzon},
 
 		// {"Загрузка заказов wildberries", "30 18 * * *", gw.receiveOrdersWB},
 		// {"Загрузка заказов ozon", "0 16 * * *", gw.receiveOrdersOzon},
@@ -75,8 +75,8 @@ func (gw *grpcGatewayServerImpl) scheduleTasks(ctx context.Context) {
 		// {"Загрузка продаж wildberries", "00 22 * * *", gw.receiveSalesWB},
 		// {"Загрузка продаж ozon", "00 22 * * *", gw.receiveSalesOzon},
 
-		{"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
-		{"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
+		// {"Загрузка отчета по продажам wildberries", "30 19 * * *", gw.receiveSaleReportWB},
+		// {"Загрузка отчета по продажам ozon", "30 19 * * *", gw.receiveSaleReportOzon},
 
 		{"Загрузка себестоимости товара из 1с", "00 22 * * *", gw.receiveCostFrom1C},
 	}

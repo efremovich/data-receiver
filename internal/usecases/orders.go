@@ -95,11 +95,11 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	for _, meta := range ordersMetaList {
 		meta.Seller = seller
 
-		err = s.processUpdatePriceOrder(ctx, &meta)
-		if err != nil {
-			rootSpan.SetTag("error", true)
-			return err
-		}
+		// err = s.processUpdatePriceOrder(ctx, &meta)
+		// if err != nil {
+		// 	rootSpan.SetTag("error", true)
+		// 	return err
+		// }
 
 		err = s.processSingleOrder(ctx, &meta)
 		if err != nil {
@@ -233,6 +233,11 @@ func (s *receiverCoreServiceImpl) processSingleOrder(ctx context.Context, meta *
 
 	meta.Region = region
 
+	_, err = s.setOrder(ctx, meta)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -242,7 +247,7 @@ func (s *receiverCoreServiceImpl) processUpdatePriceOrder(ctx context.Context, m
 
 	order, err := s.getOrderByExternalID(ctx, meta.ExternalID)
 	if errors.Is(err, ErrObjectNotFound) {
-		return s.processSingleOrder(ctx, meta)
+		return nil
 	} else if err != nil {
 		return err
 	}
@@ -307,4 +312,16 @@ func (s *receiverCoreServiceImpl) setStatus(ctx context.Context, in *entity.Stat
 		return nil, err
 	}
 	return status, nil
+}
+
+func (s *receiverCoreServiceImpl) setOrder(ctx context.Context, income *entity.Order) (*entity.Order, error) {
+	order, err := s.orderrepo.SelectByExternalID(ctx, income.ExternalID)
+	if errors.Is(err, ErrObjectNotFound) {
+		order, err = s.orderrepo.Insert(ctx, income)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return order, nil
 }

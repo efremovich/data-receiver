@@ -134,7 +134,7 @@ func (wb *apiClientImp) getSaleReportResoponse(ctx context.Context, desc entity.
 
 		req.Header.Set("Authorization", wb.token)
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("accept", "application/json")
+		req.Header.Set("accept", "Application/json")
 
 		resp, err := wb.client.Do(req)
 		if err != nil {
