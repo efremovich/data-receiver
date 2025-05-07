@@ -72,7 +72,7 @@ func (wb *apiClientImp) GetStocks(ctx context.Context, desc entity.PackageDescri
 		}
 
 		stockMeta.PriceSize = entity.PriceSize{
-			Price: float64(elem.Price),
+			PriceFinal: float64(elem.Price),
 		}
 
 		stockMeta.Seller2Card = entity.Seller2Card{

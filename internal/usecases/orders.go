@@ -92,43 +92,18 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 	sellerSpan.Finish()
 
-	orders := make([]*entity.Order, 0, len(ordersMetaList))
-	chunkSize := 1000 // Размер чанка
-
 	for _, meta := range ordersMetaList {
 		meta.Seller = seller
 
-		// err = s.processSingleOrder(ctx, &meta)
 		err = s.processUpdatePriceOrder(ctx, &meta)
 		if err != nil {
 			rootSpan.SetTag("error", true)
 			return err
 		}
 
-		orders = append(orders, &meta)
-
-		// Если накопилось 100 заказов - отправляем и очищаем срез
-		if len(orders) == chunkSize {
-			updateOrderSpan, _ := jaeger.StartSpan(ctx, "updateOrder Чанк 1000")
-			defer updateOrderSpan.Finish()
-
-			err = s.updateOrders(ctx, orders)
-			if err != nil {
-				rootSpan.SetTag("error", true)
-				return err
-			}
-
-			orders = orders[:0] // Очищаем срез (но сохраняем capacity)
-		}
-	}
-
-	// Отправляем оставшиеся заказы (если есть)
-	if len(orders) > 0 {
-		updateOrderSpan, _ := jaeger.StartSpan(ctx, fmt.Sprintf("UpdateOrder финал чанк %d", len(orders)))
-		defer updateOrderSpan.Finish()
-
-		err = s.updateOrders(ctx, orders)
+		err = s.processSingleOrder(ctx, &meta)
 		if err != nil {
+			rootSpan.SetTag("error", true)
 			return err
 		}
 	}

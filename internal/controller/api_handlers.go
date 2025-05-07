@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -23,19 +24,11 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 }
 
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
-	// err := gw.receivePromotionCompanies(ctx)
-	// if err != nil {
-	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении рекламных компаний:%s", err.Error())
-	// }
+	err := gw.receiveOrdersWB(ctx)
+	if err != nil {
+		fmt.Errorf("ошибка при получении заказов по WB:%s", err.Error())
+	}
 
-	// group, gCtx := errgroup.WithContext(ctx)
-	//
-	// group.Go(func() error {
-	// 	err := gw.receiveOrdersWB(gCtx)
-	// 	if err != nil {
-	// 		return fmt.Errorf("ошибка при получении заказов по WB:%s", err.Error())
-	// 	}
-	//
 	// 	return nil
 	// })
 	//

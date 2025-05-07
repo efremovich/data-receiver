@@ -245,52 +245,65 @@ func (repo *offerRepoImpl) GetCardsVkFeed(ctx context.Context, params entity.VkC
 	var results []vkFeedDB
 
 	query := fmt.Sprintf(`
-			WITH filtered_brands AS (
+					WITH filtered_brands AS (
+							SELECT
+									id,
+									title
+							FROM
+									shop.brands
+							WHERE
+									title ~ 'LARETTO|LRTT'
+					)
 					SELECT
-							id,
-							title
+							card.vendor_code AS code,
+							c.title AS subject,
+							SPLIT_PART(char_color.value, ',', 1) AS color,
+							card.title,
+							char_gender.value AS gender,
+							card.description,
+							(
+									SELECT ARRAY_AGG(link)
+									FROM (
+											SELECT DISTINCT mf.link
+											FROM shop.media_files mf
+											WHERE mf.card_id = card.id AND mf.type_id = 1
+											LIMIT 5
+									) AS limited_links
+							) AS media_links,
+							MAX(ps.price) AS price,
+							COALESCE(MIN(s."name")::text, '') || ' - ' || COALESCE(MAX(s."name")::text, '') AS size,
+							sc.external_id AS external_id,
+							COALESCE(sl.title, '') AS seller_name
 					FROM
-							shop.brands
-					WHERE
-							title ~ 'LARETTO|LRTT'
-			)
-			SELECT
-					card.vendor_code AS code,
-					c.title AS subject,
- 					SPLIT_PART(char_color.value, ',', 1) AS color,
-					card.title,
-					char_gender.value AS gender,
-					card.description,
-					(
-							SELECT ARRAY_AGG(link)
-							FROM (
-									SELECT DISTINCT mf.link
-									FROM shop.media_files mf
-									WHERE mf.card_id = card.id AND mf.type_id = 1
-									LIMIT 5
-							) AS limited_links
-					) AS media_links,
-					MAX(ps.price) AS price,
-					COALESCE(MIN(s."name")::text, '') || ' - ' || COALESCE(MAX(s."name")::text, '') AS size,
-					sc.external_id AS external_id,
-					COALESCE(sl.title, '') AS seller_name
-			FROM
-					shop.cards card
-					JOIN filtered_brands b ON b.id = card.brand_id
-					LEFT JOIN shop.cards_characteristics char_color ON char_color.card_id = card.id
-							AND char_color.characteristic_id = 11
-					LEFT JOIN shop.cards_characteristics char_gender ON char_gender.card_id = card.id
-							AND char_gender.characteristic_id = 8
-					LEFT JOIN shop.card_categories cc ON cc.card_id = card.id
-					LEFT JOIN shop.categories c ON c.id = cc.category_id
-					LEFT JOIN shop.price_sizes ps ON ps.card_id = card.id
-					LEFT JOIN shop.sizes s ON s.id = ps.size_id
-					LEFT JOIN shop.seller2cards sc ON sc.card_id = card.id
-					LEFT JOIN shop.sellers sl ON sl.id = sc.seller_id 
+							shop.cards card
+							JOIN filtered_brands b ON b.id = card.brand_id
+							LEFT JOIN shop.cards_characteristics char_color ON char_color.card_id = card.id
+									AND char_color.characteristic_id = 11
+							LEFT JOIN shop.cards_characteristics char_gender ON char_gender.card_id = card.id
+									AND char_gender.characteristic_id = 8
+							LEFT JOIN shop.card_categories cc ON cc.card_id = card.id
+							LEFT JOIN shop.categories c ON c.id = cc.category_id
+							LEFT JOIN (
+									SELECT card_id, price, size_id, updated_at
+									FROM (
+											SELECT 
+													card_id, 
+													price, 
+													size_id, 
+													updated_at,
+													ROW_NUMBER() OVER (PARTITION BY card_id ORDER BY updated_at DESC) as rn
+											FROM shop.price_sizes
+									) ranked
+									WHERE rn = 1  -- Берем только самые свежие записи для каждой карточки
+							) ps ON ps.card_id = card.id
+							LEFT JOIN shop.sizes s ON s.id = ps.size_id
+							LEFT JOIN shop.seller2cards sc ON sc.card_id = card.id
+							LEFT JOIN shop.sellers sl ON sl.id = sc.seller_id 
           %s
-			GROUP BY
-					card.vendor_code, c.title, char_color.value, card.title, char_gender.value, card.description, b.title, sc.external_id, sc.seller_id, sl.title, card.id
-			ORDER BY
+					GROUP BY
+							card.vendor_code, c.title, char_color.value, card.title, char_gender.value,
+							card.description, b.title, sc.external_id, sc.seller_id, sl.title, card.id
+					ORDER BY
 					code ASC
           %s`, whereCondition, limitCondititon)
 
