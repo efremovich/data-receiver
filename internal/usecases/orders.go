@@ -287,6 +287,7 @@ func (s *receiverCoreServiceImpl) processUpdatePriceOrder(ctx context.Context, m
 	if err != nil {
 		return err
 	}
+
 	meta.Status = order.Status
 	meta.Barcode = order.Barcode
 	meta.Region = order.Region

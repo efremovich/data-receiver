@@ -2,16 +2,12 @@ package controller
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"time"
 
 	"github.com/robfig/cron/v3"
-	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/efremovich/data-receiver/internal/entity"
-	"github.com/efremovich/data-receiver/pkg/alogger"
 	package_receiver "github.com/efremovich/data-receiver/pkg/data-receiver-service"
 	"github.com/efremovich/data-receiver/pkg/logger"
 )
@@ -32,35 +28,35 @@ func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
 	// 	logger.GetLoggerFromContext(ctx).Errorf("ошибка при получении рекламных компаний:%s", err.Error())
 	// }
 
-	group, gCtx := errgroup.WithContext(ctx)
-
-	group.Go(func() error {
-		err := gw.receiveOrdersWB(gCtx)
-		if err != nil {
-			return fmt.Errorf("ошибка при получении заказов по WB:%s", err.Error())
-		}
-
-		return nil
-	})
-
-	group.Go(func() error {
-		err := gw.receiveOrdersOzon(gCtx)
-		if err != nil {
-			return fmt.Errorf("ошибка при получении заказов по Ozon:%s", err.Error())
-		}
-
-		return nil
-	})
-
-	if err := group.Wait(); err != nil {
-		if errors.Is(err, context.Canceled) {
-			alogger.WarnFromCtx(ctx, "Операция была отменена: %v", err)
-
-			return
-		}
-
-		fmt.Errorf("ошибка при обработке клиентов: %w", err)
-	}
+	// group, gCtx := errgroup.WithContext(ctx)
+	//
+	// group.Go(func() error {
+	// 	err := gw.receiveOrdersWB(gCtx)
+	// 	if err != nil {
+	// 		return fmt.Errorf("ошибка при получении заказов по WB:%s", err.Error())
+	// 	}
+	//
+	// 	return nil
+	// })
+	//
+	// group.Go(func() error {
+	// 	err := gw.receiveOrdersOzon(gCtx)
+	// 	if err != nil {
+	// 		return fmt.Errorf("ошибка при получении заказов по Ozon:%s", err.Error())
+	// 	}
+	//
+	// 	return nil
+	// })
+	//
+	// if err := group.Wait(); err != nil {
+	// 	if errors.Is(err, context.Canceled) {
+	// 		alogger.WarnFromCtx(ctx, "Операция была отменена: %v", err)
+	//
+	// 		return
+	// 	}
+	//
+	// 	fmt.Errorf("ошибка при обработке клиентов: %w", err)
+	// }
 }
 
 type Task struct {
@@ -168,8 +164,8 @@ func (gw *grpcGatewayServerImpl) receiveStocksOzon(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
-	daysToGet := 365 // Количество дней для загрузки
-	delay := 61      // Количество секунд задержки перед следующим запросом
+	daysToGet := 30 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
 	startDate := time.Now().AddDate(0, 0, 0)
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
@@ -183,8 +179,8 @@ func (gw *grpcGatewayServerImpl) receiveOrdersWB(ctx context.Context) error {
 }
 
 func (gw *grpcGatewayServerImpl) receiveOrdersOzon(ctx context.Context) error {
-	daysToGet := 365 // Количество дней для загрузки
-	delay := 61      // Количество секунд задержки перед следующим запросом
+	daysToGet := 30 // Количество дней для загрузки
+	delay := 61     // Количество секунд задержки перед следующим запросом
 	startDate := time.Now().AddDate(0, 0, 0)
 	descOrderOzon := entity.PackageDescription{
 		PackageType: entity.PackageTypeOrder,
