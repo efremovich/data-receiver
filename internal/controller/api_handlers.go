@@ -2,13 +2,13 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/robfig/cron/v3"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/efremovich/data-receiver/internal/entity"
+	"github.com/efremovich/data-receiver/pkg/alogger"
 	package_receiver "github.com/efremovich/data-receiver/pkg/data-receiver-service"
 	"github.com/efremovich/data-receiver/pkg/logger"
 )
@@ -26,7 +26,7 @@ func (gw *grpcGatewayServerImpl) OfferFeed(ctx context.Context, _ *emptypb.Empty
 func (gw *grpcGatewayServerImpl) runTask(ctx context.Context) {
 	err := gw.receiveOrdersWB(ctx)
 	if err != nil {
-		fmt.Errorf("ошибка при получении заказов по WB:%s", err.Error())
+		alogger.InfoFromCtx(ctx, "ошибка при получении заказов по WB:%s", err.Error())
 	}
 
 	// 	return nil

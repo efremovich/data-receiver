@@ -69,7 +69,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 
 	startTime := time.Now()
 	rootSpan, ctx := jaeger.StartSpan(ctx, "receiveAndSaveOrders")
-
+	defer rootSpan.Finish()
 	ordersSpan, ctx := jaeger.StartSpan(ctx, "GetOrders from "+client.GetMarketPlace().Title+" "+desc.UpdatedAt.Format("02.01.2006"))
 
 	ordersMetaList, err := client.GetOrders(ctx, desc)
