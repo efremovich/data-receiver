@@ -23,30 +23,7 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 		client := c
 
 		group.Go(func() error {
-			if err := s.receiveAndSaveOrders(gCtx, client, desc); err != nil {
-				return err
-			}
-
-			if desc.Limit > 0 {
-				packet := entity.PackageDescription{
-					PackageType: entity.PackageTypeOrder,
-
-					UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
-					Limit:     desc.Limit - 1,
-					Seller:    desc.Seller,
-					Delay:     desc.Delay,
-				}
-
-				err := s.brokerPublisher.SendPackage(ctx, &packet)
-				if err != nil {
-					return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
-				}
-
-				alogger.InfoFromCtx(ctx, "Создана очередь для получения заказов на %s", packet.UpdatedAt.Format("02.01.2006"))
-			} else {
-				alogger.InfoFromCtx(ctx, "Все элементы обработаны")
-			}
-			return nil
+			return s.receiveAndSaveOrders(gCtx, client, desc)
 		})
 	}
 
@@ -60,6 +37,26 @@ func (s *receiverCoreServiceImpl) ReceiveOrders(ctx context.Context, desc entity
 	}
 
 	alogger.InfoFromCtx(ctx, "постановка задачи в очередь %d", desc.Limit)
+
+	if desc.Limit > 0 {
+		packet := entity.PackageDescription{
+			PackageType: entity.PackageTypeOrder,
+
+			UpdatedAt: desc.UpdatedAt.Add(-24 * time.Hour),
+			Limit:     desc.Limit - 1,
+			Seller:    desc.Seller,
+			Delay:     desc.Delay,
+		}
+
+		err := s.brokerPublisher.SendPackage(ctx, &packet)
+		if err != nil {
+			return fmt.Errorf("ошибка постановки задачи в очередь: %w", err)
+		}
+
+		alogger.InfoFromCtx(ctx, "Создана очередь для получения заказов на %s", packet.UpdatedAt.Format("02.01.2006"))
+	} else {
+		alogger.InfoFromCtx(ctx, "Все элементы обработаны")
+	}
 
 	return nil
 }
@@ -95,13 +92,7 @@ func (s *receiverCoreServiceImpl) receiveAndSaveOrders(ctx context.Context, clie
 	for _, meta := range ordersMetaList {
 		meta.Seller = seller
 
-		// err = s.processUpdatePriceOrder(ctx, &meta)
-		// if err != nil {
-		// 	rootSpan.SetTag("error", true)
-		// 	return err
-		// }
-
-		err = s.processSingleOrder(ctx, &meta)
+		err = s.processUpdatePriceOrder(ctx, &meta)
 		if err != nil {
 			rootSpan.SetTag("error", true)
 			return err
@@ -247,7 +238,7 @@ func (s *receiverCoreServiceImpl) processUpdatePriceOrder(ctx context.Context, m
 
 	order, err := s.getOrderByExternalID(ctx, meta.ExternalID)
 	if errors.Is(err, ErrObjectNotFound) {
-		return nil
+		return s.processSingleOrder(ctx, meta)
 	} else if err != nil {
 		return err
 	}
@@ -276,6 +267,11 @@ func (s *receiverCoreServiceImpl) processUpdatePriceOrder(ctx context.Context, m
 	meta.Size = order.Size
 	meta.ID = order.ID
 	meta.PriceSize = priceSize
+
+	_, err = s.setOrder(ctx, meta)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -323,5 +319,15 @@ func (s *receiverCoreServiceImpl) setOrder(ctx context.Context, income *entity.O
 	if err != nil {
 		return nil, err
 	}
+
+	if order.Price != income.Price ||
+		order.PriceWithoutDiscount != income.PriceWithoutDiscount ||
+		order.PriceFinal != income.PriceFinal {
+		err = s.orderrepo.UpdateExecOne(ctx, income)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка обновления данных о заказе %w", err)
+		}
+	}
+
 	return order, nil
 }
