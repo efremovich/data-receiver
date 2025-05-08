@@ -129,8 +129,8 @@ func (repo *repoImpl) SelectByCardIDAndDate(ctx context.Context, cardID int64, d
 func (repo *repoImpl) Insert(ctx context.Context, in *entity.Order) (*entity.Order, error) {
 	dbModel := convertToDBOrder(ctx, in)
 
-	query := `INSERT INTO shop.orders (external_id, price, status_id, direction, type, sale, created_at, seller_id, card_id, warehouse_id, region_id, price_size_id, is_cancel)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	query := `INSERT INTO shop.orders (external_id, price, price_without_discount, price_final, status_id, direction, type, sale, created_at, seller_id, card_id, warehouse_id, region_id, price_size_id, is_cancel)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
             RETURNING
               id`
 
@@ -139,6 +139,8 @@ func (repo *repoImpl) Insert(ctx context.Context, in *entity.Order) (*entity.Ord
 	err := repo.getWriteConnection().QueryAndScan(&charIDWrap, query,
 		dbModel.ExternalID,
 		dbModel.Price,
+		dbModel.PriceWithoutDiscount,
+		dbModel.PriceFinal,
 		dbModel.StatusID,
 		dbModel.Direction,
 		dbModel.Type,
@@ -220,24 +222,28 @@ func (repo *repoImpl) UpdateExecOne(ctx context.Context, in *entity.Order) error
             SET
               external_id = $1,
               price = $2,
-              status_id = $3,
-              direction = $4,
-              type = $5,
-              sale = $6,
-              quantity = $7,
-              created_at = $8,
-              seller_id = $9,
-              card_id = $10,
-              warehouse_id = $11,
-              region_id = $12,
-              price_size_id = $13,
-							is_cancel = $14
+							price_without_discount = $3,
+							price_final = $4,
+              status_id = $5,
+              direction = $6,
+              type = $7,
+              sale = $8,
+              quantity = $9,
+              created_at = $10,
+              seller_id = $11,
+              card_id = $12,
+              warehouse_id = $13,
+              region_id = $14,
+              price_size_id = $15,
+							is_cancel = $16
             WHERE
-              id = $15`
+              id = $17`
 
 	_, err := repo.getWriteConnection().ExecOne(query,
 		dbModel.ExternalID,
 		dbModel.Price,
+		dbModel.PriceWithoutDiscount,
+		dbModel.PriceFinal,
 		dbModel.StatusID,
 		dbModel.Direction,
 		dbModel.Type,

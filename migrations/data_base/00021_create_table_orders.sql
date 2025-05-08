@@ -4,6 +4,8 @@ CREATE TABLE shop.orders (
     id serial NOT NULL,
     external_id text NOT NULL,
     price numeric(10, 2) NOT NULL,
+    price_without_discount numeric(10, 2) NOT NULL,
+    price_final numeric(10, 2) NOT NULL,
     warehouse_id integer NOT NULL,
     status_id integer,
     direction text,
@@ -61,6 +63,10 @@ COMMENT ON COLUMN shop.orders.id IS 'Идентификатор';
 COMMENT ON COLUMN shop.orders.external_id IS 'Внешний идентификатор';
 
 COMMENT ON COLUMN shop.orders.price IS 'Цена';
+
+COMMENT ON COLUMN shop.orders.price_without_discount IS 'Цена без скидок';
+
+COMMENT ON COLUMN shop.orders.price_final IS 'Реальная цена по которой была продажи';
 
 COMMENT ON COLUMN shop.orders.warehouse_id IS 'Идентификатор склада';
 

@@ -131,6 +131,8 @@ func fillOrderStruct(orderResponce []OrdersResponce) []entity.Order {
 		order := entity.Order{}
 		order.ExternalID = elem.Srid
 		order.Price = float64(elem.PriceWithDisc)
+		order.PriceWithoutDiscount = float64(elem.TotalPrice)
+		order.PriceFinal = float64(elem.FinishedPrice)
 		order.IsCancel = elem.IsCancel
 		order.Quantity = 1
 
