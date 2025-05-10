@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -286,7 +287,7 @@ func (ozon *apiClientImp) getSupplyList(ctx context.Context) ([]int, error) {
 	filter := SupplyFilter{}
 
 	filter.Filter.States = []string{"ORDER_STATE_COMPLETED"}
-	filter.Paging.Limit = requestItemLimit
+	filter.Paging.Limit = 100
 
 	supplyOrderID := []int{}
 	endOfList := false
@@ -308,6 +309,11 @@ func (ozon *apiClientImp) getSupplyList(ctx context.Context) ([]int, error) {
 		resp, err := ozon.client.Do(req)
 
 		if err != nil || resp.StatusCode != http.StatusOK {
+			bdata, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, fmt.Errorf("%s: ошибка чтения ответа: %s", supplyOrderListMethod, string(bdata))
+			}
+
 			return nil, fmt.Errorf("%s: ошибка выполнения запроса: %s", supplyOrderListMethod, err)
 		}
 		defer resp.Body.Close()
